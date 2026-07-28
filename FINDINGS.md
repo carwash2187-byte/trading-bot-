@@ -130,3 +130,48 @@ be traded, and it trades weekends when gold does not. The costs are estimated
 from a screenshot rather than measured fills.
 
 The direction of these results is trustworthy. The decimal places are not.
+
+## Betting bigger does not unlock payouts faster
+
+Tested across 17 starting points, $10k gold, five risk levels:
+
+| risk | unlock | died | got paid | $/month |
+|---|---|---|---|---|
+| 1.5% | 32 days | 2/17 | **16/17** | $623 |
+| 2% | 31 days | 4/17 | 14/17 | $844 |
+| **3%** | 31 days | 6/17 | 12/17 | **$1,322** |
+| 4% | 31 days | 9/17 | 10/17 | $1,824 |
+| 5% | 31 days | 9/17 | 9/17 | $2,357 |
+
+**The unlock time does not move.** It is 31 days at every level, and the reason
+is that the bar was never the constraint: at 1.5% risk a winning trade already
+gains 2.25%, which clears the +0.5% requirement four times over. Betting more
+makes the same qualifying days larger, it does not create new ones.
+
+What risk actually buys is money, paid for in deaths. 1.5% earns $623/month and
+gets paid 16 times in 17; 3% earns $1,322 and gets paid 12 times in 17. Past 3%
+the money keeps rising while "got paid" falls below two thirds — the account is
+being lost before payday more often than not, and an unpaid gain is not income.
+
+**To unlock faster the lever is trade frequency, not bet size.** Qualifying days
+are days that closed up; only a third of days currently have any trade at all.
+More trading days is the only thing that can raise the count, which is what
+`find_fast_payout.py` searches for.
+
+## Closed profit vs floating profit
+
+Prop firms count balance (closed trades), not equity (which includes open
+positions). Checked, because it would invalidate every payout figure above:
+
+| basis | qualifying days | unlock |
+|---|---|---|
+| equity (open trades count) | 93 | day 43 |
+| **balance (closed only)** | **90** | **day 43** |
+
+Effectively identical, because every trade carries a take-profit and stop-loss
+set before entry, so positions close at the broker rather than sitting open
+across day boundaries. On a strategy that held positions for days this would
+have mattered and end-of-day banking would be needed.
+
+Of the 150 days where a trade closed, 90 closed up 0.5% or more — 60%. The
+constraint is not the size of a winning day, it is how many days have a trade.
