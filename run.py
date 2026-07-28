@@ -27,9 +27,34 @@ from tradebot.runtime.cycle import TradingCycle
 from tradebot.runtime.lock import AlreadyRunning, InstanceLock
 from tradebot.runtime.state import StateStore
 from tradebot.runtime.watchdog import Heartbeat
+from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
+from tradebot.strategy.stack import StrategyStack
+from tradebot.strategy.trend import BreakoutRider, KamaTrend
 
 log = logging.getLogger("tradebot")
+
+# Every strategy the bot knows how to run. Adding one here makes it available
+# to --strategies; the portfolio manager decides whether it may actually trade.
+REGISTRY = {
+    "breakout_rider": BreakoutRider,
+    "kama_trend": KamaTrend,
+}
+
+
+def build_roster(names: list[str]):
+    """Instantiate the requested strategies, rejecting unknown names loudly."""
+    roster = []
+    for name in names:
+        name = name.strip()
+        if not name:
+            continue
+        if name not in REGISTRY:
+            raise SystemExit(
+                f"unknown strategy {name!r}; known: {', '.join(sorted(REGISTRY))}"
+            )
+        roster.append(REGISTRY[name]())
+    return roster
 
 
 def build_broker(args):
@@ -84,6 +109,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--news-url", default="",
                         help="economic calendar JSON endpoint")
     parser.add_argument("--data-dir", default="run")
+    parser.add_argument("--strategies", default="breakout_rider,kama_trend",
+                        help="comma-separated; 'none' disables trading entirely")
+    parser.add_argument("--review-window", type=int, default=14,
+                        help="days of history each strategy is scored on")
+    parser.add_argument("--review-min-trades", type=int, default=10,
+                        help="trades needed before a strategy can be benched")
+    parser.add_argument("--report", action="store_true",
+                        help="print the portfolio report card and exit")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args(argv)
 
@@ -94,6 +127,31 @@ def main(argv: list[str] | None = None) -> int:
 
     data_dir = Path(args.data_dir)
     data_dir.mkdir(parents=True, exist_ok=True)
+
+    strategy_names = [] if args.strategies.strip().lower() == "none" \
+        else args.strategies.split(",")
+
+    def make_manager():
+        return PortfolioManager(
+            roster=build_roster(strategy_names),
+            journal=TradeJournal(data_dir / "journal.jsonl",
+                                 starting_balance=args.balance),
+            state_path=data_dir / "portfolio.json",
+            window_days=args.review_window,
+            min_trades=args.review_min_trades,
+        )
+
+    # Read-only view of how each strategy is doing. Deliberately available
+    # without touching the broker or the lock, so it can be run any time.
+    if args.report:
+        if not strategy_names:
+            print("no strategies configured")
+            return 0
+        manager = make_manager()
+        review = manager.review()
+        print(review.summary())
+        print(review.table())
+        return 0
 
     # Refuse to start if another copy is mid-cycle. Skipping this run is
     # always safer than double-trading the same account.
@@ -131,9 +189,21 @@ def main(argv: list[str] | None = None) -> int:
         broker = build_broker(args)
         journal = TradeJournal(data_dir / "journal.jsonl", starting_balance=args.balance)
 
+        if strategy_names:
+            manager = make_manager()
+            # Score and bench *before* trading, so a strategy that went cold
+            # cannot open one more position on the way out.
+            manager.review()
+            strategy = StrategyStack(manager)
+            log.info("active: %s",
+                     ", ".join(s.name for s in manager.active_strategies()) or "none")
+        else:
+            strategy = NoOpStrategy()
+            log.info("no strategies configured; running without trading")
+
         cycle = TradingCycle(
             broker=broker,
-            strategy=NoOpStrategy(),     # <- plug your strategy in here
+            strategy=strategy,
             risk=risk,
             journal=journal,
             symbols=[s.upper() for s in args.symbols],

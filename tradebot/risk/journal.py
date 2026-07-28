@@ -36,6 +36,9 @@ class JournalEntry:
     commission: float = 0.0
     reason: str = ""
     note: str = ""
+    # Which strategy owned the trade. Without this the portfolio manager cannot
+    # tell a losing strategy from a losing week, so it cannot bench anything.
+    strategy: str = ""
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), separators=(",", ":"))
@@ -55,6 +58,7 @@ class JournalEntry:
             commission=float(raw.get("commission", 0.0)),
             reason=str(raw.get("reason", "")),
             note=str(raw.get("note", "")),
+            strategy=str(raw.get("strategy", "")),
         )
 
 
@@ -106,6 +110,7 @@ class TradeJournal:
         closed_at: datetime | None = None,
         commission: float = 0.0,
         reason: str = "",
+        strategy: str = "",
     ) -> JournalEntry:
         entry = JournalEntry(
             ticket=ticket,
@@ -119,6 +124,7 @@ class TradeJournal:
             realized_pnl=realized_pnl,
             commission=commission,
             reason=reason,
+            strategy=strategy,
         )
         self.record(entry)
         return entry

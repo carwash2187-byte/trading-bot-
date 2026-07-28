@@ -172,6 +172,10 @@ class Exit(Action):
             opened_at=position.opened_at,
             closed_at=fill.filled_at,
             reason=self.reason,
+            # Entries stamp the owning strategy into the order comment, so the
+            # broker's own record of the position tells us who to credit or
+            # blame. Nothing extra has to be persisted or kept in sync.
+            strategy=position.comment,
         )
         return True
 
