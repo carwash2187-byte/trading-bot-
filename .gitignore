@@ -29,3 +29,6 @@ venv/
 # Cached market history. Re-downloadable for free; no reason to version 1MB+
 # of exchange candles that never change.
 data/history/
+
+# Daily account record — real balances, not for sharing
+reports/
