@@ -25,3 +25,7 @@ venv/
 
 # macOS
 .DS_Store
+
+# Cached market history. Re-downloadable for free; no reason to version 1MB+
+# of exchange candles that never change.
+data/history/
