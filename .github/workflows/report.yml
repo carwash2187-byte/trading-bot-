@@ -2,8 +2,12 @@ name: daily report
 
 on:
   schedule:
-    - cron: "17 23 * * *"     # once a day, after the session settles
+    - cron: "17 23 * * *"     # once a day, after the session has settled
   workflow_dispatch:
+
+# Needed to push the day's line back into the repository.
+permissions:
+  contents: write
 
 jobs:
   report:
@@ -11,10 +15,29 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+
       - name: Write today's line
         env:
           TRADELOCKER_USERNAME: ${{ secrets.TRADELOCKER_USERNAME }}
           TRADELOCKER_PASSWORD: ${{ secrets.TRADELOCKER_PASSWORD }}
           TRADELOCKER_SERVER: ${{ secrets.TRADELOCKER_SERVER }}
           TRADELOCKER_ACCOUNT: ${{ secrets.TRADELOCKER_ACCOUNT }}
-        run: python3 daily_report.py
+        # --public omits cash amounts. This repository is public so the
+        # unlimited Actions minutes cover a five-minute schedule, and the
+        # account balance would otherwise be readable by anyone. Percentages
+        # and payout progress are what decisions get made on.
+        run: python3 daily_report.py --public
+
+      # Committing the record does two jobs. It keeps the history, which is the
+      # whole point of the report -- a run's filesystem is destroyed when it
+      # ends. And it counts as repository activity, which matters more than it
+      # looks: GitHub disables scheduled workflows after 60 days without any,
+      # so a bot left alone for two months would quietly stop trading and
+      # nothing would say so.
+      - name: Keep the record
+        run: |
+          git config user.name "tradebot"
+          git config user.email "tradebot@users.noreply.github.com"
+          git add -f reports/daily.md run/report_state.json
+          git diff --staged --quiet || git commit -m "record $(date -u +%Y-%m-%d)"
+          git push

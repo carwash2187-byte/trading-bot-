@@ -16,6 +16,7 @@ It never trades and never changes anything.
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from datetime import datetime, timezone
@@ -63,6 +64,17 @@ def account_now() -> dict | None:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--public", action="store_true",
+        help="omit cash amounts. Set when the report will be committed to a "
+             "public repository, where the account balance would otherwise be "
+             "readable by anyone. Percentages and payout progress are what "
+             "decisions are made on anyway.",
+    )
+    args = parser.parse_args()
+    private = not args.public
+
     now = datetime.now(timezone.utc)
     today = now.date().isoformat()
 
@@ -117,10 +129,16 @@ def main() -> int:
     unlocked = "UNLOCKED" if qualifying >= NEEDED_DAYS else f"{qualifying}/{NEEDED_DAYS}"
     mark = "yes" if is_qualifying else ""
 
+    shown_balance = f"${balance:,.2f}" if private else "—"
+    shown_change = (f"{change:+,.2f} ({change_pct:+.2f}%)" if private
+                    else f"{change_pct:+.2f}%")
+    shown_room = (f"${room:,.0f} ({room_pct:.1f}%)" if private
+                  else f"{room_pct:.1f}%")
+
     with REPORT.open("a") as fh:
         fh.write(
-            f"| {today} | ${balance:,.2f} | {change:+,.2f} ({change_pct:+.2f}%) | "
-            f"{mark} | {unlocked} | {trades} | ${room:,.0f} ({room_pct:.1f}%) |\n"
+            f"| {today} | {shown_balance} | {shown_change} | "
+            f"{mark} | {unlocked} | {trades} | {shown_room} |\n"
         )
 
     state.update({
@@ -132,8 +150,12 @@ def main() -> int:
     STATE.parent.mkdir(parents=True, exist_ok=True)
     STATE.write_text(json.dumps(state, indent=2))
 
-    print(f"{today}: ${balance:,.2f} ({change:+,.2f}), "
-          f"payout days {unlocked}, ${room:,.0f} above the limit")
+    if private:
+        print(f"{today}: ${balance:,.2f} ({change:+,.2f}), "
+              f"payout days {unlocked}, ${room:,.0f} above the limit")
+    else:
+        print(f"{today}: {change_pct:+.2f}%, payout days {unlocked}, "
+              f"{room_pct:.1f}% above the limit")
     return 0
 
 
