@@ -136,7 +136,7 @@ class RsiScalper(_Managed):
 
     name = "rsi_scalper"
     timeframe = "15m"
-    lookback = 200
+    lookback = 400
 
     def __init__(
         self,
@@ -149,6 +149,13 @@ class RsiScalper(_Managed):
         atr_period: int = 14,
         allow_shorts: bool = True,
     ) -> None:
+        # The window must exceed the longest indicator or the strategy silently
+        # never trades: it is handed exactly `lookback` bars, and a 200-bar EMA
+        # needs more than 200 of them. That failure is invisible -- no error,
+        # no warning, just a backtest reporting zero trades as though the rules
+        # were merely never met.
+        self.lookback = max(type(self).lookback,
+                            (trend_ema or 0) + max(rsi_period, atr_period) + 20)
         self.rsi_period = rsi_period
         self.oversold = oversold
         self.overbought = overbought

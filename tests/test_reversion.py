@@ -274,3 +274,28 @@ def test_it_leaves_an_open_trade_to_its_bracket():
 def test_it_does_nothing_when_rsi_is_ordinary():
     steady = candles([1000.0 + i * 0.5 for i in range(300)])
     assert not entries(RsiScalper().evaluate(context_with(steady)))
+
+
+def test_the_history_window_always_exceeds_the_longest_indicator():
+    """A window smaller than the trend EMA means it can never trade at all.
+
+    The failure is silent -- no error, just a backtest reporting zero trades as
+    though the rules were merely never met. This cost a whole gold sweep.
+    """
+    for trend in (50, 200, 400):
+        scalper = RsiScalper(trend_ema=trend)
+        assert scalper.lookback > trend + scalper.rsi_period
+
+    # And with the filter off, the base window is still enough for the rest.
+    off = RsiScalper(trend_ema=None)
+    assert off.lookback >= max(off.rsi_period, off.atr_period) + 5
+
+
+def test_the_trend_filtered_version_actually_trades():
+    """The regression that matters: it must produce entries, not just refuse."""
+    seq = [1000.0 + i * 0.6 for i in range(700)]
+    top = seq[-1]
+    seq += [top - 9 * i for i in range(1, 5)]
+    bars = candles(seq)
+    window = bars[-RsiScalper().lookback:]
+    assert entries(RsiScalper().evaluate(context_with(window)))
