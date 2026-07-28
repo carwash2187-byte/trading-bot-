@@ -73,6 +73,23 @@ def build_roster(names: list[str]):
     return roster
 
 
+def load_env(path: str = ".env") -> dict:
+    """Read credentials from .env, without needing an extra package installed."""
+    values: dict[str, str] = {}
+    env_path = Path(path)
+    if not env_path.exists():
+        return values
+    for line in env_path.read_text().splitlines():
+        line = line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, value = line.partition("=")
+        # Quotes get pasted in out of habit and would otherwise become part of
+        # the password, producing a login failure that looks like a typo.
+        values[key.strip()] = value.strip().strip("'\"")
+    return values
+
+
 def build_broker(args):
     """Construct the requested adapter. Paper is the default everywhere."""
     mode = TradingMode(args.mode)
@@ -88,9 +105,17 @@ def build_broker(args):
     if args.broker == "tradelocker":
         from tradebot.brokers.tradelocker import TradeLockerBroker
 
+        # Command-line arguments win, but the .env file is the normal source.
+        # Passing a password as an argument would put it in `ps` output and in
+        # shell history, and a scheduled job's arguments are readable by
+        # anything on the machine.
+        env = load_env()
         return TradeLockerBroker(
-            username=args.username, password=args.password, server=args.server,
-            account_id=args.account, mode=mode,
+            username=args.username or env.get("TRADELOCKER_USERNAME", ""),
+            password=args.password or env.get("TRADELOCKER_PASSWORD", ""),
+            server=args.server or env.get("TRADELOCKER_SERVER", ""),
+            account_id=args.account or env.get("TRADELOCKER_ACCOUNT", ""),
+            mode=mode,
         )
 
     if args.broker == "mt5":

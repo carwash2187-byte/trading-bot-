@@ -20,11 +20,13 @@ on failure so the cycle's error isolation can catch it and retry next pass.
 from __future__ import annotations
 
 import json
+import math
 import urllib.error
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
+from ..data.ohlc import timeframe_minutes
 from ..instruments import Instrument, get_instrument
 from .base import (
     AccountSnapshot,
@@ -59,10 +61,17 @@ BROWSER_HEADERS = {
     "Referer": "https://demo.tradelocker.com/",
 }
 
-# TradeLocker resolution codes for the timeframes this package uses.
+# TradeLocker resolution codes. The case is not cosmetic: minutes are
+# lower-case and months are upper-case, so "15M" asks for fifteen-MONTH bars
+# and the API rejects the request outright. That was worth an hour -- the
+# symptom is an empty candle list, which is indistinguishable from a market
+# that simply has no history yet.
+#
+# The full set the API accepts: 1m, 5m, 15m, 30m, 1H, 4H, 1D, 1W, 1M.
+# Note there is no 2h; strategies on that timeframe must build it from 1H.
 _RESOLUTIONS = {
-    "1m": "1M", "5m": "5M", "15m": "15M", "30m": "30M",
-    "1h": "1H", "4h": "4H", "1d": "1D",
+    "1m": "1m", "5m": "5m", "15m": "15m", "30m": "30m",
+    "1h": "1H", "4h": "4H", "1d": "1D", "1w": "1W",
 }
 
 
@@ -97,7 +106,8 @@ class TradeLockerBroker(Broker):
         self._token: str | None = None
         self._acc_num: str | None = None
         self._instrument_cache: dict[str, Instrument] = {}
-        self._route_cache: dict[str, int] = {}
+        self._route_cache: dict[str, tuple] = {}
+        self._rows: dict[str, dict] = {}
 
     # -- transport -------------------------------------------------------
 
@@ -189,7 +199,7 @@ class TradeLockerBroker(Broker):
                 routes.get("INFO"),
                 routes.get("TRADE"),
             )
-            self._instrument_cache[name] = self._to_instrument(row)
+            self._rows[name] = row
         try:
             return self._route_cache[symbol.upper()][0]
         except KeyError:
@@ -211,34 +221,60 @@ class TradeLockerBroker(Broker):
         return route if route is not None else iid
 
     @staticmethod
-    def _to_instrument(row: dict) -> Instrument:
+    def _to_instrument(row: dict, details: dict) -> Instrument:
         """Build an Instrument from TradeLocker's own contract details.
 
-        Preferring the broker's numbers over a local constant is what stops a
-        stale contract size from silently misstating every trade.
+        The contract size lives in the per-instrument *details* endpoint under
+        ``lotSize``, and is absent from the instrument list entirely. Defaulting
+        when it is missing is what this method used to do, and the default was
+        the forex 100,000 -- so gold, whose real lot is 100 ounces, was being
+        described a thousand times too large. Every position size computed from
+        it would have been wrong by that factor.
+
+        So there is no default any more. A missing contract size raises, because
+        a loud failure at startup is worth far more than a silently mis-sized
+        trade on a funded account.
         """
         symbol = str(row.get("name", "")).upper()
+
+        lot_size = details.get("lotSize")
+        if lot_size in (None, 0):
+            raise BrokerError(
+                f"{symbol}: TradeLocker did not report a lot size. Refusing to "
+                f"guess -- a wrong contract size mis-sizes every trade."
+            )
+
+        # tickSize arrives as a list of ranges, finest first.
+        ticks = details.get("tickSize") or []
+        tick = float(ticks[0]["tickSize"]) if ticks else 0.01
+
         return Instrument(
             symbol=symbol,
-            contract_size=float(row.get("contractSize", 100_000) or 100_000),
-            tick_size=float(row.get("tickSize", 0.00001) or 0.00001),
-            min_lot=float(row.get("minLotSize", 0.01) or 0.01),
-            max_lot=float(row.get("maxLotSize", 100.0) or 100.0),
-            lot_step=float(row.get("lotSizeStep", 0.01) or 0.01),
-            base_currency=str(row.get("baseCurrency", "")),
-            quote_currency=str(row.get("quoteCurrency", "USD")),
-            digits=int(row.get("digits", 5) or 5),
+            contract_size=float(lot_size),
+            tick_size=tick,
+            min_lot=float(details.get("minLot") or 0.01),
+            max_lot=float(details.get("maxLot") or 100.0),
+            lot_step=float(details.get("lotStep") or 0.01),
+            base_currency=str(details.get("baseCurrency") or symbol[:3]),
+            quote_currency=str(details.get("quotingCurrency") or "USD"),
+            # Digits follow from the tick: 0.01 is two decimals, 0.00001 five.
+            digits=max(0, round(-math.log10(tick))) if tick > 0 else 2,
             description=str(row.get("description", "")),
         )
 
     def get_instrument(self, symbol: str) -> Instrument:
         key = symbol.upper()
-        if key not in self._instrument_cache:
-            try:
-                self._instrument_id(key)      # populates both caches
-            except BrokerError:
-                return get_instrument(key)    # fall back to the local catalogue
-        return self._instrument_cache.get(key) or get_instrument(key)
+        if key in self._instrument_cache:
+            return self._instrument_cache[key]
+
+        iid = self._instrument_id(key)        # populates self._rows
+        details = self._request(
+            "GET",
+            f"/trade/instruments/{iid}?routeId={self._route(key, 'INFO')}&locale=en",
+        )
+        instrument = self._to_instrument(self._rows[key], details.get("d", details))
+        self._instrument_cache[key] = instrument
+        return instrument
 
     def get_price(self, symbol: str) -> tuple[float, float]:
         iid = self._instrument_id(symbol)
@@ -261,13 +297,19 @@ class TradeLockerBroker(Broker):
         if resolution is None:
             raise BrokerError(f"unsupported timeframe {timeframe!r}")
         end = end or utcnow()
+        # The API wants a time range, not a bar count -- "countBack" is
+        # rejected outright. Ask for a generous span and trim, since the
+        # market is shut at weekends and overnight, so N bars covers far more
+        # than N periods of wall-clock time.
+        minutes = timeframe_minutes(timeframe)
+        span = timedelta(minutes=minutes * count * 3 + 1440)
         params = urllib.parse.urlencode(
             {
                 "routeId": self._route(symbol, "INFO"),
                 "tradableInstrumentId": iid,
                 "resolution": resolution,
+                "from": int((end - span).timestamp() * 1000),
                 "to": int(end.timestamp() * 1000),
-                "countBack": count,
             }
         )
         payload = self._request("GET", f"/trade/history?{params}")
@@ -283,7 +325,7 @@ class TradeLockerBroker(Broker):
                     volume=float(bar.get("v", 0) or 0),
                 )
             )
-        return out
+        return out[-count:]
 
     # -- trading ---------------------------------------------------------
 

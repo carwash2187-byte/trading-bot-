@@ -124,13 +124,29 @@ def _tradelocker_responses() -> dict:
     return {
         "POST /auth/jwt/token": {"accessToken": "fake-token"},
         "GET /auth/jwt/all-accounts": {"accounts": [{"id": "42", "accNum": "1"}]},
+        # Shaped like the real API, verified against a live AquaFunded account.
+        # The list carries no contract size at all, and the routes are three
+        # distinct numbers: the instrument id, an INFO route for quotes and a
+        # TRADE route for orders. An earlier version of this fixture invented a
+        # "contractSize" field on the list, so the adapter's fallback to the
+        # forex default of 100,000 was never exercised -- gold was being sized
+        # a thousand times too large and every test still passed.
         "GET /trade/accounts/42/instruments": {
             "d": {"instruments": [{
-                "name": "XAUUSD", "tradableInstrumentId": 7, "contractSize": 100,
-                "tickSize": 0.01, "minLotSize": 0.01, "maxLotSize": 50.0,
-                "lotSizeStep": 0.01, "baseCurrency": "XAU", "quoteCurrency": "USD",
-                "digits": 2,
+                "name": "XAUUSD",
+                "tradableInstrumentId": 7,
+                "description": "Gold vs US Dollar - Spot",
+                "routes": [{"id": 900, "type": "TRADE"},
+                           {"id": 800, "type": "INFO"}],
             }]}
+        },
+        "GET /trade/instruments/7": {
+            "d": {
+                "lotSize": 100,
+                "tickSize": [{"leftRangeLimit": None, "tickSize": 0.01}],
+                "minLot": 0.01, "maxLot": 50.0, "lotStep": 0.01,
+                "baseCurrency": None, "quotingCurrency": "USD",
+            }
         },
         "GET /trade/quotes": {"d": {"bp": 1999.5, "ap": 2000.5}},
         "POST /trade/accounts/42/orders": {"d": {"orderId": "TL-123"}},
@@ -275,3 +291,61 @@ def test_paper_and_tradelocker_agree_on_pnl_for_the_same_trade(mock_tradelocker)
     args = (2000.0, 2010.0, 0.3, True)
     assert tl_inst.pnl_in_account(*args) == pytest.approx(paper_inst.pnl_in_account(*args))
     assert tl_inst.pnl_in_account(*args) == pytest.approx(300.0)
+
+
+# ---------------------------------------------------------------------------
+# Regressions from the first real connection. Every one of these passed
+# against a mock and failed against the actual broker.
+# ---------------------------------------------------------------------------
+
+def test_a_missing_lot_size_refuses_rather_than_guessing():
+    """The bug that would have mis-sized every gold trade by 1000x.
+
+    Contract size lives only in the details endpoint, and the old code
+    defaulted to the forex 100,000 when it was absent. Gold's real lot is 100
+    ounces, so positions were described a thousand times too large. A loud
+    failure is worth far more than a silently wrong size on a funded account.
+    """
+    from tradebot.brokers.base import BrokerError
+    from tradebot.brokers.tradelocker import TradeLockerBroker
+
+    row = {"name": "XAUUSD"}
+    with pytest.raises(BrokerError, match="lot size"):
+        TradeLockerBroker._to_instrument(row, {})
+
+    with pytest.raises(BrokerError, match="lot size"):
+        TradeLockerBroker._to_instrument(row, {"lotSize": 0})
+
+
+def test_gold_is_a_hundred_ounces_not_a_hundred_thousand():
+    from tradebot.brokers.tradelocker import TradeLockerBroker
+
+    instrument = TradeLockerBroker._to_instrument(
+        {"name": "XAUUSD"},
+        {"lotSize": 100, "tickSize": [{"tickSize": 0.01}],
+         "minLot": 0.01, "lotStep": 0.01, "quotingCurrency": "USD"},
+    )
+    assert instrument.contract_size == 100.0
+    assert instrument.digits == 2          # derived from the tick, not guessed
+
+
+def test_quotes_and_orders_use_different_routes(mock_tradelocker):
+    """TradeLocker answers a wrong route with an empty quote, not an error.
+
+    That is indistinguishable from a symbol which does not exist, so using the
+    instrument id for both looked like "gold is not tradable here".
+    """
+    broker = mock_tradelocker
+    assert broker._instrument_id("XAUUSD") == 7
+    assert broker._route("XAUUSD", "INFO") == 800
+    assert broker._route("XAUUSD", "TRADE") == 900
+
+
+def test_minute_resolutions_are_lower_case():
+    """Upper-case M means MONTHS. "15M" asks for fifteen-month bars."""
+    from tradebot.brokers.tradelocker import _RESOLUTIONS
+
+    assert _RESOLUTIONS["15m"] == "15m"
+    assert _RESOLUTIONS["5m"] == "5m"
+    assert _RESOLUTIONS["1h"] == "1H"      # hours stay upper-case
+    assert _RESOLUTIONS["1d"] == "1D"
