@@ -13,7 +13,12 @@ from tradebot.brokers.base import AccountSnapshot, Candle, OrderSide, Position
 from tradebot.instruments import Instrument
 from tradebot.risk.limits import RiskLimits, RiskManager
 from tradebot.strategy.base import Enter, Exit, StrategyContext
-from tradebot.strategy.reversion import MeanReverter, PullbackBuyer, RangeFader
+from tradebot.strategy.reversion import (
+    MeanReverter,
+    PullbackBuyer,
+    RangeFader,
+    RsiScalper,
+)
 
 NOW = datetime(2026, 7, 1, tzinfo=timezone.utc)
 
@@ -208,3 +213,64 @@ def test_it_leaves_another_strategys_position_alone():
     actions = RangeFader().evaluate(context_with(candles(seq, spread=1.0), [theirs]))
     assert not exits(actions)
     assert not entries(actions)
+
+
+# ---------------------------------------------------------------------------
+# RsiScalper — knows its reward before it enters
+# ---------------------------------------------------------------------------
+
+def dip_inside_an_uptrend() -> list[Candle]:
+    """A long uptrend with a short sharp dip: oversold, but still above trend."""
+    seq = [1000.0 + i * 1.2 for i in range(260)]
+    top = seq[-1]
+    seq += [top - 14 * i for i in range(1, 5)]
+    return candles(seq)
+
+
+def test_it_takes_the_dip_and_sets_both_exits_up_front():
+    """A scalper must know its reward before entering, not discover it later."""
+    got = entries(RsiScalper().evaluate(context_with(dip_inside_an_uptrend())))
+    assert len(got) == 1
+    trade = got[0]
+    assert trade.side == OrderSide.BUY
+    assert trade.stop_loss is not None and trade.take_profit is not None
+
+    close = dip_inside_an_uptrend()[-1].close
+    risk = close - trade.stop_loss
+    reward = trade.take_profit - close
+    assert reward / risk == __import__("pytest").approx(1.5, rel=1e-6)
+
+
+def test_the_reward_multiple_is_configurable():
+    bars = dip_inside_an_uptrend()
+    trade = entries(RsiScalper(reward=3.0).evaluate(context_with(bars)))[0]
+    close = bars[-1].close
+    assert (trade.take_profit - close) / (close - trade.stop_loss) == \
+        __import__("pytest").approx(3.0, rel=1e-6)
+
+
+def test_the_trend_filter_blocks_a_dip_in_a_downtrend():
+    """Buying oversold in a downtrend is buying every step of the way down."""
+    seq = [1400.0 - i * 1.2 for i in range(260)]
+    top = seq[-1]
+    seq += [top - 14 * i for i in range(1, 5)]
+    assert not entries(RsiScalper().evaluate(context_with(candles(seq))))
+
+
+def test_the_trend_filter_can_be_turned_off():
+    seq = [1400.0 - i * 1.2 for i in range(260)]
+    top = seq[-1]
+    seq += [top - 14 * i for i in range(1, 5)]
+    assert entries(RsiScalper(trend_ema=None).evaluate(context_with(candles(seq))))
+
+
+def test_it_leaves_an_open_trade_to_its_bracket():
+    """Managing exits bar by bar cannot work between scheduled runs."""
+    bars = dip_inside_an_uptrend()
+    held = position(entry=bars[-1].close, owner="rsi_scalper")
+    assert RsiScalper().evaluate(context_with(bars, [held])) == []
+
+
+def test_it_does_nothing_when_rsi_is_ordinary():
+    steady = candles([1000.0 + i * 0.5 for i in range(300)])
+    assert not entries(RsiScalper().evaluate(context_with(steady)))

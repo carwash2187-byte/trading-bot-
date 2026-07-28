@@ -114,6 +114,92 @@ class MeanReverter(_Managed):
         return []
 
 
+class RsiScalper(_Managed):
+    """Many small trades off an RSI extreme, with a fixed reward-to-risk exit.
+
+    This is the shape of strategy that only works where trading is cheap, and
+    on gold it is: a 100oz lot at $4,050 is $405,000 of notional, so
+    AquaFunded's $5 commission is 0.0012%, and the quoted spread measured off
+    Leo's own screen was 0.0091%. About 0.010% a round trip, against 0.104% on
+    BTCUSD -- roughly a tenfold difference.
+
+    That ratio is the entire argument for trading gold rather than crypto with
+    something like this. An earlier measurement in this project found a fast
+    strategy earning $0.04 a trade while paying $0.98 in fees; the edge per
+    trade never changed, only the toll. Where the toll is a tenth as large, the
+    same edge survives.
+
+    Unlike :class:`MeanReverter` the exit is a fixed multiple of the stop
+    distance rather than a return to the average, because a scalper needs to
+    know its reward before it enters, not whenever the mean happens to arrive.
+    """
+
+    name = "rsi_scalper"
+    timeframe = "15m"
+    lookback = 200
+
+    def __init__(
+        self,
+        rsi_period: int = 14,
+        oversold: float = 30.0,
+        overbought: float = 70.0,
+        stop_atr: float = 1.0,
+        reward: float = 1.5,
+        trend_ema: int | None = 200,
+        atr_period: int = 14,
+        allow_shorts: bool = True,
+    ) -> None:
+        self.rsi_period = rsi_period
+        self.oversold = oversold
+        self.overbought = overbought
+        self.stop_atr = stop_atr
+        self.reward = reward
+        self.trend_ema = trend_ema
+        self.atr_period = atr_period
+        self.allow_shorts = allow_shorts
+
+    def evaluate(self, context: StrategyContext) -> list[Action]:
+        candles = context.candles
+        needed = max(self.rsi_period, self.atr_period, self.trend_ema or 0) + 5
+        if len(candles) < needed:
+            return []
+
+        closes = [c.close for c in candles]
+        strength = rsi(candles, self.rsi_period)
+        atr_series = atr(candles, self.atr_period)
+        rsi_now, atr_now, close = strength[-1], atr_series[-1], closes[-1]
+        if rsi_now is None or atr_now is None or atr_now <= 0:
+            return []
+
+        # The bracket does the exiting. A scalper that manages its own exits
+        # bar by bar cannot react between scheduled runs, and the whole trade
+        # is often over inside one bar.
+        if context.has_position:
+            return []
+        if context.news is not None and context.news.active:
+            return []
+
+        trend_now = None
+        if self.trend_ema:
+            trend_now = ema(closes, self.trend_ema)[-1]
+            if trend_now is None:
+                return []
+
+        stop_distance = self.stop_atr * atr_now
+        if rsi_now < self.oversold and (trend_now is None or close > trend_now):
+            return [Enter(side=OrderSide.BUY,
+                          stop_loss=close - stop_distance,
+                          take_profit=close + self.reward * stop_distance,
+                          comment=self.name)]
+        if (self.allow_shorts and rsi_now > self.overbought
+                and (trend_now is None or close < trend_now)):
+            return [Enter(side=OrderSide.SELL,
+                          stop_loss=close + stop_distance,
+                          take_profit=close - self.reward * stop_distance,
+                          comment=self.name)]
+        return []
+
+
 class PullbackBuyer(_Managed):
     """Buy a dip inside an uptrend, not a breakout.
 
