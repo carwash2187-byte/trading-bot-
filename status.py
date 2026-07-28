@@ -67,8 +67,15 @@ def show_cloud(token: str) -> None:
     # though the schedule looks alive.
     if age > 20:
         print("  ** it has not run recently. Something has stopped it. **")
-    if failed > len(trades) / 4:
+
+    # Only judge the failure rate once there is a rate to judge. One failure
+    # out of three is noise -- and right after a fix, the run that prompted the
+    # fix is still in the window. A warning that fires on noise gets ignored,
+    # and then the real one gets ignored too.
+    if len(trades) >= 10 and failed > len(trades) / 4:
         print("  ** failing often. Open the Actions tab and read the error. **")
+    elif failed and len(trades) < 10:
+        print(f"  ({failed} early failure(s) — normal while settling in)")
 
 
 def show_account() -> None:
