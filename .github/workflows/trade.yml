@@ -1,13 +1,21 @@
 name: trade
 
-# Every 20 minutes. Not every 5, for two reasons: GitHub's free tier allows
-# 2,000 minutes a month and this fits comfortably inside it, and the bot does
-# not need to be watching. Once a trade is open its stop-loss and take-profit
-# live at the broker, so they protect the position even while nothing is
-# running. A missed check costs an entry, never safety.
+# Every 5 minutes, which is GitHub's floor -- it refuses anything shorter.
+#
+# Checking more often would not help even if it were allowed: the strategy
+# reads 15-minute candles, so a new signal can only appear when a 15-minute bar
+# closes. Five minutes already looks three times more often than the chart can
+# change; a one-minute schedule would re-read the same unchanged bar fifteen
+# times.
+#
+# This is only affordable on a PUBLIC repository, which gets unlimited Actions
+# minutes. A private one allows 2,000 a month and this uses roughly 5,000, so
+# it would stop partway through the month -- silently, which is the worst way
+# for a trading bot to stop. Nothing secret lives in the repo: the broker
+# password is a GitHub Secret, and .env is gitignored.
 on:
   schedule:
-    - cron: "*/20 * * * *"
+    - cron: "*/5 * * * *"
   workflow_dispatch:        # lets you run it by hand from the Actions tab
 
 # Two runs at once could double an order. GitHub will queue rather than
@@ -20,16 +28,14 @@ concurrency:
 jobs:
   cycle:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      # The bot deliberately has no dependencies, so there is nothing to
-      # install and nothing that can break on a version bump.
+      # No setup-python step and no install step. The bot depends on nothing
+      # outside the standard library, so the runner's own Python is enough --
+      # which saves about fifteen seconds a run, and removes any chance of a
+      # dependency breaking the schedule while nobody is watching.
       - name: Trade one cycle
         env:
           TRADELOCKER_USERNAME: ${{ secrets.TRADELOCKER_USERNAME }}
