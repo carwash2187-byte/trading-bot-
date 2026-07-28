@@ -1,0 +1,27 @@
+# Anything the bot writes while running. None of this belongs in a repo —
+# the journal and state files describe real positions and real balances.
+run/
+data/
+logs/
+*.log
+*.jsonl
+*.lock
+*.corrupt.*
+
+# Credentials. There should never be a broker password in here, but if one
+# ever lands in a .env this stops it leaving the machine.
+.env
+.env.*
+secrets.json
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# macOS
+.DS_Store
