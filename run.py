@@ -30,6 +30,7 @@ from tradebot.runtime.watchdog import Heartbeat
 from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
 from tradebot.strategy.stack import StrategyStack
+from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
 
@@ -38,7 +39,19 @@ log = logging.getLogger("tradebot")
 # Every strategy the bot knows how to run. Adding one here makes it available
 # to --strategies; the portfolio manager decides whether it may actually trade.
 REGISTRY = {
-    # The only one that survived out-of-sample testing. See runner.py.
+    # The best thing measured on this project: gold 15m, profitable in 4 of 4
+    # walk-forward stretches, and the drawdown stays inside AquaFunded's 6%
+    # loss cap (measured from the starting balance, confirmed with Leo).
+    # See FINDINGS.md.
+    "gold_scalper": lambda: RsiScalper(
+        oversold=35, overbought=65, reward=1.5, trend_ema=200
+    ),
+    # The pickier variant. Half the money, but half the drawdown too -- the
+    # one to fall back to if the firm ever measures loss from the peak
+    # instead, because that would disqualify gold_scalper.
+    "gold_safe": lambda: RsiScalper(
+        oversold=30, overbought=70, reward=1.5, trend_ema=200
+    ),
     "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,
     "kama_trend": KamaTrend,

@@ -375,8 +375,12 @@ def run_portfolio_backtest(
     diversification would be a lie.
 
     Args:
-        factory: called per symbol to build that symbol's own strategy
-            instance, so nothing leaks between markets.
+        factory: either one callable used for every market, or a dict of
+            symbol -> callable so each market runs the strategy that suits it.
+            Either way it is called once per symbol, so nothing leaks between
+            markets. The dict form is what lets genuinely different markets be
+            combined -- gold and a crypto pair want different logic, and
+            forcing one strategy on both would test neither.
         series: symbol -> its bars. Bars are replayed in timestamp order across
             all symbols, so a position in one market is open while another is
             being evaluated, exactly as it would be live.
@@ -398,7 +402,10 @@ def run_portfolio_backtest(
         max_total_positions=max(len(series), 1),
     ))
 
-    strategies = {symbol: factory() for symbol in series}
+    strategies = {
+        symbol: (factory[symbol] if isinstance(factory, dict) else factory)()
+        for symbol in series
+    }
     windows = {s: getattr(st, "lookback", 300) for s, st in strategies.items()}
     indexes = {symbol: {c.timestamp: i for i, c in enumerate(bars)}
                for symbol, bars in series.items()}

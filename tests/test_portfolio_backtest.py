@@ -152,3 +152,30 @@ def test_no_markets_at_all_does_not_crash():
     result = run_portfolio_backtest(AlwaysBuy, {}, {}, starting_balance=1_000.0)
     assert result.trades == []
     assert result.ending_balance == 1_000.0
+
+
+def test_each_market_can_run_a_different_strategy():
+    """Gold and a crypto pair want different logic; one strategy tests neither."""
+    class Passive(AlwaysBuy):
+        name = "passive"
+
+        def evaluate(self, context):
+            return []
+
+    markets = three_markets()
+    result = run_portfolio_backtest(
+        {"BTCUSD": AlwaysBuy, "ETHUSD": Passive, "SOLUSD": Passive},
+        markets, INSTRUMENTS, starting_balance=100_000.0,
+        max_correlated=3, fee_pct=0.0,
+    )
+    # Only the market given the active strategy should have traded.
+    assert result.trades
+    assert {t["symbol"] for t in result.trades} == {"BTCUSD"}
+
+
+def test_a_single_factory_still_applies_to_every_market():
+    result = run_portfolio_backtest(
+        AlwaysBuy, three_markets(), INSTRUMENTS,
+        starting_balance=100_000.0, max_correlated=3, fee_pct=0.0,
+    )
+    assert len({t["symbol"] for t in result.trades}) == 3
