@@ -148,6 +148,17 @@ def _tradelocker_responses() -> dict:
                 "baseCurrency": None, "quotingCurrency": "USD",
             }
         },
+        # The real column order, read from a live account. It is deliberately
+        # not the obvious one -- side before quantity, and the stop/take fields
+        # are order IDS rather than prices.
+        "GET /trade/config": {
+            "d": {"positionsConfig": {"columns": [
+                {"id": "id"}, {"id": "tradableInstrumentId"}, {"id": "routeId"},
+                {"id": "side"}, {"id": "qty"}, {"id": "avgPrice"},
+                {"id": "stopLossId"}, {"id": "takeProfitId"}, {"id": "openDate"},
+                {"id": "unrealizedPl"}, {"id": "strategyId"},
+            ]}}
+        },
         "GET /trade/quotes": {"d": {"bp": 1999.5, "ap": 2000.5}},
         "POST /trade/accounts/42/orders": {"d": {"orderId": "TL-123"}},
         "GET /trade/accounts/42/state": {"d": {"accountDetailsData": [10_000.0, 10_050.0, 0.0, 10_000.0]}},
@@ -349,3 +360,75 @@ def test_minute_resolutions_are_lower_case():
     assert _RESOLUTIONS["5m"] == "5m"
     assert _RESOLUTIONS["1h"] == "1H"      # hours stay upper-case
     assert _RESOLUTIONS["1d"] == "1D"
+
+
+def test_a_second_position_on_the_same_symbol_is_refused():
+    """The bug that would have emptied the account.
+
+    A strategy is shown only the positions attributed to it. When that
+    attribution fails -- a broker that returns no order comment, a renamed
+    strategy, a restart -- it believes it is flat while holding a position and
+    opens another every cycle. RSI can sit oversold for hours, so that is a
+    dozen entries stacked at several times the intended size.
+
+    The guard lives in the risk layer, not the strategy, so it holds no matter
+    which strategy asks or what it thinks it owns.
+    """
+    from datetime import datetime, timezone
+
+    from tradebot.brokers.base import Position
+    from tradebot.risk.limits import RiskLimits, RiskManager
+
+    risk = RiskManager(RiskLimits())
+    held = Position(
+        ticket="1", symbol="XAUUSD", side=OrderSide.BUY, lots=0.07,
+        entry_price=4000.0, stop_loss=3990.0, take_profit=None,
+        opened_at=datetime.now(timezone.utc),
+        comment="",                       # attribution lost, as it would be
+    )
+
+    decision = risk.check_entry(
+        equity=10_000.0, symbol="XAUUSD", correlation_group="METALS",
+        open_positions=[held],
+    )
+    assert not decision.allowed
+    assert "already holding" in decision.detail
+
+    # A different symbol is still fine -- this is not a blanket freeze.
+    assert risk.check_entry(
+        equity=10_000.0, symbol="EURUSD", correlation_group="EUR",
+        open_positions=[held],
+    ).allowed
+
+
+def test_position_fields_are_read_by_name_not_by_guessed_order(mock_tradelocker):
+    """TradeLocker sends positions as bare arrays in a non-obvious order.
+
+    Element 3 is the side, not the quantity; element 8 is the open date, not
+    the stop price. Read positionally from a guess, a position parses into a
+    different symbol with side and size swapped -- and the strategy, asked
+    "do I hold this?", answers no.
+    """
+    columns = mock_tradelocker._position_columns()
+    assert columns["side"] == 3
+    assert columns["qty"] == 4
+    assert columns["openDate"] == 8
+    assert columns["unrealizedPl"] == 9
+
+
+def test_the_owning_strategy_survives_the_round_trip(mock_tradelocker):
+    """Without this the stack cannot tell whose position is whose."""
+    captured = {}
+
+    def capture(self, method, path, body=None, auth=True):
+        if method == "POST" and path.endswith("/orders"):
+            captured.update(body or {})
+            return {"d": {"orderId": "TL-9"}}
+        return _fake_request(_tradelocker_responses())(self, method, path, body, auth)
+
+    with patch.object(TradeLockerBroker, "_request", capture):
+        mock_tradelocker.submit_bracket(BracketOrder(
+            symbol="XAUUSD", side=OrderSide.BUY, lots=0.07,
+            stop_loss=1990.0, comment="gold_scalper",
+        ))
+    assert captured.get("strategyId") == "gold_scalper"

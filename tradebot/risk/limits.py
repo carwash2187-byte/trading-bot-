@@ -180,6 +180,25 @@ class RiskManager:
                 f"today {daily:.2%} at/over limit -{self.limits.daily_loss_limit:.2%}",
             )
 
+        # One position per symbol, always. This is not a preference, it is the
+        # last line of defence against a specific way of destroying an account:
+        # a strategy is shown only the positions attributed to it, so if that
+        # attribution fails for any reason -- a broker that does not return the
+        # order comment, a renamed strategy, a restart -- it believes it is flat
+        # while holding a position, and opens another every cycle. RSI can sit
+        # oversold for hours, so that is a dozen entries stacked at several
+        # times the intended size.
+        #
+        # Checked here rather than in the strategy because it must hold no
+        # matter which strategy asks and no matter what it thinks it owns.
+        held = [p for p in open_positions if p.symbol.upper() == symbol.upper()]
+        if held:
+            return RiskDecision(
+                False,
+                CORRELATION,
+                f"already holding {symbol}; refusing to stack a second position",
+            )
+
         if len(open_positions) >= self.limits.max_total_positions:
             return RiskDecision(
                 False,

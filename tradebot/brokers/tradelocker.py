@@ -108,6 +108,7 @@ class TradeLockerBroker(Broker):
         self._instrument_cache: dict[str, Instrument] = {}
         self._route_cache: dict[str, tuple] = {}
         self._rows: dict[str, dict] = {}
+        self._columns: dict[str, int] | None = None
 
     # -- transport -------------------------------------------------------
 
@@ -352,6 +353,13 @@ class TradeLockerBroker(Broker):
             "stopLoss": inst.round_price(order.stop_loss),
             "stopLossType": "absolute",
         }
+        # Which strategy owns this. TradeLocker returns it on the position as
+        # `strategyId`, and it is the only field that survives the round trip --
+        # the order "comment" other brokers carry does not exist here. Without
+        # it the stack cannot tell whose position is whose, every strategy
+        # believes it is flat, and each opens another position every cycle.
+        if order.comment:
+            body["strategyId"] = order.comment[:32]
         if order.take_profit is not None:
             body["takeProfit"] = inst.round_price(order.take_profit)
             body["takeProfitType"] = "absolute"
@@ -403,29 +411,90 @@ class TradeLockerBroker(Broker):
             return
         self._request("PATCH", f"/trade/positions/{ticket}", body)
 
+    def _position_columns(self) -> dict[str, int]:
+        """Where each field sits in a position row, asked of the broker.
+
+        Positions come back as bare arrays with no field names, and the real
+        order is nothing like the obvious guess -- element 3 is the side, not
+        the quantity, and element 8 is the open date, not the stop price. Read
+        positionally from a guess, a position parses into a different symbol,
+        with side and size swapped and a timestamp as its stop.
+
+        That is worse than a crash. The strategy asks "do I already hold this?"
+        and a mangled symbol answers no, so it would open a second position on
+        top of the first.
+
+        So the layout is read from /trade/config once per connection and cached.
+        Asking is also robust to TradeLocker reordering the columns later.
+        """
+        if self._columns is None:
+            config = self._request("GET", "/trade/config")
+            block = config.get("d", config).get("positionsConfig", {})
+            self._columns = {
+                str(column.get("id")): index
+                for index, column in enumerate(block.get("columns", []))
+            }
+        return self._columns
+
     def get_positions(self) -> list[Position]:
+        columns = self._position_columns()
         payload = self._request("GET", f"/trade/accounts/{self.account_id}/positions")
+
+        def field(row, name, default=None):
+            index = columns.get(name)
+            if index is None or index >= len(row):
+                return default
+            return row[index]
+
         out = []
         for row in payload.get("d", {}).get("positions", []):
             try:
+                instrument_id = field(row, "tradableInstrumentId")
                 out.append(
                     Position(
-                        ticket=str(row[0]),
-                        symbol=str(row[1]).upper(),
-                        side=OrderSide.BUY if str(row[4]).lower() == "buy" else OrderSide.SELL,
-                        lots=float(row[3]),
-                        entry_price=float(row[5]),
-                        stop_loss=float(row[8]) if row[8] else None,
-                        take_profit=float(row[9]) if row[9] else None,
+                        ticket=str(field(row, "id")),
+                        symbol=self._symbol_for(instrument_id),
+                        side=(OrderSide.BUY
+                              if str(field(row, "side", "")).lower() == "buy"
+                              else OrderSide.SELL),
+                        lots=float(field(row, "qty", 0)),
+                        entry_price=float(field(row, "avgPrice", 0)),
+                        # stopLossId and takeProfitId are order identifiers, not
+                        # prices -- the levels are not in this payload at all.
+                        # Reporting the id as a price would be a plausible-
+                        # looking number in the right field, which is the most
+                        # dangerous kind of wrong.
+                        stop_loss=None,
+                        take_profit=None,
                         opened_at=datetime.fromtimestamp(
-                            int(row[2]) / 1000, tz=timezone.utc
+                            int(field(row, "openDate", 0)) / 1000, tz=timezone.utc
                         ),
-                        unrealized_pnl=float(row[10]) if len(row) > 10 and row[10] else 0.0,
+                        unrealized_pnl=float(field(row, "unrealizedPl", 0) or 0),
+                        # The stack matches positions to strategies on this.
+                        comment=str(field(row, "strategyId", "") or ""),
                     )
                 )
             except (IndexError, TypeError, ValueError):
                 continue   # one odd row must not hide the rest of the book
         return out
+
+    def _symbol_for(self, instrument_id) -> str:
+        """Turn a tradableInstrumentId back into the name the bot uses."""
+        if instrument_id is None:
+            return ""
+        for name, (iid, _info, _trade) in self._route_cache.items():
+            if str(iid) == str(instrument_id):
+                return name
+        # Warm the cache and try once more; a position may be open on an
+        # instrument this session has not looked up yet.
+        try:
+            self._instrument_id("XAUUSD")
+        except BrokerError:
+            return ""
+        for name, (iid, _info, _trade) in self._route_cache.items():
+            if str(iid) == str(instrument_id):
+                return name
+        return ""
 
     def get_account(self) -> AccountSnapshot:
         payload = self._request("GET", f"/trade/accounts/{self.account_id}/state")
