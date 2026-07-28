@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 
 from tradebot.backtest import run_backtest
 from tradebot.data.history import bars
+from tradebot.strategy.reversion import MeanReverter, PullbackBuyer, RangeFader
 from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
 
@@ -124,6 +125,27 @@ def build_candidates(products, timeframes, risks) -> list[Candidate]:
         out.append(Candidate(
             label="kama_trend", product=product, timeframe=tf, risk=risk,
             factory=KamaTrend,
+        ))
+        # The non-trend family. These lose on BTC 2h; included because losing
+        # there says nothing about whether they work on a different market,
+        # and a strategy that is wrong at different times is what a portfolio
+        # actually needs.
+        for oversold in (20.0, 30.0):
+            out.append(Candidate(
+                label=f"mean_reverter rsi{oversold:.0f}",
+                product=product, timeframe=tf, risk=risk,
+                factory=lambda o=oversold: MeanReverter(
+                    oversold=o, overbought=100.0 - o),
+            ))
+        for target in (2.0, 4.0):
+            out.append(Candidate(
+                label=f"pullback_buyer t{target:.0f}",
+                product=product, timeframe=tf, risk=risk,
+                factory=lambda t=target: PullbackBuyer(target_atr=t),
+            ))
+        out.append(Candidate(
+            label="range_fader", product=product, timeframe=tf, risk=risk,
+            factory=RangeFader,
         ))
     return out
 
