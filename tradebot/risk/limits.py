@@ -54,6 +54,12 @@ class RiskLimits:
     max_drawdown_limit: float = 0.06    # halt entirely at -6% from peak
     max_correlated_positions: int = 2
     max_total_positions: int = 5
+    # Halt at this fraction of each limit rather than at the limit itself.
+    # 0.9 turns a 6% account-ending drawdown into a 5.4% stop, which leaves
+    # room to be wrong about slippage, a gapping fill, or a stale equity read
+    # -- all of which land on the wrong side of a threshold that cannot be
+    # recovered from once crossed.
+    safety_margin: float = 0.9
 
     def __post_init__(self) -> None:
         for name in ("risk_per_trade", "daily_loss_limit", "max_drawdown_limit"):
@@ -162,22 +168,38 @@ class RiskManager:
         if self.state.halted:
             return RiskDecision(False, self.state.halt_reason, "risk manager is halted")
 
+        # Stop short of the limit rather than on it. Two reasons, and the
+        # second is the one that bites:
+        #
+        # Binary floating point cannot represent 6% exactly. A drawdown of
+        # precisely the limit computes as 0.059999999999999984, which is NOT
+        # >= 0.06, so the check passes and trading continues at the exact
+        # moment the account is being closed.
+        #
+        # And a prop firm ends the account the instant the line is touched,
+        # with no appeal. Riding right up to a threshold whose breach is fatal
+        # and unrecoverable is worth giving up a fraction of a percent to
+        # avoid -- the last 0.6% of a 6% allowance is not worth the account.
         drawdown = self.drawdown_pct(equity)
-        if drawdown >= self.limits.max_drawdown_limit:
+        drawdown_stop = self.limits.max_drawdown_limit * self.limits.safety_margin
+        if drawdown >= drawdown_stop:
             self._halt(MAX_DRAWDOWN)
             return RiskDecision(
                 False,
                 MAX_DRAWDOWN,
-                f"drawdown {drawdown:.2%} at/over limit {self.limits.max_drawdown_limit:.2%}",
+                f"drawdown {drawdown:.2%} at/over the stop at {drawdown_stop:.2%} "
+                f"(the account itself ends at {self.limits.max_drawdown_limit:.2%})",
             )
 
         daily = self.daily_pnl_pct(equity)
-        if daily <= -self.limits.daily_loss_limit:
+        daily_stop = self.limits.daily_loss_limit * self.limits.safety_margin
+        if daily <= -daily_stop:
             self._halt(DAILY_LOSS)
             return RiskDecision(
                 False,
                 DAILY_LOSS,
-                f"today {daily:.2%} at/over limit -{self.limits.daily_loss_limit:.2%}",
+                f"today {daily:.2%} at/over the stop at -{daily_stop:.2%} "
+                f"(the firm's limit is -{self.limits.daily_loss_limit:.2%})",
             )
 
         # One position per symbol, always. This is not a preference, it is the

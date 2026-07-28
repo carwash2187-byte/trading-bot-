@@ -432,3 +432,40 @@ def test_the_owning_strategy_survives_the_round_trip(mock_tradelocker):
             stop_loss=1990.0, comment="gold_scalper",
         ))
     assert captured.get("strategyId") == "gold_scalper"
+
+
+def test_the_bot_halts_before_the_limit_that_ends_the_account():
+    """A 6% drawdown does not compute as 6%.
+
+    Binary floating point makes a drawdown of exactly the limit come out as
+    0.059999999999999984, which is not >= 0.06 -- so a check written against
+    the limit itself keeps trading at the precise moment the prop firm is
+    closing the account. Stopping short of the line sidesteps that, and leaves
+    room for slippage and stale equity reads besides.
+    """
+    from tradebot.risk.limits import RiskLimits, RiskManager
+
+    limits = RiskLimits(daily_loss_limit=0.03, max_drawdown_limit=0.06)
+    start = 2635.39
+
+    def allowed_at(fraction: float) -> bool:
+        risk = RiskManager(limits)
+        risk.state.peak_equity = start
+        risk.state.day_start_equity = start
+        return risk.check_entry(
+            equity=start * fraction, symbol="XAUUSD",
+            correlation_group="METALS", open_positions=[],
+        ).allowed
+
+    assert allowed_at(0.99)          # 1% down, fine
+    assert not allowed_at(0.946)     # 5.4%, the stop
+    assert not allowed_at(0.94)      # 6%, where the account would have died
+
+
+def test_the_safety_margin_is_configurable_and_off_by_default_is_not_an_option():
+    from tradebot.risk.limits import RiskLimits
+
+    assert RiskLimits().safety_margin < 1.0
+    # Explicitly settable, so a live account with no external rule can use the
+    # full allowance if that is genuinely wanted.
+    assert RiskLimits(safety_margin=1.0).safety_margin == 1.0
