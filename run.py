@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -74,8 +75,20 @@ def build_roster(names: list[str]):
 
 
 def load_env(path: str = ".env") -> dict:
-    """Read credentials from .env, without needing an extra package installed."""
-    values: dict[str, str] = {}
+    """Credentials from .env, or the environment when there is no file.
+
+    The environment is what CI provides -- a GitHub Actions runner has no .env
+    and never should, since committing one would publish the password. Reading
+    both means the same command works on a laptop and in the cloud with no
+    branching.
+    """
+    values: dict[str, str] = {
+        key: os.environ[key]
+        for key in ("TRADELOCKER_USERNAME", "TRADELOCKER_PASSWORD",
+                    "TRADELOCKER_SERVER", "TRADELOCKER_ACCOUNT")
+        if os.environ.get(key)
+    }
+
     env_path = Path(path)
     if not env_path.exists():
         return values

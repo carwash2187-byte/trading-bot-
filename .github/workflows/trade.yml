@@ -1,0 +1,46 @@
+name: trade
+
+# Every 20 minutes. Not every 5, for two reasons: GitHub's free tier allows
+# 2,000 minutes a month and this fits comfortably inside it, and the bot does
+# not need to be watching. Once a trade is open its stop-loss and take-profit
+# live at the broker, so they protect the position even while nothing is
+# running. A missed check costs an entry, never safety.
+on:
+  schedule:
+    - cron: "*/20 * * * *"
+  workflow_dispatch:        # lets you run it by hand from the Actions tab
+
+# Two runs at once could double an order. GitHub will queue rather than
+# overlap, and cancel-in-progress is wrong here -- a half-finished run may
+# already have placed an order.
+concurrency:
+  group: trade
+  cancel-in-progress: false
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # The bot deliberately has no dependencies, so there is nothing to
+      # install and nothing that can break on a version bump.
+      - name: Trade one cycle
+        env:
+          TRADELOCKER_USERNAME: ${{ secrets.TRADELOCKER_USERNAME }}
+          TRADELOCKER_PASSWORD: ${{ secrets.TRADELOCKER_PASSWORD }}
+          TRADELOCKER_SERVER: ${{ secrets.TRADELOCKER_SERVER }}
+          TRADELOCKER_ACCOUNT: ${{ secrets.TRADELOCKER_ACCOUNT }}
+        run: |
+          python3 run.py \
+            --broker tradelocker --mode demo \
+            --symbols XAUUSD --strategies gold_scalper \
+            --risk-per-trade 0.015 \
+            --daily-loss-limit 0.03 \
+            --max-drawdown-limit 0.06 \
+            --verbose
