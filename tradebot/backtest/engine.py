@@ -68,6 +68,11 @@ class BacktestBroker(PaperBroker):
         # attributable when it closes. Held here so the per-trade P&L and the
         # account balance cannot drift apart.
         self._entry_fees: dict[str, float] = {}
+        # The bar being replayed. Without this the paper broker stamps trades
+        # with the wall clock, so every trade in a two-year backtest is dated
+        # today and any grouping by month or year silently collapses into one
+        # bucket. The equity curve carries real bar times, so the two disagree.
+        self.now: datetime | None = None
 
     # -- pricing ---------------------------------------------------------
 
@@ -87,6 +92,7 @@ class BacktestBroker(PaperBroker):
         Anything else quietly credits the strategy with a target it might never
         have reached alive.
         """
+        self.now = candle.timestamp
         longs = any(p.symbol == symbol.upper() and p.is_long
                     for p in self._positions.values())
         first, second = (candle.low, candle.high) if longs else (candle.high, candle.low)
@@ -130,6 +136,8 @@ class BacktestBroker(PaperBroker):
         if self.closed_trades:
             self.closed_trades[-1]["pnl"] -= exit_fee + share
             self.closed_trades[-1]["fee"] = exit_fee + share
+            if self.now is not None:
+                self.closed_trades[-1]["closed_at"] = self.now
         return fill
 
 

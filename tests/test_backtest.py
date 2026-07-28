@@ -242,3 +242,29 @@ def test_an_empty_run_reports_nothing_rather_than_dividing_by_zero():
     assert result.win_rate == 0.0
     assert result.profit_factor == 0.0
     assert result.max_drawdown_pct == 0.0
+
+
+def test_trades_are_stamped_with_the_simulated_date_not_todays():
+    """Otherwise every trade in a two-year run is dated today.
+
+    The equity curve carries real bar times while the trade log carried the
+    wall clock, so grouping trades by month collapsed fourteen months into one
+    bucket -- and the two views of the same run disagreed without saying so.
+    """
+    candles = flat(40)
+    result = run_backtest(BuyOnce(), candles, starting_balance=20_000, warmup=10)
+
+    assert result.trades
+    stamped = result.trades[0]["closed_at"]
+    assert stamped.year == NOW.year
+    assert candles[0].timestamp <= stamped <= candles[-1].timestamp
+
+
+def test_grouping_trades_by_month_reflects_the_test_window():
+    long_run = [
+        bar(60_000, 60_100, 59_900, 60_000, i) for i in range(2000)
+    ]
+    result = run_backtest(BuyOnce(), long_run, starting_balance=20_000, warmup=10)
+    months = {t["closed_at"].strftime("%Y-%m") for t in result.trades}
+    assert months
+    assert all(m.startswith(str(NOW.year)) for m in months)
