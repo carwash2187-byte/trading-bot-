@@ -15,7 +15,12 @@ name: trade
 # password is a GitHub Secret, and .env is gitignored.
 on:
   schedule:
-    - cron: "*/5 * * * *"
+    # Offset by three minutes rather than "*/5". A */5 schedule fires at :00,
+    # :05, :10 -- the same instants every other GitHub user picks, and the most
+    # contended slots on the platform. GitHub delays scheduled runs under load
+    # and drops them outright at the extreme, so landing on the quarter-hour
+    # marks is choosing the worst moment to ask.
+    - cron: "3,8,13,18,23,28,33,38,43,48,53,58 * * * *"
   workflow_dispatch:        # lets you run it by hand from the Actions tab
 
 # Two runs at once could double an order. GitHub will queue rather than
