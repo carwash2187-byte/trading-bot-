@@ -30,6 +30,7 @@ from tradebot.runtime.watchdog import Heartbeat
 from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
 from tradebot.strategy.stack import StrategyStack
+from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
 
 log = logging.getLogger("tradebot")
@@ -37,6 +38,8 @@ log = logging.getLogger("tradebot")
 # Every strategy the bot knows how to run. Adding one here makes it available
 # to --strategies; the portfolio manager decides whether it may actually trade.
 REGISTRY = {
+    # The only one that survived out-of-sample testing. See runner.py.
+    "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,
     "kama_trend": KamaTrend,
 }
