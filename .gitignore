@@ -1,8 +1,15 @@
 # Anything the bot writes while running. None of this belongs in a repo —
 # the journal and state files describe real positions and real balances.
-run/
-data/
-logs/
+#
+# The leading slashes matter and are not cosmetic. Written bare, "data/"
+# matches a directory of that name at ANY depth, so it also excluded
+# tradebot/data/ -- the indicators package -- and the repository was pushed
+# without code the bot cannot start without. Nothing reported it: the files
+# were present locally, the tests passed locally, and only a clean checkout
+# elsewhere failed, on an import error that says nothing about gitignore.
+/run/
+/data/
+/logs/
 *.log
 *.jsonl
 *.lock
