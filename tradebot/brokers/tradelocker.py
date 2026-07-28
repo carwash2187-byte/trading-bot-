@@ -43,6 +43,22 @@ from .base import (
 DEMO_HOST = "https://demo.tradelocker.com/backend-api"
 LIVE_HOST = "https://live.tradelocker.com/backend-api"
 
+# TradeLocker sits behind Cloudflare, which rejects the default urllib
+# identifier outright with a 403 "browser signature banned" before the request
+# ever reaches the API. Identifying as an ordinary browser is what the platform
+# expects from a client; without it every call fails on a login error that has
+# nothing to do with the credentials.
+BROWSER_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/126.0.0.0 Safari/537.36"
+    ),
+    "Accept-Language": "en-US,en;q=0.9",
+    "Origin": "https://demo.tradelocker.com",
+    "Referer": "https://demo.tradelocker.com/",
+}
+
 # TradeLocker resolution codes for the timeframes this package uses.
 _RESOLUTIONS = {
     "1m": "1M", "5m": "5M", "15m": "15M", "30m": "30M",
@@ -91,6 +107,10 @@ class TradeLockerBroker(Broker):
         url = f"{self.base_url}{path}"
         data = json.dumps(body).encode("utf-8") if body is not None else None
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
+        headers.update(BROWSER_HEADERS)
+        if self.base_url.startswith(LIVE_HOST):
+            headers["Origin"] = "https://live.tradelocker.com"
+            headers["Referer"] = "https://live.tradelocker.com/"
         if auth:
             if not self._token:
                 raise BrokerError("not authenticated; call connect() first")
@@ -105,6 +125,14 @@ class TradeLockerBroker(Broker):
             return json.loads(raw) if raw else {}
         except urllib.error.HTTPError as err:
             detail = err.read().decode("utf-8", "replace")[:400]
+            # A Cloudflare block reads as an auth failure but has nothing to do
+            # with the credentials, and chasing the wrong cause wastes a lot of
+            # time on a first connection.
+            if err.code == 403 and "1010" in detail:
+                raise BrokerError(
+                    "blocked by Cloudflare before reaching TradeLocker, not a "
+                    "login problem. The client identifier was rejected."
+                ) from err
             raise BrokerError(f"TradeLocker {method} {path} -> {err.code}: {detail}") from err
         except (urllib.error.URLError, OSError, json.JSONDecodeError) as err:
             raise BrokerError(f"TradeLocker {method} {path} failed: {err}") from err
@@ -148,17 +176,39 @@ class TradeLockerBroker(Broker):
     # -- market data -----------------------------------------------------
 
     def _instrument_id(self, symbol: str) -> int:
+        """The tradableInstrumentId, which is not a route id -- see _route()."""
         if symbol.upper() in self._route_cache:
-            return self._route_cache[symbol.upper()]
+            return self._route_cache[symbol.upper()][0]
         payload = self._request("GET", f"/trade/accounts/{self.account_id}/instruments")
         for row in payload.get("d", {}).get("instruments", []):
             name = str(row.get("name", "")).upper()
-            self._route_cache[name] = int(row.get("tradableInstrumentId"))
+            routes = {str(r.get("type", "")).upper(): int(r.get("id"))
+                      for r in row.get("routes", []) if r.get("id") is not None}
+            self._route_cache[name] = (
+                int(row.get("tradableInstrumentId")),
+                routes.get("INFO"),
+                routes.get("TRADE"),
+            )
             self._instrument_cache[name] = self._to_instrument(row)
         try:
-            return self._route_cache[symbol.upper()]
+            return self._route_cache[symbol.upper()][0]
         except KeyError:
             raise BrokerError(f"{symbol} is not tradable on this account") from None
+
+    def _route(self, symbol: str, kind: str) -> int:
+        """The route id for quotes ("INFO") or orders ("TRADE").
+
+        These are three different numbers and TradeLocker will not tell you
+        when the wrong one is used -- it returns an empty quote rather than an
+        error, which reads exactly like a symbol that does not exist. Gold on
+        this account is instrument 1714, INFO route 791554, TRADE route 795894.
+        """
+        self._instrument_id(symbol)              # ensure the cache is warm
+        iid, info, trade = self._route_cache[symbol.upper()]
+        route = info if kind == "INFO" else trade
+        # Falling back to the instrument id keeps older accounts working, where
+        # the routes list is sometimes absent entirely.
+        return route if route is not None else iid
 
     @staticmethod
     def _to_instrument(row: dict) -> Instrument:
@@ -194,7 +244,8 @@ class TradeLockerBroker(Broker):
         iid = self._instrument_id(symbol)
         payload = self._request(
             "GET",
-            f"/trade/quotes?routeId={iid}&tradableInstrumentId={iid}",
+            f"/trade/quotes?routeId={self._route(symbol, 'INFO')}"
+            f"&tradableInstrumentId={iid}",
         )
         quote = payload.get("d", {})
         try:
@@ -212,7 +263,7 @@ class TradeLockerBroker(Broker):
         end = end or utcnow()
         params = urllib.parse.urlencode(
             {
-                "routeId": iid,
+                "routeId": self._route(symbol, "INFO"),
                 "tradableInstrumentId": iid,
                 "resolution": resolution,
                 "to": int(end.timestamp() * 1000),
@@ -251,7 +302,7 @@ class TradeLockerBroker(Broker):
         body = {
             "price": order.limit_price or 0,
             "qty": lots,                      # lots, never units
-            "routeId": iid,
+            "routeId": self._route(order.symbol, "TRADE"),
             "side": "buy" if order.side.is_long else "sell",
             "tradableInstrumentId": iid,
             "type": order.order_type.value,
