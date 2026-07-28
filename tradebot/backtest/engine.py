@@ -344,3 +344,117 @@ def run_backtest(
         equity_curve=equity_curve,
         fees_paid=broker.fees_paid,
     )
+
+
+def run_portfolio_backtest(
+    factory,
+    series: dict[str, list[Candle]],
+    instruments: dict[str, Instrument] | None = None,
+    timeframe: str = "2h",
+    starting_balance: float = 20_000.0,
+    risk_per_trade: float = 0.01,
+    spread_pct: float = 0.00104,
+    fee_pct: float = 0.00055,
+    max_correlated: int = 2,
+) -> BacktestResult:
+    """Run one strategy across several markets sharing a single account.
+
+    The reason to bother is diversification, and the reason not to expect much
+    of it here is that crypto is one trade wearing eight tickers -- when BTC
+    falls, so does everything else. So the correlation cap is deliberately left
+    switched on: letting eight positions open at once would not be eight bets,
+    it would be one bet in eight times the size, and reporting the result as
+    diversification would be a lie.
+
+    Args:
+        factory: called per symbol to build that symbol's own strategy
+            instance, so nothing leaks between markets.
+        series: symbol -> its bars. Bars are replayed in timestamp order across
+            all symbols, so a position in one market is open while another is
+            being evaluated, exactly as it would be live.
+        max_correlated: how many positions may be open in one correlation
+            group at a time.
+    """
+    broker = BacktestBroker(starting_balance=starting_balance,
+                            spread_pct=spread_pct, fee_pct=fee_pct)
+    broker.connect()
+    for symbol, inst in (instruments or {}).items():
+        broker.register_instrument(inst)
+
+    journal = TradeJournal(Path(tempfile.mkdtemp()) / "portfolio.jsonl")
+    risk = RiskManager(RiskLimits(
+        risk_per_trade=risk_per_trade,
+        daily_loss_limit=0.98,
+        max_drawdown_limit=0.99,
+        max_correlated_positions=max_correlated,
+        max_total_positions=max(len(series), 1),
+    ))
+
+    strategies = {symbol: factory() for symbol in series}
+    windows = {s: getattr(st, "lookback", 300) for s, st in strategies.items()}
+    indexes = {symbol: {c.timestamp: i for i, c in enumerate(bars)}
+               for symbol, bars in series.items()}
+
+    timeline = sorted({c.timestamp for bars in series.values() for c in bars})
+    equity_curve: list[tuple[datetime, float]] = []
+
+    for stamp in timeline:
+        for symbol, bars in series.items():
+            i = indexes[symbol].get(stamp)
+            if i is None:
+                continue        # this market has no bar here; leave it alone
+
+            candle = bars[i]
+            if broker._prices.get(symbol.upper()) is not None:
+                broker.advance(symbol, candle)
+            else:
+                broker.set_price(symbol, candle.close)
+
+            window = windows[symbol]
+            if i < window:
+                continue
+
+            bid, ask = broker.get_price(symbol)
+            context = StrategyContext(
+                symbol=symbol,
+                instrument=broker.get_instrument(symbol),
+                candles=bars[max(0, i + 1 - window): i + 1],
+                bid=bid, ask=ask,
+                account=broker.get_account(),
+                open_positions=[p for p in broker.get_positions()
+                                if p.symbol == symbol.upper()],
+                news=None, risk=risk, now=stamp,
+            )
+            try:
+                actions = strategies[symbol].evaluate(context)
+            except Exception:
+                log.exception("%s blew up on %s", symbol, stamp)
+                continue
+            for action in actions:
+                try:
+                    action.execute(broker, risk, journal, context)
+                except BrokerError:
+                    continue
+
+        equity_curve.append((stamp, broker.get_account().equity))
+
+    for position in list(broker.get_positions()):
+        try:
+            broker.close_position(position.ticket)
+        except BrokerError:
+            pass
+
+    name = getattr(strategies[next(iter(strategies))], "name", "portfolio") \
+        if strategies else "portfolio"
+    return BacktestResult(
+        strategy=name,
+        symbol="+".join(sorted(series)),
+        timeframe=timeframe,
+        start=timeline[0] if timeline else None,
+        end=timeline[-1] if timeline else None,
+        starting_balance=starting_balance,
+        ending_balance=broker.balance,
+        trades=list(broker.closed_trades),
+        equity_curve=equity_curve,
+        fees_paid=broker.fees_paid,
+    )
