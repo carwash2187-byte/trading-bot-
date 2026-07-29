@@ -469,3 +469,71 @@ def test_the_safety_margin_is_configurable_and_off_by_default_is_not_an_option()
     # Explicitly settable, so a live account with no external rule can use the
     # full allowance if that is genuinely wanted.
     assert RiskLimits(safety_margin=1.0).safety_margin == 1.0
+
+
+def test_the_stateless_floor_works_with_no_state_at_all():
+    """The guard that survives a wiped filesystem.
+
+    The stateful breakers read a peak and a daily baseline from a file; a host
+    like GitHub Actions destroys that file between runs, silently reducing
+    them to no-ops. The floor compares live equity to a constant, so there is
+    nothing to lose.
+    """
+    from tradebot.risk.limits import RiskLimits, RiskManager, RiskState
+
+    limits = RiskLimits(max_drawdown_limit=0.06, floor_balance=2635.39)
+
+    # Fresh state every call -- exactly the amnesia GitHub induces.
+    def decide(equity):
+        return RiskManager(limits, RiskState()).check_entry(
+            equity=equity, symbol="XAUUSD",
+            correlation_group="METALS", open_positions=[],
+        )
+
+    assert decide(2635.39).allowed                    # at the start: fine
+    assert decide(2560.0).allowed                     # down ~2.9%: fine
+    floor = 2635.39 * (1 - 0.06 * 0.9)                # the 5.4% stop
+    assert not decide(floor - 0.01).allowed
+    assert not decide(2477.27).allowed                # where the firm kills it
+
+
+def test_the_floor_stays_out_of_the_way_when_unset():
+    from tradebot.risk.limits import RiskLimits, RiskManager, RiskState
+
+    manager = RiskManager(RiskLimits(), RiskState())
+    manager.state.peak_equity = 10_000.0
+    assert manager.check_entry(
+        equity=5.0, symbol="XAUUSD",
+        correlation_group="METALS", open_positions=[],
+    ).allowed is False       # the stateful breaker still catches it
+    # ...but with genuinely no state and no floor, a tiny equity sails through,
+    # which is precisely why the floor exists.
+    fresh = RiskManager(RiskLimits(), RiskState())
+    assert fresh.check_entry(
+        equity=5.0, symbol="XAUUSD",
+        correlation_group="METALS", open_positions=[],
+    ).allowed is True
+
+
+def test_reads_are_retried_but_orders_never_are():
+    """Retrying a GET is free; retrying a POST is how one position becomes two."""
+    from tradebot.brokers.tradelocker import TradeLockerBroker
+
+    calls = {"n": 0}
+
+    def flaky(self, method, path, body=None, auth=True):
+        calls["n"] += 1
+        if calls["n"] < 3:
+            raise BrokerError("TradeLocker GET /x failed: timed out")
+        return {"d": {}}
+
+    broker = TradeLockerBroker(username="u", password="p", server="s")
+    with patch.object(TradeLockerBroker, "_request_once", flaky):
+        assert broker._request("GET", "/x") == {"d": {}}
+    assert calls["n"] == 3                            # two retries, then success
+
+    calls["n"] = 0
+    with patch.object(TradeLockerBroker, "_request_once", flaky):
+        with pytest.raises(BrokerError):
+            broker._request("POST", "/orders", {"qty": 1})
+    assert calls["n"] == 1                            # one attempt, no retry

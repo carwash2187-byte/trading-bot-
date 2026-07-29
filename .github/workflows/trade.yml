@@ -37,6 +37,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # The risk breakers keep their memory -- yesterday's peak, today's
+      # starting equity, the halted flag -- in run/risk_state.json. Every
+      # Actions run starts on a wiped filesystem, so without this restore the
+      # breakers wake with amnesia each run and can never trip. Cache keys are
+      # immutable, so each run saves under its own id and the next run
+      # restores the newest one via the prefix.
+      - name: Remember the risk state
+        uses: actions/cache@v4
+        with:
+          path: run
+          key: risk-state-${{ github.run_id }}
+          restore-keys: |
+            risk-state-
+
       # No setup-python step and no install step. The bot depends on nothing
       # outside the standard library, so the runner's own Python is enough --
       # which saves about fifteen seconds a run, and removes any chance of a
@@ -47,6 +61,11 @@ jobs:
           TRADELOCKER_PASSWORD: ${{ secrets.TRADELOCKER_PASSWORD }}
           TRADELOCKER_SERVER: ${{ secrets.TRADELOCKER_SERVER }}
           TRADELOCKER_ACCOUNT: ${{ secrets.TRADELOCKER_ACCOUNT }}
+          # The account's opening balance. Feeds a drawdown guard that needs
+          # no stored state at all -- the firm ends the account 6% below this
+          # number, so the fatal line is a constant. It backstops the cached
+          # state above: a cache miss degrades the breakers, never this.
+          TRADEBOT_START_BALANCE: "2635.39"
         run: |
           python3 run.py \
             --broker tradelocker --mode demo \

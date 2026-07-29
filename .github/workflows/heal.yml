@@ -1,0 +1,55 @@
+name: heal
+
+# Self-repair for the bot's host, not its trades.
+#
+# When a trade run fails, this fires. It retries the cycle once -- most cloud
+# failures are a runner hiccup or a network blip that a second attempt clears
+# -- and if the retry fails too, it opens an issue on the repository. GitHub
+# emails the owner about new issues, so a genuinely broken bot becomes an
+# email in Leo's inbox instead of a red icon nobody is looking at.
+#
+# Why it never retries more than once: a failure that survives a clean retry
+# is not transient, and hammering the broker with a broken configuration
+# helps nothing. And why it never touches positions: every open trade already
+# carries a broker-side stop-loss and take-profit, so a dead bot cannot turn
+# into an unprotected position. The worst a stopped bot can do is miss an
+# entry.
+
+on:
+  workflow_run:
+    workflows: [trade]
+    types: [completed]
+
+permissions:
+  actions: write         # to re-run the failed workflow
+  issues: write          # to raise the alarm
+
+jobs:
+  heal:
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Retry once, or raise the alarm
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          ATTEMPT: ${{ github.event.workflow_run.run_attempt }}
+        run: |
+          if [ "$ATTEMPT" -lt 2 ]; then
+            echo "trade run $RUN_ID failed on attempt $ATTEMPT -- retrying once"
+            gh api -X POST \
+              "repos/${{ github.repository }}/actions/runs/$RUN_ID/rerun-failed-jobs"
+          else
+            echo "the retry failed too -- this is real. Opening an issue."
+            EXISTING=$(gh issue list --repo "${{ github.repository }}" \
+              --state open --search "bot is failing in:title" \
+              --json number --jq length)
+            if [ "$EXISTING" = "0" ]; then
+              gh issue create --repo "${{ github.repository }}" \
+                --title "The bot is failing and could not fix itself" \
+                --body "$(printf 'The trading cycle failed, was retried automatically, and failed again.\n\nIt is NOT trading until this is fixed.\n\nOpen trades are still protected: their stop-loss and take-profit live at the broker.\n\nLook at the failed run: %s\n\nWhen it is fixed, close this issue.' "${{ github.event.workflow_run.html_url }}")"
+            else
+              echo "an issue is already open; not spamming another"
+            fi
+          fi

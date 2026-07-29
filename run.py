@@ -223,10 +223,26 @@ def main(argv: list[str] | None = None) -> int:
                         "(bad file kept at %s)", loaded.backup_path)
         risk_state = RiskState.from_dict(loaded.data)
 
+        # The opening balance, for the stateless drawdown floor. An env var
+        # rather than a flag because the value belongs with the credentials:
+        # it describes the account, not the invocation, and it must be present
+        # on a host that wipes the filesystem between runs -- which is exactly
+        # where the stateful breakers lose their memory and this floor becomes
+        # the only drawdown guard still standing.
+        floor = 0.0
+        raw_floor = os.environ.get("TRADEBOT_START_BALANCE", "").strip()
+        if raw_floor:
+            try:
+                floor = float(raw_floor)
+            except ValueError:
+                log.warning("TRADEBOT_START_BALANCE %r is not a number; "
+                            "the stateless floor is OFF this run", raw_floor)
+
         limits = RiskLimits(
             risk_per_trade=args.risk_per_trade,
             daily_loss_limit=args.daily_loss_limit,
             max_drawdown_limit=args.max_drawdown_limit,
+            floor_balance=floor,
         )
         risk = RiskManager(limits, risk_state)
 

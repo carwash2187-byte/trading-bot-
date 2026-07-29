@@ -60,6 +60,14 @@ class RiskLimits:
     # -- all of which land on the wrong side of a threshold that cannot be
     # recovered from once crossed.
     safety_margin: float = 0.9
+    # The account's opening balance, when known. This powers a guard that
+    # needs NO stored state at all: the prop firm ends the account 6% below
+    # this number, so with the number itself in hand the fatal line is a
+    # constant. The stateful breakers above track peaks and daily baselines in
+    # a file -- and an environment like GitHub Actions destroys that file
+    # between runs, silently reducing them to no-ops. This one survives
+    # anything, because there is nothing to lose.
+    floor_balance: float = 0.0
 
     def __post_init__(self) -> None:
         for name in ("risk_per_trade", "daily_loss_limit", "max_drawdown_limit"):
@@ -168,6 +176,35 @@ class RiskManager:
         if self.state.halted:
             return RiskDecision(False, self.state.halt_reason, "risk manager is halted")
 
+        # The stateless floor, checked first because it is the one guard that
+        # cannot have lost its memory. The others compare against a peak and a
+        # daily baseline read from a state file; on a host that wipes the
+        # filesystem between runs (GitHub Actions does) that file is gone and
+        # they silently compare against freshly-seeded values. This check is a
+        # constant against a constant.
+        #
+        # It halts one full trade-loss ABOVE the line, not at it. Walk-forward
+        # showed why: a stretch dipped to $2,448 against a $2,477 death line,
+        # and a floor that only blocks new entries still lets the trade that is
+        # already open ride through the line. The rule that actually protects
+        # the account is: never be in a position whose full loss would cross it.
+        if self.limits.floor_balance > 0:
+            floor = self.limits.floor_balance * (
+                1
+                - self.limits.max_drawdown_limit * self.limits.safety_margin
+                + self.limits.risk_per_trade
+            )
+            if equity <= floor:
+                self._halt(MAX_DRAWDOWN)
+                return RiskDecision(
+                    False,
+                    MAX_DRAWDOWN,
+                    f"equity {equity:,.2f} at/under the entry floor {floor:,.2f} "
+                    f"(account opened at {self.limits.floor_balance:,.2f}; the "
+                    f"firm ends it {self.limits.max_drawdown_limit:.0%} below "
+                    f"that, and one more full loss must not be able to reach it)",
+                )
+
         # Stop short of the limit rather than on it. Two reasons, and the
         # second is the one that bites:
         #
@@ -180,7 +217,11 @@ class RiskManager:
         # with no appeal. Riding right up to a threshold whose breach is fatal
         # and unrecoverable is worth giving up a fraction of a percent to
         # avoid -- the last 0.6% of a 6% allowance is not worth the account.
-        drawdown = self.drawdown_pct(equity)
+        # The same one-full-loss headroom applies to the stateful breakers: an
+        # entry is refused if this trade losing outright would carry the
+        # account past the stop. Without it the breakers only react AFTER the
+        # damage, and against a fatal, unappealable limit "after" is too late.
+        drawdown = self.drawdown_pct(equity) + self.limits.risk_per_trade
         drawdown_stop = self.limits.max_drawdown_limit * self.limits.safety_margin
         if drawdown >= drawdown_stop:
             self._halt(MAX_DRAWDOWN)
@@ -191,7 +232,7 @@ class RiskManager:
                 f"(the account itself ends at {self.limits.max_drawdown_limit:.2%})",
             )
 
-        daily = self.daily_pnl_pct(equity)
+        daily = self.daily_pnl_pct(equity) - self.limits.risk_per_trade
         daily_stop = self.limits.daily_loss_limit * self.limits.safety_margin
         if daily <= -daily_stop:
             self._halt(DAILY_LOSS)

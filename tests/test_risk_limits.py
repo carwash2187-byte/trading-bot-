@@ -34,10 +34,22 @@ def fresh(limits: RiskLimits | None = None, equity: float = 10_000.0) -> RiskMan
 
 # -- daily loss -------------------------------------------------------------
 
-def test_daily_loss_allows_trading_just_under_the_limit():
+def test_daily_loss_allows_trading_while_a_full_loss_stays_inside():
+    """Entries are judged on where a FULL loss would land, not on where we are.
+
+    The stop sits at 90% of the 3% limit (2.7%), and the next trade risks 1%,
+    so entries are allowed only while today's loss plus one full trade-loss
+    stays under 2.7% -- that is, down to about -1.7% on the day. This replaced
+    a rule that allowed entries right up against the line, where the trade
+    being entered could itself carry the account through it.
+    """
     rm = fresh()                                   # 3% daily limit
-    rm.update_equity(9_750.0, NOW)                 # -2.5%
-    assert rm.check_entry(9_750.0, "EURUSD", None, []).allowed
+    rm.update_equity(9_850.0, NOW)                 # -1.5%: projected -2.5%, fine
+    assert rm.check_entry(9_850.0, "EURUSD", None, []).allowed
+
+    rm2 = fresh()
+    rm2.update_equity(9_790.0, NOW)                # -2.1%: projected -3.1%, no
+    assert not rm2.check_entry(9_790.0, "EURUSD", None, []).allowed
 
 
 def test_daily_loss_trips_exactly_at_the_limit():
@@ -81,11 +93,17 @@ def test_drawdown_measured_from_the_peak_not_the_start():
     assert decision.reason == MAX_DRAWDOWN
 
 
-def test_drawdown_does_not_trip_just_under_the_limit():
+def test_drawdown_allows_trading_while_a_full_loss_stays_inside():
+    """Same one-full-loss headroom as the daily breaker, against the peak."""
     rm = fresh()
     rm.update_equity(20_000.0, NOW)
-    rm.update_equity(19_000.0, NOW)                # -5%
-    assert rm.check_entry(19_000.0, "EURUSD", None, []).allowed
+    rm.update_equity(19_200.0, NOW)                # -4%: projected -5%, fine
+    assert rm.check_entry(19_200.0, "EURUSD", None, []).allowed
+
+    rm2 = fresh()
+    rm2.update_equity(20_000.0, NOW)
+    rm2.update_equity(19_080.0, NOW)               # -4.6%: projected -5.6%, no
+    assert not rm2.check_entry(19_080.0, "EURUSD", None, []).allowed
 
 
 def test_drawdown_halt_does_not_clear_on_a_new_day():

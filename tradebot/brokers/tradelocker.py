@@ -115,6 +115,39 @@ class TradeLockerBroker(Broker):
     def _request(
         self, method: str, path: str, body: dict | None = None, auth: bool = True
     ) -> dict:
+        """One API call, with self-repair for the failures that repair safely.
+
+        GETs are retried on network blips and server-side 5xx errors: reading
+        a price twice is harmless, and a cloud runner's network hiccuping for
+        a second should not abort a whole trading cycle.
+
+        Anything that changes state -- placing an order, closing a position,
+        moving a stop -- is deliberately NEVER retried here. A POST that times
+        out may still have landed, and re-sending it is how one intended
+        position becomes two. The safe recovery for that case lives elsewhere:
+        the risk layer refuses a second position on a held symbol, so if the
+        lost order did land, the next cycle sees it and stands down.
+        """
+        attempts = 3 if method == "GET" else 1
+        delay = 1.0
+        for attempt in range(attempts):
+            try:
+                return self._request_once(method, path, body, auth)
+            except BrokerError as err:
+                text = str(err)
+                transient = ("failed:" in text          # URLError / timeout
+                             or "-> 5" in text)         # 500/502/503/504
+                if attempt < attempts - 1 and transient:
+                    import time
+                    time.sleep(delay)
+                    delay *= 3
+                    continue
+                raise
+        raise BrokerError("unreachable")                 # for the type checker
+
+    def _request_once(
+        self, method: str, path: str, body: dict | None = None, auth: bool = True
+    ) -> dict:
         url = f"{self.base_url}{path}"
         data = json.dumps(body).encode("utf-8") if body is not None else None
         headers = {"Content-Type": "application/json", "Accept": "application/json"}
