@@ -198,3 +198,22 @@ pointing the same way -- his one-session habit is doing work.
 -trough dip of about a third of the account somewhere along the way. That dip
 is not a tail risk to be engineered away; it is what a 25%-win-rate, 1:8
 strategy feels like from the inside.
+
+## Is 6% risk real, or fitted to these ten months?
+
+Each quarter tested on its own at 5% and 6%: 2.31x, 1.06x, 2.10x, 1.17x. Every
+quarter profitable at both, and 6% edges 5% in all four. Not a curve-fit to one
+lucky stretch.
+
+## Is it secretly a volatility bet?
+
+Quarters ranged from 47 to 65 point average candles -- a 38% spread -- and all
+four were profitable. The two best quarters had the LOWEST and the second
+HIGHEST volatility, so returns do not track it.
+
+An artificial test that halved every candle's range did produce a losing
+result, but that test is not what it appears: stretching or shrinking wicks
+while leaving closes untouched manufactures bars where price wanders without
+going anywhere, which punishes any breakout strategy by construction. Recorded
+here because the number looked alarming and the honest read is that it was a
+bad test, not a bad strategy. The real-quarter evidence is what stands.
