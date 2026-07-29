@@ -120,3 +120,28 @@ instead of collapsing, because a 1:8 payout survives being sized up.
 bars lose $3,000-6,000 a month: zones become noise, breaks become noise, and a
 half-candle stop is often under one tick. He says "the 15, the 5, or the 1" --
 the 15 is the one that works.
+
+## AGGRESSION: size, not trade count (measured 2026-07-29)
+
+Leo asked for the bot to stop playing it safe. Tested both ways on ten months
+of US30 15m, full compounding runs on his real balance:
+
+| build | risk | $/mo | ends | trades | PF | drop |
+|---|---|---|---|---|---|---|
+| **picky NY** | **5%** | **+$1,030** | **$13,155** | 51 | **1.70** | **34%** |
+| picky NY | 3% | +$541 | $8,163 | 51 | 1.85 | 28% |
+| picky, all sessions | 5% | +$826 | $11,069 | 113 | 1.35 | 40% |
+| loose, all sessions | 5% | +$553 | $8,278 | 250 | 1.17 | 65% |
+
+Loosening the touch filter to 2 and allowing four trades per session takes 250
+trades instead of 51 -- five times the activity -- and earns LESS at every risk
+level while doubling the drawdown. Profit factor collapses 1.70 -> 1.17.
+
+So "be more aggressive" resolves to **bet bigger on his filter, not around it**.
+His three-touch rule is doing real work; the trades it refuses are the ones
+that bleed. Risk is where the aggression pays, and it keeps paying up to about
+5% before 8% starts costing money again.
+
+NAS100 loses at every setting tested and is not a second market for this
+strategy. Running both together on one account also loses: 527 trades, -$31 to
+-$198/month, up to 96% drawdown.

@@ -56,12 +56,19 @@ REGISTRY = {
     ),
     # Bot 2: MambaFX's breakout, as he teaches it for small accounts --
     # intrabar entry the moment the zone breaks, stop at half the breakout
-    # candle, 1:8 target. The only configuration of ~90 tested that was
-    # profitable in all four unseen stretches of ten months of US30 15m.
+    # candle, 1:8 target. US30 on 15m bars.
+    #
+    # Aggression belongs in the SIZE, not the trade count. Loosening the
+    # touch filter to 2 and allowing four trades a session takes 250 trades
+    # instead of 51 and earns LESS at every risk level while doubling the
+    # drawdown -- profit factor falls 1.70 to 1.17. The extra trades are
+    # marginal ones his own filter exists to refuse. Pushing risk instead
+    # runs +1,030/month against +553 with half the pain.
     "mamba": lambda: MambaBreakout(
         wait_for_close=False, stop_candle_frac=0.5, reward=8.0
     ),
-    # The same rules across every session rather than New York alone.
+    # All three sessions. Twice the trades for slightly more money and a
+    # meaningfully worse profit factor -- worth having, not worth defaulting.
     "mamba_all_sessions": lambda: MambaBreakout(
         wait_for_close=False, stop_candle_frac=0.5, reward=8.0,
         sessions=("tokyo", "london", "newyork"),
