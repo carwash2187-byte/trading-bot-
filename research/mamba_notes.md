@@ -476,3 +476,80 @@ always in the raw per-trade output, never in the summary.
 Note also that a 30-minute cap does reach 2.28 trades a day -- inside Leo's
 stated 2-3 -- at 1.12x. So his frequency target is achievable; it just costs
 about 90% of the return. The tension is real and unresolved.
+
+---
+
+## CYCLE 1 of 15 — "$100 Forex Account TRADING STRATEGY | EASY" (I_33XcywuIo)
+Watched: full audio transcript + 33 frames at 1024px, including the drawn charts.
+
+This is the single most relevant video in the catalogue for a $150 live account,
+because it is explicitly built for one. It also contradicts three things I had
+already built, and under RULE ZERO his version wins.
+
+### What he actually does, quoted
+
+**1. Higher timeframe first, mark the zone.**
+> "first thing you're gonna do is pretty much turn the higher time frame so
+> right here I'm looking at the four hours I'm gonna mark up a zone... price has
+> made large rejections to the upside"
+
+**2. Wait for the zone to be retested by a WICK before you look for anything.**
+> "price has actually came back retested it with a wick once we saw this wick
+> that's when we'd start looking for sales"
+
+**3. A small account must NOT trade the higher timeframe.**
+> "we're not gonna look for sales on the for our because you know obviously
+> we're using a hundred dollar count we can't really trade the for our because
+> you know our stop losses are gonna be too high we're gonna lose too much money"
+
+**4. RISK, in his own words — this is the answer to how much to risk:**
+> "we don't want to risk more than you know three to five percent max right"
+
+**5. Drop to M15 to enter.**
+> "so now what are we gonna do it's going a 15-minute time frame... this is the
+> 15-minute chart right here you're gonna get your best entries especially with
+> a smaller account"
+
+**6. THE ENTRY IS A BREAK AND RETEST — not the break itself.**
+> "price broke below these loaves came back and as you can see retested it"
+> "this is pretty much just like a break and retest strategy it's very simple"
+> "we get in a short position off that wig"
+
+**7. Stop goes just past the level, because past it the idea is dead.**
+> "stop-loss just in the middle or just above this little support zone because
+> if it breaks above this support so we don't even want to be into anyways"
+
+**8. Target is the NEAREST previous structure, not a fixed multiple.**
+> "I would target this zone right or this sound but I would stick from now to
+> this zone cuz it's the closest and you see a major wick rejection"
+
+**9. His actual numbers, spoken and confirmed on screen:**
+> "22 pips stop-loss with a 50 80 take profit it's beautiful numbers"
+> "16 pips stop-loss 51 pivot a profit"
+
+Measured off the drawn boxes in the frames: example 2 has a red risk box of
+~17 pips against a green reward box of ~52 pips. **1:3.** Not 1:8.
+
+**10. Lot size and the losing-streak logic.**
+> "if you're using a 0.01 that would have been a dollar sixty loss for a five
+> dollar and 10 cent gain right so you can lose to three trades in a row and
+> then win one and you're still gonna be positive"
+
+**11. Visible on his chart but never mentioned:** SMA 8, 50, 100, 150, 200, 250,
+300, 400, 500, 600 all loaded. He never refers to them in this video. Noted, not
+built -- building an unmentioned indicator would be inventing, not copying.
+
+### Where this contradicts what I had built
+
+| my build | what he actually does |
+|----------|----------------------|
+| reward 1:8 fixed | **1:3, and the target is the nearest structure** |
+| enter ON the break, intrabar | **enter on the RETEST of the broken level** |
+| 6% risk | **"three to five percent max"** |
+| stop = half the breakout candle | **stop just past the level** |
+
+Under RULE ZERO all four change to his version. Building `mamba_retest.py`.
+
+Note for the record, not as a veto: 1:3 with his ~40% win rate is a smaller edge
+per trade than 1:8 at 29%, but a retest entry fires far more often than a break
+entry, which is the direction Leo wants (2-3 a day). Tested numbers to follow.
