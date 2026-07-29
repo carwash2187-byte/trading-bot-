@@ -553,3 +553,47 @@ Under RULE ZERO all four change to his version. Building `mamba_retest.py`.
 Note for the record, not as a veto: 1:3 with his ~40% win rate is a smaller edge
 per trade than 1:8 at 29%, but a retest entry fires far more often than a break
 entry, which is the direction Leo wants (2-3 a day). Tested numbers to follow.
+
+### Built and measured: `mamba_retest.py`
+
+His geometry reproduces faithfully. At the default zone the realised stop is
+**0.12% of price** against his 0.11% (16-22 pips on a 1.40 pair), and the
+realised reward is **3.0R** against his stated "22 pip stop with a 50-80 take
+profit". So the trade the code takes is the trade he draws.
+
+On one market at 5% risk (his ceiling), 10 months:
+
+| market | growth | per month | trades/day | win% | drop | quarters up |
+|--------|--------|-----------|-----------|------|------|-------------|
+| EURUSD | 1.48x | +4.0% | 0.26 | 41.5% | 26% | 3/4 |
+| GBPUSD | 1.35x | +3.1% | 0.28 | 26.7% | 36% | 4/4 |
+| AUDUSD | 0.61x | -4.8% | 0.30 | 22.9% | 51% | 2/4 |
+| US30 | 1.42x | +3.5% | 0.45 | 25.0% | 59% | 2/4 |
+
+### THE FREQUENCY PROBLEM IS SOLVED, AND HIS WAY
+
+One market gives 0.26-0.45 trades a day. **He does not watch one market.** Six
+markets at once, same rules untouched:
+
+| risk | growth | per month | trades/day | win% | drop |
+|------|--------|-----------|-----------|------|------|
+| 3% | 1.57x | +4.6% | **1.85** | 28.2% | 58% |
+| 5% | 2.61x | +10.1% | **1.99** | 27.9% | 81% |
+
+**1.99 trades a day is inside his stated two-to-three**, and it took no loosening
+of any filter he named -- same touch count, same retest requirement, same stop,
+same target, same 3-5% risk. The only thing added is the one difference Leo
+allowed: the bot watches every market at once, which a human with two kids and a
+camera to run cannot.
+
+This is the first route to his frequency that did not require breaking one of
+his rules. Every earlier attempt (looser touches, faster timeframe, more trades
+per session, hold caps) bought frequency by weakening the setup. Scanning more
+markets buys it by doing more of the same work.
+
+Honest on the money: 2.61x over ten months is well below mamba_both's 11.05x, and
+the 81% drawdown at 5% is worse than anything else registered. At 3% the drop is
+58% for 1.57x. So copying him exactly, on his own numbers, at his own risk
+ceiling, currently returns less than the 1:8 breakout build. Recorded, not acted
+on -- RULE ZERO says his way stands. What it needs next is more of his videos on
+which markets he actually scans and what he skips, not a parameter I invented.

@@ -34,6 +34,7 @@ from tradebot.strategy.stack import StrategyStack
 from tradebot.strategy.mamba import MambaBreakout
 from tradebot.strategy.mamba_both import MambaBoth
 from tradebot.strategy.mamba_channel import MambaChannel
+from tradebot.strategy.mamba_retest import MambaRetest
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
@@ -114,6 +115,12 @@ REGISTRY = {
     # The cost is frequency: 0.52 trades a day, because one position per symbol
     # plus a ~10 hour hold blocks everything else. That is a real tension with
     # wanting 2-3 a day and it is not solved yet.
+    # His actual small-account method, from the one video built for a $100
+    # account: break a level, wait for the retest, sell the rejection. Entry on
+    # the retest rather than the break, stop just past the level, target the
+    # nearest opposing structure (~1:3), and his own stated risk ceiling of
+    # "three to five percent max".
+    "mamba_retest": lambda: MambaRetest(),
     "mamba_both": lambda: MambaBoth(
         breakout=MambaBreakout(
             wait_for_close=False, stop_candle_frac=0.5, reward=8.0
