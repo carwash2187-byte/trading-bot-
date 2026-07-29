@@ -107,7 +107,12 @@ class MambaBreakout(Strategy):
     """
 
     name = "mamba_breakout"
-    timeframe = "1m"
+    # 15-minute bars. He names the 5, the 15 and sometimes the 1 -- and
+    # testing all three across ten months found the 15 is the only one that
+    # makes money. On 1m the same rules lose thousands a month: the zones are
+    # noise, the breaks are noise, and a quarter-candle stop is often smaller
+    # than a single tick.
+    timeframe = "15m"
     # Enough bars to always contain the pre-session window plus the trading
     # window, at any timeframe this runs on. Sized for the coarsest case: on
     # 15m bars a 3-hour range plus a 2-hour window is only 20 bars, but the
@@ -123,6 +128,9 @@ class MambaBreakout(Strategy):
         zone_pct: float = 0.05,
         reward: float = 5.0,
         stop_buffer_pct: float = 0.02,
+        wait_for_close: bool = True,
+        stop_candle_frac: float = 0.0,
+        min_stop_ticks: float = 3.0,
         max_trades_per_session: int = 2,
         window_minutes: int = 120,
         min_touches: int = 3,
@@ -133,6 +141,23 @@ class MambaBreakout(Strategy):
         self.zone_pct = zone_pct
         self.reward = reward
         self.stop_buffer_pct = stop_buffer_pct
+        # His small-account variant enters the instant price crosses the zone
+        # instead of waiting for the candle to close: "we're not waiting for
+        # candle closure... as soon as that resistance breaks, we are entering
+        # because we're going to prioritize having a very tight stop-loss and
+        # going for massive risk-to-rewards."
+        self.wait_for_close = wait_for_close
+        # And the stop is sized off the breakout candle rather than the zone:
+        # "very tight stop loss, we'll just do about a quarter of what the
+        # candle's worth." A real example he shows is 13 points against a 105
+        # point target.
+        self.stop_candle_frac = stop_candle_frac
+        # A quarter of a one-minute candle can be a fraction of a tick, which
+        # the sizing layer rightly refuses. His own example -- a 13-point stop
+        # -- implies candles around 50 points tall, which is a 5m or 15m bar,
+        # not a 1m one. So the candle fraction gets a floor rather than being
+        # allowed to propose a stop the market cannot express.
+        self.min_stop_ticks = min_stop_ticks
         self.min_touches = min_touches
         self.touch_tolerance = touch_tolerance
         self.max_trades_per_session = max_trades_per_session
@@ -241,25 +266,43 @@ class MambaBreakout(Strategy):
         # A break is a CLOSE beyond the zone, not a wick through it. He waits
         # for the candle: a wick that pokes out and closes back inside is the
         # move failing, not starting.
-        if resistance and bar.close > resistance.high:
-            stop = resistance.low - buffer
-            risk = bar.close - stop
+        broke_up = (bar.close > resistance.high if self.wait_for_close
+                    else bar.high > resistance.high) if resistance else False
+        broke_down = (bar.close < support.low if self.wait_for_close
+                      else bar.low < support.low) if support else False
+
+        # Entering intrabar means filling at the level, not at the close.
+        entry_up = bar.close if self.wait_for_close else resistance.high if resistance else bar.close
+        entry_down = bar.close if self.wait_for_close else support.low if support else bar.close
+        candle = bar.high - bar.low
+
+        floor = context.instrument.tick_size * self.min_stop_ticks
+
+        if resistance and broke_up:
+            if self.stop_candle_frac > 0 and candle > 0:
+                stop = entry_up - max(candle * self.stop_candle_frac, floor)
+            else:
+                stop = resistance.low - buffer
+            risk = entry_up - stop
             if risk > 0:
                 return [Enter(
                     side=OrderSide.BUY,
                     stop_loss=stop,
-                    take_profit=bar.close + self.reward * risk,
+                    take_profit=entry_up + self.reward * risk,
                     comment=self.name,
                 )]
 
-        if support and bar.close < support.low:
-            stop = support.high + buffer
-            risk = stop - bar.close
+        if support and broke_down:
+            if self.stop_candle_frac > 0 and candle > 0:
+                stop = entry_down + max(candle * self.stop_candle_frac, floor)
+            else:
+                stop = support.high + buffer
+            risk = stop - entry_down
             if risk > 0:
                 return [Enter(
                     side=OrderSide.SELL,
                     stop_loss=stop,
-                    take_profit=bar.close - self.reward * risk,
+                    take_profit=entry_down - self.reward * risk,
                     comment=self.name,
                 )]
 

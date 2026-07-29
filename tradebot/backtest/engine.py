@@ -326,8 +326,13 @@ def run_backtest(
         for action in actions:
             try:
                 action.execute(broker, risk, journal, context)
-            except BrokerError:
-                continue        # a rejected order is a normal outcome
+            except Exception:   # noqa: BLE001
+                # A rejected order or a refused size is a normal outcome of a
+                # rule meeting a market it cannot be expressed in. The live
+                # cycle logs these and moves on; a sweep of a hundred
+                # parameter sets must not die on the first one that proposes
+                # a sub-tick stop.
+                continue
 
     # Close anything still open at the last price, so the result is a complete
     # accounting rather than one flattered by an open winner.
@@ -448,7 +453,7 @@ def run_portfolio_backtest(
             for action in actions:
                 try:
                     action.execute(broker, risk, journal, context)
-                except BrokerError:
+                except Exception:   # noqa: BLE001
                     continue
 
         equity_curve.append((stamp, broker.get_account().equity))

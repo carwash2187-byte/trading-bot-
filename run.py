@@ -31,6 +31,7 @@ from tradebot.runtime.watchdog import Heartbeat
 from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
 from tradebot.strategy.stack import StrategyStack
+from tradebot.strategy.mamba import MambaBreakout
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
@@ -52,6 +53,18 @@ REGISTRY = {
     # instead, because that would disqualify gold_scalper.
     "gold_safe": lambda: RsiScalper(
         oversold=30, overbought=70, reward=1.5, trend_ema=200
+    ),
+    # Bot 2: MambaFX's breakout, as he teaches it for small accounts --
+    # intrabar entry the moment the zone breaks, stop at half the breakout
+    # candle, 1:8 target. The only configuration of ~90 tested that was
+    # profitable in all four unseen stretches of ten months of US30 15m.
+    "mamba": lambda: MambaBreakout(
+        wait_for_close=False, stop_candle_frac=0.5, reward=8.0
+    ),
+    # The same rules across every session rather than New York alone.
+    "mamba_all_sessions": lambda: MambaBreakout(
+        wait_for_close=False, stop_candle_frac=0.5, reward=8.0,
+        sessions=("tokyo", "london", "newyork"),
     ),
     "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,

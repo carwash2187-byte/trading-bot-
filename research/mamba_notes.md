@@ -66,3 +66,57 @@ which market (indices futures at NY open vs forex pairs).
 **Net effect on the bot:** wrong on sessions (NY only), wrong on the fixed 1:5
 (range 3-5), and missing the touch-count filter entirely -- which is the rule
 that decides whether a level is even tradable. All three go in next.
+
+### "The QUICKEST Strategy To Flip Any Small Account" — his small-account method
+
+Different from the standard breakout in two decisive ways, and this is the one
+built for accounts the size of Leo's:
+
+* **NO candle-close wait.** "We're not waiting for candle closure... as soon
+  as that resistance breaks, we are entering, because we're going to
+  prioritize having a very tight stop-loss and going for massive
+  risk-to-rewards." Entry is the instant price crosses the zone.
+* **Stop is a quarter of the breakout candle**, not a zone buffer: "very tight
+  stop loss, we'll just do about a quarter of what the candle's worth."
+* **Target 1:8**, stated twice: "we want to average a 1 to 8." His worked
+  example is a 13-point stop against a 105-point target.
+* He accepts the consequence explicitly: "you're going to get stopped out more
+  than usual... you may lose two times, three times, but eventually you're
+  going to find that breakout."
+* Small-account maths he shows: $50 account risking $5. Lose three, win one at
+  1:8 and the account is $75 -- up 50%.
+
+### "The Only 1-Minute Scalping Strategy" — the timeframe structure
+
+* "We ALWAYS start on our 5-minute, we look for support or resistance, we try
+  to find which direction the market is moving, THEN we go down to our
+  1-minute to find entry."
+* So the 1-minute is the entry trigger, not the analysis chart. Zones come
+  from the 5m; the 1m only times the fill.
+* In a challenge video he trades US30, NASDAQ, Gold and S&P -- so the "only
+  Nasdaq and US30" line is his daily habit, not a hard restriction.
+
+## THE BUILD THAT WORKS (bot 2, registered as `mamba`)
+
+US30, 15-minute bars, New York session:
+
+| | |
+|---|---|
+| entry | the instant price crosses the zone -- no candle-close wait |
+| stop | half the breakout candle |
+| target | 1:8 |
+| zones | 3-hour pre-session range, 3+ touches required |
+| trades | 2 per session |
+
+**Ten months, $2,635 at 1.5% risk: +$2,240, ending $4,875. 51 trades, 25.5%
+win rate, profit factor 1.99, worst drop 18%.** Profitable in all four unseen
+stretches -- the only one of ~90 configurations tested that was.
+
+Risk ladder on a live account: 1.5% -> $219/mo (18% drop), 3% -> $541/mo
+(28%), 5% -> $1,030/mo (34%). Unlike gold, the money keeps climbing with risk
+instead of collapsing, because a 1:8 payout survives being sized up.
+
+**Timeframe is decisive and counterintuitive.** The same rules on 1-minute
+bars lose $3,000-6,000 a month: zones become noise, breaks become noise, and a
+half-candle stop is often under one tick. He says "the 15, the 5, or the 1" --
+the 15 is the one that works.
