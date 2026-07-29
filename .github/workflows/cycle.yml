@@ -43,12 +43,18 @@ jobs:
       # breakers wake with amnesia each run and can never trip. Cache keys are
       # immutable, so each run saves under its own id and the next run
       # restores the newest one via the prefix.
-      - name: Remember the risk state
+      # run/ holds the breakers' memory; data/ holds the trade journal, which
+      # feeds the portfolio manager's judgement and the daily trade counts.
+      # Both die with the runner's filesystem unless carried across runs.
+      - name: Remember state and history
         uses: actions/cache@v4
         with:
-          path: run
-          key: risk-state-${{ github.run_id }}
+          path: |
+            run
+            data
+          key: bot-state-${{ github.run_id }}
           restore-keys: |
+            bot-state-
             risk-state-
 
       # No setup-python step and no install step. The bot depends on nothing
