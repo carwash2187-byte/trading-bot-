@@ -57,7 +57,7 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 
 from ..brokers.base import Candle, OrderSide
-from .base import Action, AdjustStop, Enter, Strategy, StrategyContext
+from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 
 # Session opens in UTC. Tokyo 09:00 JST, London 08:00 UK, New York 09:30 ET --
 # the hours the wider market actually turns over, which is when a range built
@@ -132,6 +132,7 @@ class MambaBreakout(Strategy):
         stop_candle_frac: float = 0.0,
         min_stop_ticks: float = 3.0,
         breakeven_at: float = 0.0,
+        scale_targets: tuple[tuple[float, float], ...] = (),
         max_trades_per_session: int = 2,
         window_minutes: int = 120,
         min_touches: int = 3,
@@ -172,6 +173,17 @@ class MambaBreakout(Strategy):
         # fly -- and at 1:8 the runners are the entire business. Worse on both
         # axes at every level tested (1R through 4R).
         self.breakeven_at = breakeven_at
+        # His trades have Target 1, Target 2, Target 3 -- "I closed all my
+        # position at Target 3", "Target 2 ended up getting hit". So the exit
+        # is not one number, it is a ladder he takes pieces at. Each entry is
+        # (R-multiple, fraction of the ORIGINAL position to close there); the
+        # broker bracket still holds the final target for whatever is left.
+        #
+        # Which rung has already been taken is inferred from where the stop
+        # sits, exactly as the trend strategies do it: taking a piece also
+        # advances the stop, so the stop IS the record. Nothing is persisted,
+        # so this survives the process exiting between scheduled runs.
+        self.scale_targets = scale_targets
         self.min_touches = min_touches
         self.touch_tolerance = touch_tolerance
         self.max_trades_per_session = max_trades_per_session
@@ -253,6 +265,36 @@ class MambaBreakout(Strategy):
         if active is None:
             return []
         _, open_at = active
+
+        # Take pieces off at his intermediate targets before anything else.
+        if self.scale_targets:
+            for pos in context.open_positions:
+                if pos.comment != self.name or pos.stop_loss is None:
+                    continue
+                risk = abs(pos.entry_price - pos.stop_loss)
+                if risk <= 0:
+                    continue
+                ahead = ((context.bid - pos.entry_price) if pos.is_long
+                         else (pos.entry_price - context.ask))
+                # How far the stop has already been advanced tells us which
+                # rungs are done, in the same R units as the targets.
+                banked = ((pos.stop_loss - pos.entry_price) / risk if pos.is_long
+                          else (pos.entry_price - pos.stop_loss) / risk)
+                for rung, (at_r, fraction) in enumerate(self.scale_targets):
+                    if banked >= at_r - 1e-9:
+                        continue            # this rung is already taken
+                    if ahead < risk * at_r:
+                        break               # not there yet; later rungs neither
+                    piece = round(pos.lots * fraction, 4)
+                    if piece <= 0:
+                        break
+                    new_stop = (pos.entry_price + risk * at_r if pos.is_long
+                                else pos.entry_price - risk * at_r)
+                    return [
+                        Exit(ticket=pos.ticket, lots=piece,
+                             reason=f"target-{rung + 1}"),
+                        AdjustStop(ticket=pos.ticket, stop_loss=new_stop),
+                    ]
 
         # Move the stop to breakeven once the trade is far enough ahead. This
         # runs before the has-position return, because managing a live winner

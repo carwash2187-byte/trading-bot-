@@ -310,3 +310,35 @@ of four. Together: near his frequency, three quarters of four, 4.59x.
 Breakout takes priority when both fire. Once a level actually breaks, the
 channel it belonged to is not a channel any more, and fading its edge is
 taking the wrong side of the same event.
+
+## His exit ladder: Target 1, Target 2, Target 3
+
+He does not use one target. "I closed all my position at Target 3." "Target 2
+ended up getting hit." "We held this to a one to five, then take all your
+profit or put your stops into profit." And on holding: "I don't care what
+anybody says about holding trades for a few hours or 8 hours."
+
+Built as a ladder of (R-multiple, fraction) rungs, with the stop advancing to
+each rung as its piece is taken -- so the stop position IS the record of which
+rungs are done, and nothing needs persisting between scheduled runs.
+
+US30 15m, $150 at 6%:
+
+| exit plan | growth | win rate | drop | quarters up |
+|---|---|---|---|---|
+| **one target at 1:8** | **5.15x** | 25.5% | 36% | **4/4** |
+| T1 2R/50%, T2 5R/50% | 3.96x | **48.5%** | **28%** | **4/4** |
+| T1 2R/33%, T2 4R/50% | 4.08x | 48.5% | 28% | 3/4 |
+| T1 1R, T2 3R, T3 5R | 3.61x | 61.3% | 29% | 2/4 |
+
+Scaling out trades money for smoothness: the win rate roughly doubles and the
+drawdown falls by a fifth, but growth drops by a quarter. Both the single
+target and the 2R/5R ladder hold up in four quarters of four.
+
+**This probably explains his record claims.** "500 wins and 20 losses in two
+months" is impossible for a single 1:8 target, which wins about a quarter of
+the time by construction. Taking a piece at Target 1 converts most trades into
+technical wins -- 25.5% becomes 48.5% on the same trades, purely from
+bookkeeping. His numbers and his method are consistent once the ladder is
+visible; they are not consistent with the strategy as taught in his breakout
+videos.
