@@ -368,3 +368,27 @@ his own strategy run against real prices -- produce the same number.
 So the bot is already sized the way he sizes. The instruction to "go riskier
 than he does" is not a way of copying him more closely; by his own account it
 is the way to be margin-called.
+
+## Everything of his, together — and the trade-off it exposes
+
+US30 15m, $150, ten months, both trades running with his target ladder:
+
+| build | risk | trades/day | growth | win% | drop | quarters up |
+|---|---|---|---|---|---|---|
+| both trades, single 1:8 | 2% | 1.08 | **4.59x** | 17.6% | 44% | **3/4** |
+| both trades, single 1:8 | 5% | 1.10 | 5.82x | 16.7% | 86% | 2/4 |
+| **both + his T1/T2 ladder** | **2%** | **2.01** | 2.12x | **35.3%** | 56% | **3/4** |
+| both + ladder | 5% | 1.98 | 3.18x | 37.6% | 91% | 2/4 |
+
+**His trade count is reached: 2.01 a day.** The ladder roughly doubles trade
+frequency, because taking a piece at 2R frees the position for the next setup
+instead of holding one trade to 1:8.
+
+And that is exactly why it earns less. 4.59x becomes 2.12x. The 1:8 runners
+are what pay for a 17% win rate, and scaling out caps them -- the win rate
+doubles to 35% while the money halves. Every mechanic of his that makes the
+equity curve *feel* better costs return.
+
+So the honest summary of copying him completely: the frequency is his, the win
+rate is close to his, the drawdown is real, and the money is lower than the
+simplest version of his own strategy. More of him is not more money.
