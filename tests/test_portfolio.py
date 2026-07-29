@@ -500,3 +500,35 @@ def test_strategies_stand_aside_during_news():
 def test_short_history_is_handled_not_crashed():
     assert BreakoutRider().evaluate(context_with([], candles([100.0] * 5))) == []
     assert KamaTrend().evaluate(context_with([], candles([100.0] * 5))) == []
+
+
+# ---------------------------------------------------------------------------
+# Journal baseline — the books must start from the broker's number
+# ---------------------------------------------------------------------------
+
+def test_the_journal_baselines_itself_from_the_broker(tmp_path):
+    """Seeded from a flag, the books start at a number that has nothing to do
+    with the real account, and every reconciliation after that screams about a
+    mismatch that is really a mis-seeded constant."""
+    journal = TradeJournal(tmp_path / "j.jsonl", starting_balance=10_000.0)
+    journal.ensure_baseline(2_635.39)
+
+    assert journal.expected_balance() == pytest.approx(2_635.39)
+    assert journal.reconcile(2_635.39).matches
+
+
+def test_the_baseline_is_written_once_and_only_once(tmp_path):
+    journal = TradeJournal(tmp_path / "j.jsonl")
+    journal.ensure_baseline(2_635.39)
+    journal.ensure_baseline(9_999.99)          # later balances must not move it
+    assert journal.expected_balance() == pytest.approx(2_635.39)
+
+
+def test_the_baseline_row_does_not_pollute_the_trade_list(tmp_path):
+    journal = TradeJournal(tmp_path / "j.jsonl")
+    journal.ensure_baseline(2_635.39)
+    assert journal.entries() == []
+
+    write_trades(journal, "gold_scalper", [12.0, -8.0])
+    assert len(journal.entries()) == 2
+    assert journal.expected_balance() == pytest.approx(2_635.39 + 4.0)

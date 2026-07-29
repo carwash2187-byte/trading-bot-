@@ -149,6 +149,39 @@ class TradeJournal:
 
     # -- analysis --------------------------------------------------------
 
+    def ensure_baseline(self, broker_balance: float) -> None:
+        """Record what the account held when the journal first met it.
+
+        The reconciliation check needs a starting point, and a configured
+        --balance flag is the wrong source: it defaults to a number that has
+        nothing to do with the real account, which makes every later check
+        scream about a mismatch that is really a mis-seeded constant. The
+        broker's own figure at first contact is the truth, written once into
+        the journal file itself so it travels wherever the journal does --
+        including through a cloud runner's cache.
+        """
+        if self._baseline() is not None:
+            return
+        with self.path.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps({"type": "baseline",
+                                 "balance": float(broker_balance)}) + "\n")
+            fh.flush()
+
+    def _baseline(self) -> float | None:
+        if not self.path.exists():
+            return None
+        for line in self.path.read_text(encoding="utf-8").splitlines():
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if isinstance(row, dict) and row.get("type") == "baseline":
+                try:
+                    return float(row["balance"])
+                except (KeyError, TypeError, ValueError):
+                    continue
+        return None
+
     def realized_pnl(self) -> float:
         return sum(e.realized_pnl for e in self.entries())
 
@@ -156,7 +189,10 @@ class TradeJournal:
         return sum(e.commission for e in self.entries())
 
     def expected_balance(self) -> float:
-        return self.starting_balance + self.realized_pnl()
+        baseline = self._baseline()
+        if baseline is None:
+            baseline = self.starting_balance
+        return baseline + self.realized_pnl()
 
     def stats(self) -> dict:
         rows = [e for e in self.entries() if e.closed_at]

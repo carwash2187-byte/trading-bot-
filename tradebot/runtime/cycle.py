@@ -94,6 +94,10 @@ class TradingCycle:
             return report
 
         report.equity = account.equity
+        # First contact with the account writes the reconciliation baseline.
+        # A no-op every cycle after the first, wherever the journal persists.
+        self._guard(report, "baseline",
+                    lambda: self.journal.ensure_baseline(account.balance))
         self._guard(report, "risk-update", lambda: self.risk.update_equity(account.equity, now))
         report.halted = self.risk.state.halted
         report.halt_reason = self.risk.state.halt_reason
@@ -107,7 +111,11 @@ class TradingCycle:
                 lambda s=symbol: self._process_symbol(s, account, positions, report, now),
             )
 
-        if self._cycles % self.reconcile_every == 0:
+        # On the first cycle of the process, then every reconcile_every after.
+        # The old `% == 0` never fired on a host that runs one cycle per
+        # process -- which is exactly how the cloud runs it, so the money
+        # cross-check silently never happened where it mattered most.
+        if self._cycles % self.reconcile_every == 1 or self.reconcile_every == 1:
             self._guard(report, "reconcile", lambda: self._reconcile(account, report))
 
         report.finished_at = datetime.now(timezone.utc)
