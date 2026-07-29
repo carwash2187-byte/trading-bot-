@@ -532,3 +532,43 @@ def test_the_baseline_row_does_not_pollute_the_trade_list(tmp_path):
     write_trades(journal, "gold_scalper", [12.0, -8.0])
     assert len(journal.entries()) == 2
     assert journal.expected_balance() == pytest.approx(2_635.39 + 4.0)
+
+
+def test_a_rejected_order_fails_the_cycle_loudly(tmp_path):
+    """A bot whose every order bounces must not look like a bot with no
+    signal. The rejection propagates into the cycle's error report, which
+    fails the run -- and on the cloud a failed run is what wakes the repair
+    chain and, eventually, the human."""
+    from tradebot.brokers.base import BrokerError
+    from tradebot.brokers.paper import PaperBroker
+    from tradebot.runtime.cycle import TradingCycle
+    from tradebot.risk.limits import RiskLimits, RiskManager
+
+    class Rejecting(PaperBroker):
+        def submit_bracket(self, order):
+            raise BrokerError("rejected: qty below venue minimum")
+
+    broker = Rejecting(starting_balance=10_000.0)
+    broker.connect()
+    broker.set_price("XAUUSD", 4_000.0)
+    broker.feed_candles("XAUUSD", "2h", candles([4_000.0] * 60))
+
+    class AlwaysEnters(Strategy):
+        timeframe = "2h"
+        lookback = 50
+        name = "eager"
+
+        def evaluate(self, context):
+            return [Enter(side=OrderSide.BUY,
+                          stop_loss=context.last_close - 10,
+                          comment=self.name)]
+
+    cycle = TradingCycle(
+        broker=broker, strategy=AlwaysEnters(),
+        risk=RiskManager(RiskLimits()),
+        journal=TradeJournal(tmp_path / "j.jsonl"),
+        symbols=["XAUUSD"],
+    )
+    report = cycle.run_once(NOW)
+    assert not report.ok
+    assert any("rejected" in e for e in report.errors)

@@ -128,10 +128,14 @@ class Enter(Action):
             take_profit=self.take_profit,
             comment=self.comment,
         )
-        try:
-            broker.submit_bracket(order)
-        except BrokerError:
-            return False
+        # A rejection is NOT swallowed. Silently returning False here made a
+        # bot whose every order bounces indistinguishable from a bot with no
+        # signal -- green runs, empty account, nothing to investigate. Letting
+        # it propagate lands it in the cycle's error report, which fails the
+        # run, which is what wakes the self-repair chain and, if it keeps
+        # happening, the human. Refusals by the risk layer still return False
+        # above: being told "no" is a decision, not a failure.
+        broker.submit_bracket(order)
         return True
 
 
@@ -153,10 +157,9 @@ class Exit(Action):
         position = broker.get_position(self.ticket)
         if position is None:
             return False
-        try:
-            fill = broker.close_position(self.ticket, self.lots)
-        except BrokerError:
-            return False
+        # Propagates on failure for the same reason Enter does: an exit that
+        # silently fails leaves a position running with nobody the wiser.
+        fill = broker.close_position(self.ticket, self.lots)
 
         pnl = context.instrument.pnl_in_account(
             position.entry_price, fill.price, fill.lots, position.is_long
@@ -195,10 +198,7 @@ class AdjustStop(Action):
         journal: TradeJournal,
         context: StrategyContext,
     ) -> bool:
-        try:
-            broker.modify_protection(self.ticket, self.stop_loss, self.take_profit)
-        except BrokerError:
-            return False
+        broker.modify_protection(self.ticket, self.stop_loss, self.take_profit)
         return True
 
 
