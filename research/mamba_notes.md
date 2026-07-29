@@ -342,3 +342,29 @@ technical wins -- 25.5% becomes 48.5% on the same trades, purely from
 bookkeeping. His numbers and his method are consistent once the ladder is
 visible; they are not consistent with the strategy as taught in his breakout
 videos.
+
+## What HE says about risk, in his own words
+
+Mined from 518,000 characters of his transcripts:
+
+* "Risking 10 percent is not very smart because you've already lost 10 percent
+  of your account."
+* "Put $100 in an account and risk 30%. Two trades go by, your margin call,
+  you're done. You lost everything. With the 5%, 10 trades go by, you've only
+  lost half."
+* "$50 account, you're risking $5 per trade."
+* "Once you start risking $20 per trade, you're making $80 per win" -- a 1:4,
+  on a small account.
+* On his own scaling: "If normally I'm risking $10,000 per trade, I'm now
+  risking only $4,000, and my stop loss is much tighter."
+
+**His stated risk is 5%. He calls 10% unwise and 30% a two-trade wipeout.**
+
+That matters because the independent measurement landed in the same place:
+testing US30 15m across $150 to $2,635 accounts, returns peak at 5-6% risk and
+fall away above it. Two different methods -- his experience, and ten months of
+his own strategy run against real prices -- produce the same number.
+
+So the bot is already sized the way he sizes. The instruction to "go riskier
+than he does" is not a way of copying him more closely; by his own account it
+is the way to be margin-called.
