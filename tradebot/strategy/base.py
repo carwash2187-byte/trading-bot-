@@ -109,6 +109,21 @@ class Enter(Action):
             return False
 
         entry_price = context.ask if self.side.is_long else context.bid
+
+        # Cap the size at what free margin can actually carry, with a tenth
+        # held back for the position moving against us before the stop. The
+        # risk formula alone can balloon when volatility collapses -- risk
+        # divided by a tiny stop distance is a huge position -- and the right
+        # response is to trade the affordable size, not to ask the broker for
+        # an impossible one and treat its refusal as an emergency.
+        notional_per_lot = entry_price * context.instrument.contract_size
+        affordable = 0.0
+        if notional_per_lot > 0:
+            affordable = (
+                context.account.margin_free * risk.limits.leverage * 0.9
+                / notional_per_lot
+            )
+
         sized = size_position(
             instrument=context.instrument,
             equity=context.account.equity,
@@ -116,6 +131,7 @@ class Enter(Action):
             entry_price=entry_price,
             stop_price=self.stop_loss,
             quote_to_account_rate=self.quote_to_account_rate,
+            max_lots=affordable,
         )
         if not sized.tradable:
             return False

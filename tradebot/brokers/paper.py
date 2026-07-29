@@ -200,10 +200,16 @@ class PaperBroker(Broker):
 
     def get_account(self) -> AccountSnapshot:
         unrealized = sum(p.unrealized_pnl for p in self.get_positions())
+        equity = self.balance + unrealized
         return AccountSnapshot(
             balance=self.balance,
-            equity=self.balance + unrealized,
+            equity=equity,
             currency=self.currency,
+            # A simulator that does not model margin has all of its equity
+            # free, not none of it. Defaulting this to zero told the
+            # margin-aware position cap that nothing was affordable, and the
+            # whole simulator silently stopped trading.
+            margin_free=equity,
         )
 
     # -- internals -------------------------------------------------------

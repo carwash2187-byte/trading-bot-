@@ -152,7 +152,22 @@ def _tradelocker_responses() -> dict:
         # not the obvious one -- side before quantity, and the stop/take fields
         # are order IDS rather than prices.
         "GET /trade/config": {
-            "d": {"positionsConfig": {"columns": [
+            "d": {"accountDetailsConfig": {"columns": [
+                {"id": "balance"}, {"id": "projectedBalance"},
+                {"id": "availableFunds"}, {"id": "blockedBalance"},
+                {"id": "cashBalance"}, {"id": "unsettledCash"},
+                {"id": "withdrawalAvailable"}, {"id": "stocksValue"},
+                {"id": "optionValue"}, {"id": "initialMarginReq"},
+                {"id": "maintMarginReq"}, {"id": "marginWarningLevel"},
+                {"id": "blockedForStocks"}, {"id": "stockOrdersReq"},
+                {"id": "stopOutLevel"}, {"id": "warningMarginReq"},
+                {"id": "marginBeforeWarning"}, {"id": "todayGross"},
+                {"id": "todayNet"}, {"id": "todayFees"},
+                {"id": "todayVolume"}, {"id": "todayTradesCount"},
+                {"id": "openGrossPnL"}, {"id": "openNetPnL"},
+                {"id": "positionsCount"}, {"id": "ordersCount"},
+            ]},
+            "positionsConfig": {"columns": [
                 {"id": "id"}, {"id": "tradableInstrumentId"}, {"id": "routeId"},
                 {"id": "side"}, {"id": "qty"}, {"id": "avgPrice"},
                 {"id": "stopLossId"}, {"id": "takeProfitId"}, {"id": "openDate"},
@@ -161,7 +176,17 @@ def _tradelocker_responses() -> dict:
         },
         "GET /trade/quotes": {"d": {"bp": 1999.5, "ap": 2000.5}},
         "POST /trade/accounts/42/orders": {"d": {"orderId": "TL-123"}},
-        "GET /trade/accounts/42/state": {"d": {"accountDetailsData": [10_000.0, 10_050.0, 0.0, 10_000.0]}},
+        # Shaped like the live payload: balance first, and NO equity column --
+        # the truthful equity is balance + openNetPnL. Guessed positionally,
+        # [1] is projectedBalance and [3] is blockedBalance (a constant 0 on
+        # this account), which the margin cap would read as "nothing
+        # affordable" and silently stop the live bot trading.
+        "GET /trade/accounts/42/state": {"d": {"accountDetailsData": [
+            10_000.0, 10_000.0, 9_400.0, 0.0, 10_000.0, 0.0,
+            10_000.0, 0.0, 0.0, 600.0, 300.0, 90.0,
+            0.0, 0.0, 100.0, 0.0, 9_700.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 55.0, 50.0, 1.0, 0.0,
+        ]}},
         "GET /trade/accounts/42/positions": {"d": {"positions": []}},
     }
 
@@ -229,10 +254,12 @@ def test_tradelocker_attaches_the_stop_to_the_entry(mock_tradelocker):
     assert "stopLoss" in captured and "takeProfit" in captured
 
 
-def test_tradelocker_account_snapshot(mock_tradelocker):
+def test_tradelocker_account_snapshot_reads_by_name(mock_tradelocker):
     acct = mock_tradelocker.get_account()
     assert acct.balance == pytest.approx(10_000.0)
-    assert acct.equity == pytest.approx(10_050.0)
+    assert acct.equity == pytest.approx(10_050.0)     # balance + openNetPnL
+    assert acct.margin_free == pytest.approx(9_400.0) # availableFunds
+    assert acct.margin_used == pytest.approx(600.0)   # initialMarginReq
 
 
 def test_tradelocker_rejects_a_size_below_min_lot(mock_tradelocker):

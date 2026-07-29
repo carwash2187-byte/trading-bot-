@@ -60,6 +60,12 @@ class RiskLimits:
     # -- all of which land on the wrong side of a threshold that cannot be
     # recovered from once crossed.
     safety_margin: float = 0.9
+    # The account's leverage, for the margin-aware position cap. AquaFunded
+    # gives 1:50. Used to stop a collapsed stop-distance ballooning the lot
+    # count past what the account can even margin -- the broker would reject
+    # that order anyway, but a bot that caps itself trades the capped size
+    # instead of raising an alarm about a size it should never have asked for.
+    leverage: float = 50.0
     # The account's opening balance, when known. This powers a guard that
     # needs NO stored state at all: the prop firm ends the account 6% below
     # this number, so with the number itself in hand the fatal line is a

@@ -109,6 +109,7 @@ class TradeLockerBroker(Broker):
         self._route_cache: dict[str, tuple] = {}
         self._rows: dict[str, dict] = {}
         self._columns: dict[str, int] | None = None
+        self._acct_columns: dict[str, int] | None = None
 
     # -- transport -------------------------------------------------------
 
@@ -553,16 +554,50 @@ class TradeLockerBroker(Broker):
                 return name
         return ""
 
+    def _account_columns(self) -> dict[str, int]:
+        """Field positions for the account-state array, asked of the broker.
+
+        Same disease as positions, same cure. The guessed order had [1] as
+        equity when it is really projectedBalance, and [3] as free margin when
+        it is really blockedBalance -- which on this account is a constant 0,
+        so the margin-aware position cap would have read "nothing affordable"
+        and silently stopped the live bot from ever trading again.
+        """
+        if self._acct_columns is None:
+            config = self._request("GET", "/trade/config")
+            block = config.get("d", config).get("accountDetailsConfig", {})
+            self._acct_columns = {
+                str(column.get("id")): index
+                for index, column in enumerate(block.get("columns", []))
+            }
+        return self._acct_columns
+
     def get_account(self) -> AccountSnapshot:
+        columns = self._account_columns()
         payload = self._request("GET", f"/trade/accounts/{self.account_id}/state")
         state = payload.get("d", {}).get("accountDetailsData", [])
-        try:
-            return AccountSnapshot(
-                balance=float(state[0]),
-                equity=float(state[1]),
-                currency="USD",
-                margin_used=float(state[2]) if len(state) > 2 else 0.0,
-                margin_free=float(state[3]) if len(state) > 3 else 0.0,
-            )
-        except (IndexError, TypeError, ValueError):
-            raise BrokerError(f"could not read account state: {payload}") from None
+
+        def field(name, default=0.0):
+            index = columns.get(name)
+            if index is None or index >= len(state):
+                return default
+            try:
+                return float(state[index])
+            except (TypeError, ValueError):
+                return default
+
+        balance = field("balance")
+        if balance <= 0 and not state:
+            raise BrokerError(f"could not read account state: {payload}")
+        # There is no plain "equity" column; the truthful equivalent is the
+        # settled balance plus the open positions' net floating P&L.
+        equity = balance + field("openNetPnL")
+        return AccountSnapshot(
+            balance=balance,
+            equity=equity,
+            currency="USD",
+            margin_used=field("initialMarginReq"),
+            # availableFunds is what the venue will actually let new margin
+            # draw on -- the honest input for the position cap.
+            margin_free=field("availableFunds"),
+        )
