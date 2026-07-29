@@ -452,11 +452,18 @@ class TradeLockerBroker(Broker):
     def modify_protection(
         self, ticket: str, stop_loss: float | None = None, take_profit: float | None = None
     ) -> None:
+        # The type fields mirror what submit_bracket sends. Absolute prices are
+        # what every strategy in this codebase computes; omitting the type and
+        # letting the server assume one is the kind of default that works until
+        # the day it doesn't. Live-unverified: the running strategy uses fixed
+        # brackets and never moves a stop, so this path has no live traffic yet.
         body: dict = {}
         if stop_loss is not None:
             body["stopLoss"] = stop_loss
+            body["stopLossType"] = "absolute"
         if take_profit is not None:
             body["takeProfit"] = take_profit
+            body["takeProfitType"] = "absolute"
         if not body:
             return
         self._request("PATCH", f"/trade/positions/{ticket}", body)
