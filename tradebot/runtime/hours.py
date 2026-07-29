@@ -128,12 +128,36 @@ class AlwaysOpenSchedule(MarketSchedule):
         return SessionStatus(True, "24/7 market")
 
 
+class MetalsSchedule(ForexSchedule):
+    """Gold and silver hours, which are NOT forex hours.
+
+    Metals close for a full hour every day -- 17:00 to 18:00 New York -- and
+    the Sunday open is 18:00, an hour after forex. Mapped to the forex clock,
+    the bot spent that dead hour awake: quoting a shut market and placing
+    orders into it, and since a rejected order now fails the run loudly, that
+    would have been a false alarm every single evening.
+
+    Modelled as a widened rollover window (16:55 to 18:05, the extra minutes
+    for the venue's own ragged edges) plus the later Sunday open.
+    """
+
+    name = "metals"
+
+    def __init__(self) -> None:
+        super().__init__(
+            open_hour=18,
+            rollover_start=time(16, 55),
+            rollover_end=time(18, 5),
+        )
+
+
 # Map a symbol to its schedule. Extend as instruments are added.
 SCHEDULES: dict[str, MarketSchedule] = {
     "EURUSD": ForexSchedule(),
     "GBPUSD": ForexSchedule(),
     "USDJPY": ForexSchedule(),
-    "XAUUSD": ForexSchedule(),
+    "XAUUSD": MetalsSchedule(),
+    "XAGUSD": MetalsSchedule(),
     "BTCUSD": AlwaysOpenSchedule(),
 }
 

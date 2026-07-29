@@ -166,3 +166,38 @@ def test_state_round_trips_through_a_dict():
                       current_day="2026-03-10", halted=True, halt_reason=DAILY_LOSS)
     restored = RiskState.from_dict(state.to_dict())
     assert restored == state
+
+
+# ---------------------------------------------------------------------------
+# Gold's clock is not forex's clock
+# ---------------------------------------------------------------------------
+
+def test_gold_stands_aside_for_the_full_metals_break():
+    """Metals close 17:00-18:00 New York daily. On the forex clock the bot
+    spent that hour quoting a shut market and placing orders into it -- and a
+    rejected order now fails the run loudly, so this was a nightly false
+    alarm waiting to happen."""
+    from datetime import datetime, timezone
+
+    from tradebot.runtime.hours import is_tradable
+
+    # 17:30 New York on a Tuesday == 21:30 UTC in July (EDT).
+    dead_hour = datetime(2026, 7, 28, 21, 30, tzinfo=timezone.utc)
+    assert not is_tradable("XAUUSD", dead_hour).is_open
+    # Forex is open at that moment; only metals rest.
+    assert is_tradable("EURUSD", dead_hour).is_open
+
+    # 18:30 New York: metals are back.
+    after = datetime(2026, 7, 28, 22, 30, tzinfo=timezone.utc)
+    assert is_tradable("XAUUSD", after).is_open
+
+
+def test_gold_opens_an_hour_after_forex_on_sunday():
+    from datetime import datetime, timezone
+
+    from tradebot.runtime.hours import is_tradable
+
+    # Sunday 17:30 New York == 21:30 UTC: forex open, metals not yet.
+    sunday = datetime(2026, 7, 26, 21, 30, tzinfo=timezone.utc)
+    assert is_tradable("EURUSD", sunday).is_open
+    assert not is_tradable("XAUUSD", sunday).is_open

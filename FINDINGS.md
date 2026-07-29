@@ -175,3 +175,40 @@ have mattered and end-of-day banking would be needed.
 
 Of the 150 days where a trade closed, 90 closed up 0.5% or more — 60%. The
 constraint is not the size of a winning day, it is how many days have a trade.
+
+## Hardening pass (2026-07-29): what broke and what guards it now
+
+Eleven live-only bugs found across the pass, none reachable by backtesting.
+The themes repeat, so they are worth naming:
+
+**Broker payloads are read by NAME, never by guessed position.** Positions and
+account state both arrive as bare arrays; both guessed orders were wrong, and
+both wrongnesses were quiet. The account guess put a constant zero where free
+margin should be, which would have silently stopped all live trading the
+moment sizing became margin-aware.
+
+**Silent failures are converted to loud ones.** A rejected order used to be
+swallowed; now it fails the run, which triggers one automatic retry, then an
+issue, which becomes an email. The cross-check of books vs broker now runs on
+the first cycle of every process (it previously never ran in the cloud).
+
+**State that must survive lives in more than one place.** The breakers'
+memory is cached across cloud runs AND backstopped by a stateless floor
+computed from the starting balance -- the firm's actual rule. Entries are
+refused when a full trade-loss would cross the stop, not when the account is
+already past it.
+
+**The host is watched from outside itself.** GitHub's scheduler never fired
+(cold-start on a new account); the laptop nudges the workflow every five
+minutes while awake and alarms if the cloud goes quiet. The nudger's token
+expires ~2026-08-04 -- if cloudwatch starts complaining then, mint a new
+token and update ~/.tradebot/gh_token.
+
+**Gold keeps metals hours, not forex hours.** Daily 17:00-18:00 New York
+close and an 18:00 Sunday open. On the forex clock the bot would have placed
+orders into a shut market every evening -- and with rejections now loud, that
+was a nightly false alarm scheduled in advance.
+
+The bot has placed no trades yet. The 432 historical orders on the account
+predate its first connection and carry no strategy tag; the bot's own orders
+will be tagged gold_scalper.
