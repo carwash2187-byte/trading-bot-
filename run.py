@@ -32,6 +32,7 @@ from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
 from tradebot.strategy.stack import StrategyStack
 from tradebot.strategy.mamba import MambaBreakout
+from tradebot.strategy.mamba_both import MambaBoth
 from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
@@ -89,6 +90,12 @@ REGISTRY = {
     # Wants ~2% risk, not the breakout's 6%: more trades at a 15% win rate
     # means longer losing runs, and 6% turns a 39% drawdown into 83%.
     "mamba_channel": lambda: MambaChannel(target_pct=1.0),
+    # Both his trades in one bot, which is how he actually trades: breakout
+    # when a level gives way, channel fade when it holds. 4.59x over ten
+    # months of US30 15m at 2% risk on 1.08 trades a day, up in three quarters
+    # of four -- better than either half alone. Wants ~2% risk; 6% returns
+    # 7.63x but through a 90% drawdown and only two quarters up.
+    "mamba_both": MambaBoth,
     "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,
     "kama_trend": KamaTrend,

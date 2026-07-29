@@ -286,3 +286,27 @@ So the honest position after three hours: his frequency is reachable, and the
 mode that reaches it is the one he actually described on video, but it is not
 reliable enough to trade on its own. Frequency and consistency trade off
 directly here, and the trade is steep.
+
+## Running both his trades together — the best build so far
+
+He has two trades, not one. Teaching videos are all breakouts; the live
+breakdown was a channel fade. A market either breaks a level or respects it,
+and he has a trade for each -- so running only the breakout half meant sitting
+out every session where the range held, which is most of them.
+
+US30 15m, ten months, $150:
+
+| risk | trades/day | growth | quarters up | drop |
+|---|---|---|---|---|
+| 1% | 1.28 | 2.09x | 3/4 | 25% |
+| **2%** | **1.08** | **4.59x** | **3/4** | **44%** |
+| 3% | 1.07 | 4.55x | 2/4 | 61% |
+| 6% | 1.10 | 7.63x | 2/4 | 90% |
+
+Better than either half alone: the breakout returns 5.15x but trades 0.17
+times a day, the channel fade trades often but holds up in only two quarters
+of four. Together: near his frequency, three quarters of four, 4.59x.
+
+Breakout takes priority when both fire. Once a level actually breaks, the
+channel it belonged to is not a channel any more, and fading its edge is
+taking the wrong side of the same event.
