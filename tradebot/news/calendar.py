@@ -195,8 +195,13 @@ class EconomicCalendar:
         self, now: datetime, min_impact: Impact = Impact.LOW, symbol: str | None = None
     ) -> NewsEvent | None:
         """The soonest upcoming event matching the filters."""
+        # Walk by index rather than slicing. `self._events[idx:]` copies the
+        # whole tail on every call -- on a 50,000-event calendar that is tens
+        # of thousands of copies per cycle, in the method documented as cheap
+        # enough to call every cycle. The binary search was never the cost.
         idx = bisect.bisect_left(self._times, now.timestamp())
-        for event in self._events[idx:]:
+        for i in range(idx, len(self._events)):
+            event = self._events[i]
             if event.impact < min_impact:
                 continue
             if symbol and not event.affects(symbol):
@@ -208,8 +213,12 @@ class EconomicCalendar:
         self, now: datetime, min_impact: Impact = Impact.LOW, symbol: str | None = None
     ) -> NewsEvent | None:
         """The most recent event that has already fired."""
+        # Same slicing trap as next_event, and worse: reversed() on a slice
+        # copies everything BEFORE the index, which for a calendar centred on
+        # today is about half of it, every call.
         idx = bisect.bisect_left(self._times, now.timestamp())
-        for event in reversed(self._events[:idx]):
+        for i in range(idx - 1, -1, -1):
+            event = self._events[i]
             if event.impact < min_impact:
                 continue
             if symbol and not event.affects(symbol):

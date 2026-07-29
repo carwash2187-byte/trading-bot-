@@ -140,12 +140,30 @@ def test_detection_is_fast_on_a_large_calendar(tmp_path):
     cal = calendar_with(*events, tmp_path=tmp_path)
     detector = NewsDetector(cal)
 
-    start = time.perf_counter()
-    for _ in range(1_000):
-        detector.check("EURUSD", NOW)
-    elapsed = time.perf_counter() - start
-    # 1,000 checks over 50k events well under a second => microseconds each.
-    assert elapsed < 1.0
+    # Measured against a baseline taken on the same machine at the same
+    # moment, not against a wall-clock constant. An absolute threshold turns
+    # any busy machine into a red test -- this one failed repeatedly while
+    # unrelated work ran alongside it, which trains you to ignore the suite.
+    #
+    # What actually matters is that the check does not SCAN the calendar: it
+    # must cost about the same over 50,000 events as over 50.
+    small = NewsDetector(calendar_with(*events[:50], tmp_path=tmp_path / "s"))
+
+    def cost(det):
+        start = time.perf_counter()
+        for _ in range(1_000):
+            det.check("EURUSD", NOW)
+        return time.perf_counter() - start
+
+    cost(small)                        # warm the code paths for both
+    cost(detector)
+    baseline = cost(small)
+    big = cost(detector)
+
+    # A linear scan over 1,000x the events would be ~1,000x slower. Ten times
+    # the baseline is loose enough to survive a loaded machine and tight
+    # enough to catch a scan.
+    assert big < max(baseline * 10, 0.05)
 
 
 # -- loading and resilience -------------------------------------------------
