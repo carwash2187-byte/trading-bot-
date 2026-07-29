@@ -99,16 +99,24 @@ REGISTRY = {
     # actually bites -- the fade. 9.69x over ten months of US30 15m at 5% risk,
     # profitable in four quarters of four, drawdown 47% against 86% without the
     # filter. See research/mamba_notes.md.
-    # Bot 2. The 3-hour cap is not there to make more money -- quarter by
-    # quarter it makes slightly less. It is there because a trade held to its
-    # target sits open for about ten hours, and while it is open the risk layer
-    # refuses every other entry on the symbol. Capping the hold frees the slot:
-    # 0.87 trades a day instead of 0.52, winning 42% instead of 29%, worst drop
-    # 46% instead of 55%. Anywhere from 2.5 to 4 hours does the same job.
+    # Bot 2. No hold cap, and that is a measured decision rather than an
+    # omission. Capping the hold was briefly registered at 180 minutes on the
+    # strength of an 11.93x result, which turned out to be an artifact: the cap
+    # sat below the session gate in MambaBreakout.evaluate, so it only ever
+    # fired during New York hours and trades ran as long as 1425 minutes. With
+    # the check moved above the gate and actually enforcing itself, every cap
+    # is far worse than none -- 30 min 1.12x, 1 hr 2.46x, 2 hr 2.48x, 3 hr
+    # 0.97x, none 11.05x -- because the 1:8 winners need hours to arrive and
+    # cutting them off keeps all the losses and discards the payoff. His own
+    # words agree: "I don't care what anybody says about holding trades for a
+    # few hours or 8 hours or whatever."
+    #
+    # The cost is frequency: 0.52 trades a day, because one position per symbol
+    # plus a ~10 hour hold blocks everything else. That is a real tension with
+    # wanting 2-3 a day and it is not solved yet.
     "mamba_both": lambda: MambaBoth(
         breakout=MambaBreakout(
-            wait_for_close=False, stop_candle_frac=0.5, reward=8.0,
-            max_hold_minutes=180,
+            wait_for_close=False, stop_candle_frac=0.5, reward=8.0
         ),
         channel=MambaChannel(target_pct=1.0, higher_tf_bars=32),
     ),

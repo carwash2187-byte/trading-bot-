@@ -81,3 +81,62 @@ def test_paper_broker_still_uses_wall_clock() -> None:
     ))
     opened = p.get_positions()[0].opened_at
     assert (datetime.now(timezone.utc) - opened).total_seconds() < 60
+
+
+def test_hold_cap_fires_outside_the_trading_session() -> None:
+    """A hold cap must not sit behind an entry gate.
+
+    The cap was first placed after MambaBreakout's session check, which returns
+    early outside New York hours. So it only ever fired during the session, and
+    a trade opened at 04:00 ran for 1425 minutes under a "180 minute cap". The
+    resulting hold-time table measured something other than its own label and
+    made a losing setting look like the best one found all session.
+    """
+    from datetime import time as _time
+
+    from tradebot.strategy.mamba import MambaBreakout
+
+    strat = MambaBreakout(max_hold_minutes=180)
+    # 03:00 UTC is outside every session this strategy trades.
+    off_session = datetime(2025, 10, 2, 3, 0, tzinfo=timezone.utc)
+    assert strat._active_session(off_session) is None, (
+        "test needs an off-session time to be meaningful"
+    )
+
+    opened = off_session - timedelta(minutes=600)
+    ctx = _context_with_position(off_session, opened)
+    actions = strat.evaluate(ctx)
+    assert actions, "a 600-minute-old trade must be closed even off-session"
+    assert actions[0].__class__.__name__ == "Exit"
+
+
+def _context_with_position(now: datetime, opened_at: datetime):
+    """A context holding one open position and enough bars to be evaluated."""
+    from tradebot.brokers.base import OrderSide, Position
+    from tradebot.strategy.base import StrategyContext
+
+    candles = [
+        Candle(
+            timestamp=now - timedelta(minutes=15 * (100 - i)),
+            open=46_000, high=46_050, low=45_950, close=46_000, volume=1.0,
+        )
+        for i in range(100)
+    ]
+    pos = Position(
+        ticket="P000001", symbol="US30", side=OrderSide.SELL, lots=0.06,
+        entry_price=46_000.0, stop_loss=46_100.0, take_profit=45_200.0,
+        opened_at=opened_at, comment="mamba_breakout",
+    )
+    from tradebot.brokers.base import AccountSnapshot
+    from tradebot.risk.limits import RiskLimits, RiskManager
+
+    return StrategyContext(
+        symbol="US30", instrument=INST, candles=candles,
+        bid=46_000.0, ask=46_001.0,
+        account=AccountSnapshot(
+            balance=150.0, equity=150.0, currency="USD",
+            margin_used=0.0, margin_free=150.0, taken_at=now,
+        ),
+        open_positions=[pos], news=None,
+        risk=RiskManager(RiskLimits()), now=now,
+    )

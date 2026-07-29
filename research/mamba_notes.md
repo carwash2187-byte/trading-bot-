@@ -440,3 +440,39 @@ Neighbours from 150 to 225 minutes all come out 8.9x-11.9x and 4/4, so this is a
 plateau rather than a spike; 180 sitting on top of it is partly luck. The 75
 minute setting collapsing to 2.31x and 2/4 between two healthy neighbours is a
 reminder of how noisy this surface is.
+
+
+### Correction, same day: the hold-time table above was measuring nothing
+
+Leo asked for proof of the numbers and the first thing the raw trade list showed
+was trade 1 held 570 minutes and trade 6 held 1425 minutes -- under a "180
+minute cap". The cap had been placed *after* MambaBreakout's session gate,
+which returns early outside New York hours, so it could only fire during the
+session. What was committed as "a 3 hour cap" actually behaved as "close stale
+trades whenever New York next opens".
+
+With the check moved above the gate and genuinely enforcing itself:
+
+| hold cap | growth | trades/day | win% | worst drop | quarters up |
+|----------|--------|-----------|------|-----------|-------------|
+| 30 min | 1.12x | 2.28 | 45.7% | 60% | 2/4 |
+| 1 hour | 2.46x | 1.73 | 49.9% | 53% | 3/4 |
+| 2 hours | 2.48x | 1.30 | 47.9% | 47% | 3/4 |
+| 3 hours | 0.97x | 1.20 | 45.5% | 69% | 2/4 |
+| 8 hours | 2.26x | 0.96 | 38.4% | 67% | 2/4 |
+| **no cap** | **11.05x** | **0.52** | **28.7%** | **55%** | **4/4** |
+
+So the answer to the original question reverses completely. **Every cap is much
+worse than none**, and a real 3-hour cap loses money (0.97x). The 11.93x that
+justified registering it was an artifact of the bug. Reverted to no cap.
+
+This is the third time in this project that a rule which appeared to help was
+actually a rule that never ran: `2h` missing from the timeframe table, the
+wall-clock stamp disabling every time-based rule, and now an exit placed behind
+an entry gate. The pattern worth remembering: **a parameter sweep where the
+setting does nothing produces a smooth, plausible table**, and the giveaway is
+always in the raw per-trade output, never in the summary.
+
+Note also that a 30-minute cap does reach 2.28 trades a day -- inside Leo's
+stated 2-3 -- at 1.12x. So his frequency target is achievable; it just costs
+about 90% of the return. The tension is real and unresolved.

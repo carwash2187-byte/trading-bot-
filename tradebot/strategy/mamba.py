@@ -274,13 +274,13 @@ class MambaBreakout(Strategy):
         if len(candles) < 60:
             return []
 
-        active = self._active_session(context.now)
-        if active is None:
-            return []
-        _, open_at = active
-
-        # Time-based exit, checked first: a trade past its clock goes whatever
-        # the price is doing.
+        # Time-based exit, before ANY other gate. Managing a position that is
+        # already open has nothing to do with whether this is a good moment to
+        # enter a new one -- and the session gate below returns early, so a cap
+        # placed after it only ever fires during New York hours. That bug made
+        # a "3 hour cap" behave as "close stale trades whenever New York next
+        # opens", which let trades run 1425 minutes and produced a hold-time
+        # table that was measuring something other than its own label.
         if self.max_hold_minutes > 0:
             for pos in context.open_positions:
                 if pos.comment != self.name:
@@ -288,6 +288,11 @@ class MambaBreakout(Strategy):
                 held = (context.now - pos.opened_at).total_seconds() / 60
                 if held >= self.max_hold_minutes:
                     return [Exit(ticket=pos.ticket, reason="time-exit")]
+
+        active = self._active_session(context.now)
+        if active is None:
+            return []
+        _, open_at = active
 
         # Take pieces off at his intermediate targets before anything else.
         if self.scale_targets:
