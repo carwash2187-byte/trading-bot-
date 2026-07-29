@@ -212,3 +212,25 @@ was a nightly false alarm scheduled in advance.
 The bot has placed no trades yet. The 432 historical orders on the account
 predate its first connection and carry no strategy tag; the bot's own orders
 will be tagged gold_scalper.
+
+## Leo's challenge (2026-07-29): every loosening tested, every one lost
+
+Deal: whatever won the walk-forward would be deployed. Seven candidates, four
+unseen stretches, the live $2,635 balance, deaths counted at $2,477.
+
+| candidate | $/mo | stretches won | died |
+|---|---|---|---|
+| champion (RSI 35/65, trend filter, live now) | **+$182** | **4/4** | **1/4** |
+| shorts at 63 ("fix" yesterday's near-miss) | +$141 | 4/4 | 2/4 |
+| shorts at 60 | +$120 | 4/4 | 2/4 |
+| no trend filter | +$135 | 1/4 | 4/4 |
+| loose shorts only | −$45 | 2/4 | 3/4 |
+| liquidity sweeps | −$522 | 0/4 | 4/4 |
+| sweeps at 2R | −$467 | 0/4 | 4/4 |
+
+The champion won every axis, so the deployment the deal required was a no-op.
+Worth keeping: tuning the short trigger to catch one remembered near-miss
+costs $41/month and doubles the death rate — the missed trade's ugly cousins
+come with it. And the trend filter is not a preference: without it the account
+died in all four stretches. At 2% risk the champion earns $246 but deaths
+double to 2/4; the standing agreement is 1.5% until a month of live results.
