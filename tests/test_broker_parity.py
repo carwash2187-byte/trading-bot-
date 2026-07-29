@@ -537,3 +537,47 @@ def test_reads_are_retried_but_orders_never_are():
         with pytest.raises(BrokerError):
             broker._request("POST", "/orders", {"qty": 1})
     assert calls["n"] == 1                            # one attempt, no retry
+
+
+def test_closing_reads_the_position_before_deleting_it(mock_tradelocker):
+    """Deleted first, the position lookup returns nothing and every field
+    degrades to a default -- symbol "", exit price 0.0. The journal then books
+    the close at zero: a five-figure fake loss on gold that flows straight
+    into the statistics and gets the strategy benched for a catastrophe that
+    never happened.
+    """
+    responses = _tradelocker_responses()
+    responses["GET /trade/accounts/42/positions"] = {
+        "d": {"positions": [[
+            "P-7", 7, 800, "buy", 0.07, 4000.0,
+            None, None, 1753700000000, 12.5, "gold_scalper",
+        ]]}
+    }
+    deleted = {"count": 0}
+
+    def with_delete(self, method, path, body=None, auth=True):
+        if method == "DELETE":
+            deleted["count"] += 1
+            # After the delete, the book is empty -- as it would be live.
+            responses["GET /trade/accounts/42/positions"] = {"d": {"positions": []}}
+            return {}
+        return _fake_request(responses)(self, method, path, body, auth)
+
+    with patch.object(TradeLockerBroker, "_request", with_delete):
+        fill = mock_tradelocker.close_position("P-7")
+
+    assert deleted["count"] == 1
+    assert fill.symbol == "XAUUSD"          # not ""
+    assert fill.lots == 0.07                # not 0.0
+    assert fill.price == 1999.5             # the live bid, not zero
+
+
+def test_closing_a_ticket_that_is_already_gone_says_so(mock_tradelocker):
+    """A bracket may beat a manual close to it. That is a stale ticket, and it
+    must surface as an error the cycle can log -- not a zero-priced fill that
+    poisons the journal."""
+    responses = _tradelocker_responses()
+    responses["GET /trade/accounts/42/positions"] = {"d": {"positions": []}}
+    with patch.object(TradeLockerBroker, "_request", _fake_request(responses)):
+        with pytest.raises(BrokerError, match="not found"):
+            mock_tradelocker.close_position("P-GONE")

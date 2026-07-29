@@ -416,18 +416,35 @@ class TradeLockerBroker(Broker):
         )
 
     def close_position(self, ticket: str, lots: float | None = None) -> Fill:
+        # Read the position BEFORE deleting it. The obvious order -- delete,
+        # then look at what closed -- looks up a position that no longer
+        # exists, and every field degrades to a default: symbol "", exit price
+        # 0.0. The journal then books the close at zero, a five-figure fake
+        # loss on gold, and the portfolio manager benches the strategy for a
+        # catastrophe that never happened. Wrong-looking numbers would at
+        # least get investigated; these flow straight into the stats.
+        pos = self.get_position(ticket)
+        if pos is None:
+            raise BrokerError(
+                f"position {ticket} not found; nothing to close. If it was "
+                f"just closed by its bracket, this is a stale ticket, not an "
+                f"error in the account."
+            )
+        bid, ask = self.get_price(pos.symbol)
+
         body = {"qty": lots} if lots is not None else {}
         self._request("DELETE", f"/trade/positions/{ticket}", body or None)
-        pos = self.get_position(ticket)
-        symbol = pos.symbol if pos else ""
-        bid, ask = self.get_price(symbol) if symbol else (0.0, 0.0)
-        side = pos.side.opposite if pos else OrderSide.SELL
+
+        side = pos.side.opposite
         return Fill(
             ticket=ticket,
             client_id="",
-            symbol=symbol,
+            symbol=pos.symbol,
             side=side,
-            lots=lots or (pos.lots if pos else 0.0),
+            lots=lots or pos.lots,
+            # The price the market showed the instant before the close went
+            # in -- the closest honest estimate this API offers, since the
+            # DELETE returns no fill details.
             price=bid if side is OrderSide.SELL else ask,
             filled_at=utcnow(),
         )
