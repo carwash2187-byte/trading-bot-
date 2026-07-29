@@ -114,6 +114,19 @@ class PaperBroker(Broker):
 
     # -- trading ---------------------------------------------------------
 
+    def _stamp(self) -> datetime:
+        """What time it is, as far as this broker is concerned.
+
+        Live and paper trading both mean wall clock. The backtester overrides
+        this to return the timestamp of the candle being replayed -- otherwise
+        every simulated position is stamped with today's real date, and any
+        rule that reasons about time (how long a trade has been held, how many
+        trades happened today, whether this is still the same session) silently
+        compares a 2025 candle against 2026. That does not crash; it just makes
+        those rules do nothing, which is worse than crashing.
+        """
+        return utcnow()
+
     def submit_bracket(self, order: BracketOrder) -> Fill:
         if not self._connected:
             raise BrokerError("broker not connected")
@@ -150,7 +163,7 @@ class PaperBroker(Broker):
             entry_price=price,
             stop_loss=inst.round_price(order.stop_loss),
             take_profit=inst.round_price(order.take_profit) if order.take_profit else None,
-            opened_at=utcnow(),
+            opened_at=self._stamp(),
             comment=order.comment,
         )
         return Fill(
@@ -160,7 +173,7 @@ class PaperBroker(Broker):
             side=order.side,
             lots=lots,
             price=price,
-            filled_at=utcnow(),
+            filled_at=self._stamp(),
             commission=commission,
             stop_loss=order.stop_loss,
             take_profit=order.take_profit,
@@ -272,7 +285,7 @@ class PaperBroker(Broker):
             side=pos.side.opposite,
             lots=close_lots,
             price=exit_price,
-            filled_at=utcnow(),
+            filled_at=self._stamp(),
         )
 
 

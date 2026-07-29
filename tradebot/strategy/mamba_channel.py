@@ -89,6 +89,7 @@ class MambaChannel(Strategy):
         target_pct: float = 0.8,
         min_width_pct: float = 0.004,
         max_trades_per_day: int = 3,
+        higher_tf_bars: int = 0,
     ) -> None:
         self.lookback_bars = lookback_bars
         self.edge_pct = edge_pct
@@ -97,6 +98,15 @@ class MambaChannel(Strategy):
         self.target_pct = target_pct
         self.min_width_pct = min_width_pct
         self.max_trades_per_day = max_trades_per_day
+        # "If it's gonna fall on the H4, that means price is really gonna fall
+        # on the M15." "We got two time frames looking good."
+        #
+        # This filter does nothing to a breakout -- breaking above resistance
+        # already means price is at the top of its range, so the timeframes
+        # agree by construction. It is the FADE that can fight the bigger
+        # picture: selling a channel top while the higher timeframe climbs is
+        # exactly the trade his rule exists to refuse. Zero disables it.
+        self.higher_tf_bars = higher_tf_bars
 
     def _channel(self, candles: list[Candle]) -> Channel | None:
         window = candles[-self.lookback_bars:]
@@ -142,6 +152,16 @@ class MambaChannel(Strategy):
             return []
 
         bar = candles[-1]
+
+        # Which way the bigger picture points, measured the way he reads it by
+        # eye: where price sits within the higher-timeframe range.
+        allow_short = allow_long = True
+        if self.higher_tf_bars > 0 and len(candles) > self.higher_tf_bars:
+            htf = candles[-self.higher_tf_bars:]
+            mid = (max(c.high for c in htf) + min(c.low for c in htf)) / 2.0
+            allow_short = bar.close < mid      # only fade down in a down bias
+            allow_long = bar.close > mid
+
         band = channel.width * self.edge_pct
         stop_room = channel.width * self.stop_pct
 
@@ -149,7 +169,8 @@ class MambaChannel(Strategy):
         # Requires the bar to have REACHED the zone and CLOSED back inside it.
         # A close above the high is the channel breaking, and fading that is
         # the losing side of this trade.
-        if (channel.high_touches >= self.min_touches
+        if (allow_short
+                and channel.high_touches >= self.min_touches
                 and bar.high >= channel.high - band
                 and bar.close < channel.high):
             stop = channel.high + stop_room
@@ -162,7 +183,8 @@ class MambaChannel(Strategy):
                     comment=self.name,
                 )]
 
-        if (channel.low_touches >= self.min_touches
+        if (allow_long
+                and channel.low_touches >= self.min_touches
                 and bar.low <= channel.low + band
                 and bar.close > channel.low):
             stop = channel.low - stop_room

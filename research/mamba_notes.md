@@ -392,3 +392,51 @@ equity curve *feel* better costs return.
 So the honest summary of copying him completely: the frequency is his, the win
 rate is close to his, the drawdown is real, and the money is lower than the
 simplest version of his own strategy. More of him is not more money.
+
+## How long to hold — measured, 2026-07-29
+
+Leo asked what happens if a trade is only held 20-30 minutes. Testing it
+exposed a bug that had been quietly disabling every time-based rule in the
+backtester: simulated positions were stamped with the real wall-clock date, so
+`now - opened_at` came out around minus 300 days. A hold limit tested as a
+perfect no-op across seven settings, which reads like "holding time doesn't
+matter" rather than "the feature never ran". Same bug meant the channel half's
+"max 3 trades a day" cap had never been enforced in any backtest, and the
+breakout's same-session guard was always true.
+
+With the clock fixed, on $150 at 6% risk, US30 15m, 10 months:
+
+| hold cap | growth | trades/day | win% | worst drop | quarters up |
+|----------|--------|-----------|------|-----------|-------------|
+| 20-30 min | 2.10x | 1.30 | 47.7% | 53% | 3/4 |
+| 1 hour | 5.09x | 1.09 | 46.9% | 46% | 4/4 |
+| 2 hours | 8.55x | 0.90 | 45.5% | 52% | 4/4 |
+| **3 hours** | **11.93x** | **0.87** | **41.7%** | **46%** | **4/4** |
+| 4 hours | 9.97x | 0.87 | 41.4% | 46% | 3/4 |
+| no cap | 11.05x | 0.52 | 28.7% | 55% | 4/4 |
+
+**His own words argue against a short hold and the numbers agree**: *"I don't
+care what anybody says about day trading in terms of holding trades for a few
+hours or 8 hours or whatever."* A 20-30 minute cap cuts the 1:8 winners off
+before they arrive — the win rate climbs to 48% because small gains get banked,
+but the few big runs are what pay for everything, and capping them costs 80% of
+the return.
+
+**But the test found the real reason bot 2 only trades 0.52 times a day**, which
+is the thing Leo has been asking about for hours. It is not the entry filters.
+A trade held to target stays open about **10 hours**, and the risk layer allows
+one position per symbol, so every signal that fires while it is open is refused.
+Holding less long is how the frequency goes up.
+
+**Honest caveat on the 11.93x.** Per quarter, each starting fresh from $150, the
+cap is *worse* in three quarters of four (1.44/2.34/1.45/1.18 against
+1.44/2.83/1.76/1.57). The full-run edge is a compounding-path artifact, not a
+per-period gain. What survives that check is the trade count, the win rate and
+the drawdown — at 5% risk the cap drops 39% against 47%, at 2% it drops 16%
+against 25%. So the cap is registered for frequency and smoothness at roughly
+equal money, not for more money.
+
+Neighbours from 150 to 225 minutes all come out 8.9x-11.9x and 4/4, so this is a
+plateau rather than a spike; 180 sitting on top of it is partly luck. The 75
+minute setting collapsing to 2.31x and 2/4 between two healthy neighbours is a
+reminder of how noisy this surface is.

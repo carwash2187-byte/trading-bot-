@@ -84,6 +84,10 @@ class BacktestBroker(PaperBroker):
         half = mid * self.spread_pct / 2.0
         return (mid - half, mid + half)
 
+    def _stamp(self) -> datetime:
+        """Simulated time: the candle being replayed, not today's date."""
+        return self.now if self.now is not None else super()._stamp()
+
     def advance(self, symbol: str, candle: Candle) -> None:
         """Walk price through one bar so stops fire where they really would.
 

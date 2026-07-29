@@ -95,7 +95,23 @@ REGISTRY = {
     # months of US30 15m at 2% risk on 1.08 trades a day, up in three quarters
     # of four -- better than either half alone. Wants ~2% risk; 6% returns
     # 7.63x but through a 90% drawdown and only two quarters up.
-    "mamba_both": MambaBoth,
+    # THE BUILD. Both his trades, plus his two-timeframe rule applied where it
+    # actually bites -- the fade. 9.69x over ten months of US30 15m at 5% risk,
+    # profitable in four quarters of four, drawdown 47% against 86% without the
+    # filter. See research/mamba_notes.md.
+    # Bot 2. The 3-hour cap is not there to make more money -- quarter by
+    # quarter it makes slightly less. It is there because a trade held to its
+    # target sits open for about ten hours, and while it is open the risk layer
+    # refuses every other entry on the symbol. Capping the hold frees the slot:
+    # 0.87 trades a day instead of 0.52, winning 42% instead of 29%, worst drop
+    # 46% instead of 55%. Anywhere from 2.5 to 4 hours does the same job.
+    "mamba_both": lambda: MambaBoth(
+        breakout=MambaBreakout(
+            wait_for_close=False, stop_candle_frac=0.5, reward=8.0,
+            max_hold_minutes=180,
+        ),
+        channel=MambaChannel(target_pct=1.0, higher_tf_bars=32),
+    ),
     "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,
     "kama_trend": KamaTrend,

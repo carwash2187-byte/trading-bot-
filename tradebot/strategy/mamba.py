@@ -131,6 +131,8 @@ class MambaBreakout(Strategy):
         wait_for_close: bool = True,
         stop_candle_frac: float = 0.0,
         min_stop_ticks: float = 3.0,
+        higher_tf_bars: int = 0,
+        max_hold_minutes: int = 0,
         breakeven_at: float = 0.0,
         scale_targets: tuple[tuple[float, float], ...] = (),
         max_trades_per_session: int = 2,
@@ -160,6 +162,17 @@ class MambaBreakout(Strategy):
         # not a 1m one. So the candle fraction gets a floor rather than being
         # allowed to propose a stop the market cannot express.
         self.min_stop_ticks = min_stop_ticks
+        # He checks the higher timeframe before taking the entry, and requires
+        # the two to agree: "if it's gonna fall on the H4, that means price is
+        # really gonna fall on the M15", "we got two time frames looking good."
+        # Measured as the direction of the last N bars -- 16 fifteen-minute
+        # bars is four hours, his H4. Zero disables the filter.
+        self.higher_tf_bars = higher_tf_bars
+        # Close a trade after this long regardless of price. He says the
+        # opposite -- "I don't care what anybody says about holding trades for
+        # a few hours or 8 hours" -- so this exists to measure what the holding
+        # is worth rather than to copy him. Zero means hold to stop or target.
+        self.max_hold_minutes = max_hold_minutes
         # He manages winners rather than only waiting for the target: "we can
         # take half our profit, put stops to break even", "75% of my profit and
         # let the rest run". Expressed here as the multiple of risk at which
@@ -266,6 +279,16 @@ class MambaBreakout(Strategy):
             return []
         _, open_at = active
 
+        # Time-based exit, checked first: a trade past its clock goes whatever
+        # the price is doing.
+        if self.max_hold_minutes > 0:
+            for pos in context.open_positions:
+                if pos.comment != self.name:
+                    continue
+                held = (context.now - pos.opened_at).total_seconds() / 60
+                if held >= self.max_hold_minutes:
+                    return [Exit(ticket=pos.ticket, reason="time-exit")]
+
         # Take pieces off at his intermediate targets before anything else.
         if self.scale_targets:
             for pos in context.open_positions:
@@ -355,7 +378,20 @@ class MambaBreakout(Strategy):
 
         floor = context.instrument.tick_size * self.min_stop_ticks
 
-        if resistance and broke_up:
+        # The higher-timeframe direction, if he would have checked it. Compares
+        # where price sits against the midpoint of the higher-timeframe range,
+        # which is the same judgement he makes by eye: is the bigger picture
+        # pointing up or down from here.
+        htf_up = htf_down = True
+        if self.higher_tf_bars > 0 and len(candles) > self.higher_tf_bars:
+            window = candles[-self.higher_tf_bars:]
+            top = max(c.high for c in window)
+            bottom = min(c.low for c in window)
+            mid = (top + bottom) / 2.0
+            htf_up = bar.close > mid
+            htf_down = bar.close < mid
+
+        if resistance and broke_up and htf_up:
             if self.stop_candle_frac > 0 and candle > 0:
                 stop = entry_up - max(candle * self.stop_candle_frac, floor)
             else:
@@ -369,7 +405,7 @@ class MambaBreakout(Strategy):
                     comment=self.name,
                 )]
 
-        if support and broke_down:
+        if support and broke_down and htf_down:
             if self.stop_candle_frac > 0 and candle > 0:
                 stop = entry_down + max(candle * self.stop_candle_frac, floor)
             else:
