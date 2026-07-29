@@ -145,3 +145,26 @@ that bleed. Risk is where the aggression pays, and it keeps paying up to about
 NAS100 loses at every setting tested and is not a second market for this
 strategy. Running both together on one account also loses: 527 trades, -$31 to
 -$198/month, up to 96% drawdown.
+
+## His exit management, tested and rejected
+
+He manages winners rather than only waiting for the target: "we can take half
+our profit, put stops to break even", "75% of my profit and let the rest run",
+"I closed all my position at Target 3."
+
+Built the breakeven-stop half of that and measured it. It is worse on both
+axes at every level:
+
+| breakeven at | 1.5% risk | 5% risk |
+|---|---|---|
+| **off** | **+$219/mo, 18% drop** | **+$1,030/mo, 34% drop** |
+| 1R | +$166, 20% | +$765, 39% |
+| 2R | +$181, 21% | +$771, 42% |
+| 3R | +$161, 23% | +$624, 48% |
+
+Saving the small losses costs the runners that dip before they fly, and at 1:8
+the runners ARE the business. Drawdown rises too, because a stopped-out
+breakeven trade re-enters into the same move and pays the spread twice.
+
+Kept in the code, off by default -- a human managing one trade with judgement
+is doing something a fixed rule cannot copy.

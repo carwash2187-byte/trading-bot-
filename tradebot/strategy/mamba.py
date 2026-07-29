@@ -57,7 +57,7 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta, timezone
 
 from ..brokers.base import Candle, OrderSide
-from .base import Action, Enter, Strategy, StrategyContext
+from .base import Action, AdjustStop, Enter, Strategy, StrategyContext
 
 # Session opens in UTC. Tokyo 09:00 JST, London 08:00 UK, New York 09:30 ET --
 # the hours the wider market actually turns over, which is when a range built
@@ -131,6 +131,7 @@ class MambaBreakout(Strategy):
         wait_for_close: bool = True,
         stop_candle_frac: float = 0.0,
         min_stop_ticks: float = 3.0,
+        breakeven_at: float = 0.0,
         max_trades_per_session: int = 2,
         window_minutes: int = 120,
         min_touches: int = 3,
@@ -158,6 +159,19 @@ class MambaBreakout(Strategy):
         # not a 1m one. So the candle fraction gets a floor rather than being
         # allowed to propose a stop the market cannot express.
         self.min_stop_ticks = min_stop_ticks
+        # He manages winners rather than only waiting for the target: "we can
+        # take half our profit, put stops to break even", "75% of my profit and
+        # let the rest run". Expressed here as the multiple of risk at which
+        # the stop is pulled to entry -- once a trade is that far ahead it can
+        # no longer become a loss, which is what lets a 1:8 runner be held
+        # without fear.
+        #
+        # Off by default, because measuring it says the fear was the point:
+        # 1,030/month becomes 765 at 5% risk, with drawdown rising 34% to 39%.
+        # It saves the small losses and kills the runners that dip before they
+        # fly -- and at 1:8 the runners are the entire business. Worse on both
+        # axes at every level tested (1R through 4R).
+        self.breakeven_at = breakeven_at
         self.min_touches = min_touches
         self.touch_tolerance = touch_tolerance
         self.max_trades_per_session = max_trades_per_session
@@ -239,6 +253,27 @@ class MambaBreakout(Strategy):
         if active is None:
             return []
         _, open_at = active
+
+        # Move the stop to breakeven once the trade is far enough ahead. This
+        # runs before the has-position return, because managing a live winner
+        # is the one thing worth doing while holding.
+        if self.breakeven_at > 0:
+            moves: list[Action] = []
+            for pos in context.open_positions:
+                if pos.comment != self.name or pos.stop_loss is None:
+                    continue
+                risk = abs(pos.entry_price - pos.stop_loss)
+                if risk <= 0:
+                    continue
+                ahead = ((context.bid - pos.entry_price) if pos.is_long
+                         else (pos.entry_price - context.ask))
+                already_safe = ((pos.stop_loss >= pos.entry_price) if pos.is_long
+                                else (pos.stop_loss <= pos.entry_price))
+                if ahead >= risk * self.breakeven_at and not already_safe:
+                    moves.append(AdjustStop(ticket=pos.ticket,
+                                            stop_loss=pos.entry_price))
+            if moves:
+                return moves
 
         # One position at a time; the risk layer enforces this too, but the
         # strategy should not be asking for what it cannot have.
