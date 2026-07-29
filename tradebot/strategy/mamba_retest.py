@@ -53,7 +53,7 @@ from dataclasses import dataclass
 from datetime import timezone
 
 from ..brokers.base import Candle, OrderSide
-from .base import Action, Enter, Strategy, StrategyContext
+from .base import Action, AdjustStop, Enter, Strategy, StrategyContext
 
 
 @dataclass(frozen=True)
@@ -102,6 +102,9 @@ class MambaRetest(Strategy):
         stop_zone_frac: float = 0.5,
         fallback_reward: float = 3.0,
         max_trades_per_day: int = 3,
+        ma_period: int = 50,
+        daily_tf_bars: int = 0,
+        trail_after: float = 0.0,
     ) -> None:
         self.higher_tf_bars = higher_tf_bars
         self.level_lookback = level_lookback
@@ -111,6 +114,21 @@ class MambaRetest(Strategy):
         self.stop_zone_frac = stop_zone_frac
         self.fallback_reward = fallback_reward
         self.max_trades_per_day = max_trades_per_day
+        # "as we start to trade below our 50 moving average we could see
+        # potentially all cryptos across the board continue to drop" -- the first
+        # indicator he names out loud. Cycle 1 saw SMAs 8/50/100/.../600 sitting
+        # on his chart and deliberately did not build them, because building an
+        # indicator he never mentions is inventing. Naming it clears that bar.
+        # Zero disables.
+        self.ma_period = ma_period
+        # "we cannot take these five-minute trades if our h4 OR our daily is not
+        # in confluence telling us we're going down." Two higher timeframes, not
+        # one. Measured in 15m bars: 384 is four days, roughly a daily view.
+        self.daily_tf_bars = daily_tf_bars
+        # "i'm going to trail my stop-loss all the way up." Expressed in R: once
+        # a trade is this far ahead, the stop follows it at that distance behind.
+        # Zero disables.
+        self.trail_after = trail_after
 
     # -- reading the chart the way he reads it ---------------------------
 
@@ -134,6 +152,18 @@ class MambaRetest(Strategy):
         if pos > 0.66:
             return -1  # up at resistance, he looks for sells
         if pos < 0.34:
+            return 1
+        return 0
+
+    def _ma_bias(self, candles: list[Candle]) -> int:
+        """Which side of his 50 moving average price is on. 0 when disabled."""
+        if self.ma_period <= 0 or len(candles) < self.ma_period:
+            return 0
+        ma = sum(c.close for c in candles[-self.ma_period:]) / self.ma_period
+        close = candles[-1].close
+        if close < ma:
+            return -1
+        if close > ma:
             return 1
         return 0
 
@@ -231,6 +261,27 @@ class MambaRetest(Strategy):
         candles = context.candles
         if len(candles) < self.higher_tf_bars + 20:
             return []
+        # "i'm going to trail my stop-loss all the way up." Managing an open
+        # trade comes before deciding whether to open another one, and before
+        # any entry gate -- a gate that returns early would silently disable
+        # this, which is exactly how the hold cap broke.
+        if self.trail_after > 0:
+            for pos in context.open_positions:
+                if pos.comment != self.name or pos.stop_loss is None:
+                    continue
+                risk = abs(pos.entry_price - pos.stop_loss)
+                if risk <= 0:
+                    continue
+                price = context.bid if pos.is_long else context.ask
+                ahead = (price - pos.entry_price) if pos.is_long else (pos.entry_price - price)
+                if ahead < risk * self.trail_after:
+                    continue
+                want = (price - risk) if pos.is_long else (price + risk)
+                better = want > pos.stop_loss if pos.is_long else want < pos.stop_loss
+                if better:
+                    return [AdjustStop(ticket=pos.ticket, stop_loss=want,
+                                       take_profit=pos.take_profit)]
+
         if context.has_position:
             return []
         if self._trades_today(context) >= self.max_trades_per_day:
@@ -240,6 +291,24 @@ class MambaRetest(Strategy):
 
         bias = self._higher_tf_bias(candles)
         if bias == 0:
+            return []
+
+        # Both higher timeframes have to agree. "if our h4 OR our daily is not
+        # in confluence" -- either one dissenting kills the trade.
+        if self.daily_tf_bars > 0 and len(candles) > self.daily_tf_bars:
+            daily = candles[-self.daily_tf_bars:]
+            hi = max(c.high for c in daily)
+            lo = min(c.low for c in daily)
+            if hi > lo:
+                pos = (candles[-1].close - lo) / (hi - lo)
+                daily_bias = -1 if pos > 0.66 else (1 if pos < 0.34 else 0)
+                if daily_bias != bias:
+                    return []
+
+        # "as we start to trade below our 50 moving average" -- the MA has to be
+        # on the same side as the trade.
+        ma = self._ma_bias(candles)
+        if ma != 0 and ma != bias:
             return []
 
         bar = candles[-1]

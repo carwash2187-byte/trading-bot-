@@ -597,3 +597,125 @@ the 81% drawdown at 5% is worse than anything else registered. At 3% the drop is
 ceiling, currently returns less than the 1:8 breakout build. Recorded, not acted
 on -- RULE ZERO says his way stands. What it needs next is more of his videos on
 which markets he actually scans and what he skips, not a parameter I invented.
+
+---
+
+## CYCLE 2 of 15 — four videos, captions mined for the open questions
+hGPg7_ZE1DM "COMPLETELY FREE DAY TRADING COURSE", prtpGhzb22g "6 Tips To Become
+a PRO SCALPER", dCCVN-0cqH0 "$62,000 scalping forex LIVE", 9bPlk7zSJAI "$1400 in
+2 hours SCALPING CRYPTO".
+
+### WHICH MARKETS HE ACTUALLY TRADES — answered outright
+
+> "i'm actually going to be full time trading just **nasdaq us 30 gbp usd** and
+> all of my **cryptos** and that's going to be it for now when i'm done trading
+> all the regular 4x pairs i'm done"
+
+So the watchlist is NAS100, US30, GBPUSD and crypto -- and he is explicitly
+DROPPING the rest of forex. My six-market portfolio test included EURUSD, USDJPY
+and XAUUSD, none of which he trades. That is not copying him.
+
+### HIS REAL TRADE FREQUENCY AND WIN RATE — from his own mouth
+
+> "the last month or so i've taken about **30 trades** i lost four of those right
+> so i think i went **26 wins four losses**"
+
+30 trades a month is **~1.4 a day**, not 2-3. And he claims 87% winners on a
+month he calls "a really really really good month". My retest build at 1.85-1.99
+a day is running ABOVE his actual rate. Correcting toward him means fewer trades,
+not more -- which reverses the direction I have been pushed all session.
+
+He is also explicit about the ceiling:
+> "you cannot go out there and take **30 trades in one night** you just can't you
+> don't want to do that you don't want to mess with your psychology that much"
+
+### THE CONFLUENCE RULE — stricter than what I built
+
+> "we cannot take these five-minute trades if our **h4 or our daily** is not in
+> confluence telling us we're going down"
+
+Two higher timeframes, not one. And the entry timeframe here is the **5-minute**,
+not 15.
+
+### THE 50 MOVING AVERAGE — first indicator he names
+
+> "as we start to trade **below our 50 moving average** we could see potentially
+> all cryptos across the board continue to drop"
+
+In cycle 1 I logged SMAs 8/50/100/…/600 visible on his chart and deliberately did
+not build them because he never mentioned them. He mentions the 50 here, as a
+directional signal. That clears the bar: build it.
+
+### TRAILING STOP — confirmed
+
+> "very tight stop loss huge take profit i'm going to **trail my stop-loss all
+> the way up** i'm gonna make a lot of money right and that's how i'm trading"
+
+### TAKE PROFIT LADDER — confirmed again
+
+> "so **take profit one take profit two** hit came back up and then again you know
+> i took my profit already on that drop"
+
+### STOP PLACEMENT, restated
+
+> "because this is a major bullish candle to me boom so i'll take my long position
+> off of that candle i have my **stops pretty much just below** because if price
+> breaks back down here most likely it's going to continue down and then i will go
+> ahead and zoom out and i'll **target my next main zone**"
+
+### HIS R:R ON THE BIG ONE
+
+> "this is a thousand pip trade **250 pips stop loss a thousand pip take profit**
+> that's the game"
+
+1:4. Together with the $100-account video's 1:3 and the 1:8 I had built, his real
+range is **1:3 to 1:4**, chosen by where the next zone sits.
+
+### Retest applies to supply/demand too, then breaks out
+
+> "same thing with supply and demand price will come back **re-test** supply demand
+> whatever the case may be if you're going up or down and then it will **break
+> out**"
+
+### What changes in the build
+
+1. Markets: NAS100, US30, GBPUSD, crypto ONLY. Drop EURUSD/USDJPY/XAUUSD.
+2. Add the 50 MA as a directional filter -- he named it.
+3. Add a trailing stop -- he says he trails all the way up.
+4. Two higher timeframes must agree (H4 and daily), not one.
+5. Target 1:3-1:4 via nearest zone, already built in cycle 1.
+
+### Cycle 2 build results — his 3 markets, 5% risk, 15m, 10 months
+
+| build | growth | trades/day | win% | avg win | drop |
+|-------|--------|-----------|------|---------|------|
+| cycle 1 (no MA, no trail) | 2.06x | 1.02 | 26.5% | — | 66% |
+| **+ his 50 MA** | **2.13x** | 0.96 | 28.0% | 2.7R | 62% |
+| + daily confluence | 1.06x | 0.69 | 26.8% | — | 76% |
+| + trail 1R | 1.09x | 1.05 | 40.7% | 1.3R | 59% |
+| + trail 2R | 1.50x | 0.98 | 35.0% | 1.8R | 56% |
+| + trail 6R | 1.95x | 0.96 | 28.4% | 2.6R | 56% |
+| everything he named | 0.70x | 0.72 | 33.5% | — | 73% |
+
+**The 50 MA earns its place** — better money, fewer trades, smaller drop. Built.
+
+**The trail needs care, and the reason is a gap in what he said, not a
+disagreement with him.** He says "very tight stop loss huge take profit i'm going
+to trail my stop-loss all the way up" but never says how far behind. That distance
+is therefore mine to invent, and inventing it tight contradicts the same sentence:
+a 1R trail turns his 2.7R average winner into 1.3R and the win rate jumps to 41%,
+which is the signature of banking winners early -- the opposite of "huge take
+profit". Registered at 6R, which sits beyond every target he draws, so it only
+manages a trade that has already run past its zone. That is the situation the
+quote describes.
+
+**The daily confluence is off, and this is an admission not an override.** He says
+"h4 or our daily" must agree. I implemented "daily" as position within a 384-bar
+range, which is a guess, and it costs 2.13x -> 1.06x. The failure is most likely
+my stand-in rather than his rule. Left as a parameter, defaulted off, flagged: need
+a video with the daily chart actually on screen before this can be built faithfully.
+
+**Frequency:** 0.96/day on his three markets against his own stated ~30 trades a
+month (~1.4/day). Closer to him than the six-market version's 1.99, and six markets
+included EURUSD, USDJPY and XAUUSD -- pairs he says he has quit. Dropping them is
+more faithful even though it lowers the trade count.

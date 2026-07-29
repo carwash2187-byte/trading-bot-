@@ -120,7 +120,24 @@ REGISTRY = {
     # the retest rather than the break, stop just past the level, target the
     # nearest opposing structure (~1:3), and his own stated risk ceiling of
     # "three to five percent max".
-    "mamba_retest": lambda: MambaRetest(),
+    "mamba_retest": lambda: MambaRetest(
+        # "as we start to trade below our 50 moving average" -- the one indicator
+        # he names out loud. Helps slightly: 2.13x against 2.06x, drop 62% vs 66%.
+        ma_period=50,
+        # "i'm going to trail my stop-loss all the way up." He never says how far,
+        # so the distance is mine to choose, and choosing it tight contradicts the
+        # rest of the same sentence -- "very tight stop loss HUGE take profit".
+        # A 1R trail converts his 2.7R average winner into 1.3R. At 6R the trail
+        # sits beyond every target he draws, so it only ever manages a trade that
+        # has already run past its zone, which is the case he is describing.
+        trail_after=6.0,
+        # He says "h4 OR daily" must agree, so this belongs on. It is off because
+        # I do not yet know HOW he reads the daily -- my stand-in (position within
+        # a 384-bar range) is my invention, not his, and it costs 2.13x -> 1.06x.
+        # Not a veto on him; a gap in what I have watched. Needs a video where the
+        # daily is on screen.
+        daily_tf_bars=0,
+    ),
     "mamba_both": lambda: MambaBoth(
         breakout=MambaBreakout(
             wait_for_close=False, stop_candle_frac=0.5, reward=8.0
