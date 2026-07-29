@@ -168,3 +168,33 @@ breakeven trade re-enters into the same move and pays the spread twice.
 
 Kept in the code, off by default -- a human managing one trade with judgement
 is doing something a fixed rule cannot copy.
+
+## Small account (~$150 live, leveraged) — what actually applies
+
+**Lot size is not the constraint.** US30's minimum 0.01 lots is $520 of index
+needing $10 of margin at 1:50, and a half-candle stop on it risks 0.13% of a
+$150 account. There is plenty of granularity; the account can express any risk
+level the strategy wants.
+
+**Risk peaks at 5-6%, the same place it peaks on every account size** — so the
+ceiling is the strategy's, not the balance's. Ten months of US30 15m:
+
+| risk | growth | per month | worst drop |
+|---|---|---|---|
+| 3% | 3.1x | +12.1% | 27% |
+| 5% | 5.1x | +17.7% | 34% |
+| **6%** | **5.2x** | **+17.8%** | **36%** |
+| 8% | 4.1x | +15.1% | 47% |
+| 15% | 1.5x | +4.2% | 71% |
+
+Past 6% the account compounds through deeper holes and ends smaller. At 15%
+it is barely above break-even while drawing down 71%.
+
+**New York alone beats all three sessions again** at the same risk: 5.15x
+against 4.19x, half the trades, shallower drawdown. Third independent test
+pointing the same way -- his one-session habit is doing work.
+
+**Percentages, not dollars:** roughly +17% a month compounding, with a peak-to
+-trough dip of about a third of the account somewhere along the way. That dip
+is not a tail risk to be engineered away; it is what a 25%-win-rate, 1:8
+strategy feels like from the inside.

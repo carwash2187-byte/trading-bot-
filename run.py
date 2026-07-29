@@ -67,6 +67,11 @@ REGISTRY = {
     "mamba": lambda: MambaBreakout(
         wait_for_close=False, stop_candle_frac=0.5, reward=8.0
     ),
+    # Risk lives on the command line (--risk-per-trade), and for this strategy
+    # it peaks at 5-6% on every account size tested from $150 to $2,635.
+    # Ten months of US30 15m at 6%: 5.2x, about +17.8% a month compounding,
+    # with a 36% peak-to-trough dip on the way. Past 6% the account compounds
+    # through deeper holes and ends smaller -- 15% risk returns 1.5x.
     # All three sessions. Twice the trades for slightly more money and a
     # meaningfully worse profit factor -- worth having, not worth defaulting.
     "mamba_all_sessions": lambda: MambaBreakout(
