@@ -217,3 +217,38 @@ while leaving closes untouched manufactures bars where price wanders without
 going anywhere, which punishes any breakout strategy by construction. Recorded
 here because the number looked alarming and the honest read is that it was a
 bad test, not a bad strategy. The real-quarter evidence is what stands.
+
+## Trying to reach his 2-3 trades a day — four routes, all lose
+
+The bot takes ~0.17 trades/day on US30. He takes 2-3. Every route to closing
+that gap was tested and every one loses money:
+
+| route | trades/day | growth | drawdown |
+|---|---|---|---|
+| **US30 alone (current)** | **0.17** | **5.15x** | **36%** |
+| 4 markets, one at a time, NY | 0.48 | 1.65x | 68% |
+| 4 markets, NY, concurrent | 0.73 | 3.19x | 85% |
+| 4 markets, one at a time, all sessions | 1.03 | 0.28x | 89% |
+| 4 markets, all sessions, concurrent | 1.48 | 0.20x | 95% |
+| looser filter on US30 (earlier test) | 0.83 | worse at every risk | 65% |
+| 5m and 1m timeframes (earlier test) | higher | loses thousands | — |
+
+Each market alone at the winning settings:
+
+| market | growth | win rate |
+|---|---|---|
+| **US30** | **5.15x** | **25.5%** |
+| NAS100 | 0.89x | 16.2% |
+| SPX500 | 0.92x | 14.0% |
+| GER40 | 0.61x | 12.3% |
+
+**The edge is US30-specific.** The other indices run his exact rules and lose.
+So the frequency gap is not timidity in the build -- there are only about five
+qualifying setups a month on the one market where the rules work, and
+manufacturing more by any means measured so far destroys the account.
+
+What this most likely means: his 2-3 trades a day come from discretion, not
+from rules. He looks at a chart and judges which break is real, which level is
+worth respecting, when a market is behaving. That judgement is the part of him
+a rule engine cannot copy -- and the part that is doing the work in the gap
+between 0.17 and 2.5 trades a day.
