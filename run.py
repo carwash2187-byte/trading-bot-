@@ -32,6 +32,7 @@ from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
 from tradebot.strategy.stack import StrategyStack
 from tradebot.strategy.mamba import MambaBreakout
+from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
@@ -78,6 +79,16 @@ REGISTRY = {
         wait_for_close=False, stop_candle_frac=0.5, reward=8.0,
         sessions=("tokyo", "london", "newyork"),
     ),
+    # His OTHER trade, from a live breakdown: find a channel the market is
+    # honouring on a higher timeframe, wait for price to reach one edge and be
+    # rejected there, take it back toward the far side. Fires about 1.2 times
+    # a day against the breakout's 0.17, because a respected channel gets
+    # touched far more often than a level gets broken -- which is what closes
+    # the gap to his stated two-to-three trades a day.
+    #
+    # Wants ~2% risk, not the breakout's 6%: more trades at a 15% win rate
+    # means longer losing runs, and 6% turns a 39% drawdown into 83%.
+    "mamba_channel": lambda: MambaChannel(target_pct=1.0),
     "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,
     "kama_trend": KamaTrend,

@@ -252,3 +252,37 @@ from rules. He looks at a chart and judges which break is real, which level is
 worth respecting, when a market is behaving. That judgement is the part of him
 a rule engine cannot copy -- and the part that is doing the work in the gap
 between 0.17 and 2.5 trades a day.
+
+## His OTHER trade: fading the channel (from a live breakdown video)
+
+Watching him walk through a real trade revealed a second mode entirely, and it
+is not a breakout:
+
+    "I started off looking at the H4, and what I saw was a very simple
+    channel. Price respected this channel -- boom, boom, boom. We're adding a
+    resistance here with these two wicks, and we're also at the top of this
+    channel. I believe price is going to crash down and hit the bottom of our
+    channel... price will either respect this channel or hit this support, one
+    or the other."
+
+So: higher-timeframe channel, wait for price to reach an edge and be rejected
+there, take it back toward the far side. Stop just past the edge, target the
+opposite side.
+
+**This solves the frequency problem.** A channel edge gets touched far more
+often than a level gets broken: 1.16 trades/day against the breakout's 0.17.
+That is his stated two-to-three a day, near enough.
+
+**Risk must come down with frequency.** At 6% the drawdown is 83%; at 2% it is
+39% for a better return. More trades at a 15% win rate means longer losing
+runs, and the size has to respect that.
+
+**But it does not hold up across time.** Quarter by quarter at 2%: 0.89x,
+0.98x, 2.61x, 1.06x -- profitable in two of four, and the full-run 3.27x is
+carried almost entirely by one strong quarter. The breakout mode, by contrast,
+is profitable in four of four at 5.15x.
+
+So the honest position after three hours: his frequency is reachable, and the
+mode that reaches it is the one he actually described on video, but it is not
+reliable enough to trade on its own. Frequency and consistency trade off
+directly here, and the trade is steep.
