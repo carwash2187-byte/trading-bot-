@@ -4311,3 +4311,33 @@ Pixel-confirmed: the two double-top candles share a high of 1.98315 and his entr
 1.98313. **He entered at the wick high itself, intra-candle** — while waiting for the *retrace*
 candle to close before drawing the fib. Both "waits for the close" and "does not wait for the
 close" are true of him, at different stages of the same setup.
+
+---
+
+# CYCLE 15 — 2026-07-30
+
+## HIS SECOND STOP RULE, BUILT ALONGSIDE THE FIRST — "THE BIGGEST WICK IT PRETTY MUCH MADE"
+
+> "right above that final wick -- **NOT that final wick, THE BIGGEST WICK it pretty much
+> made**, because **it shouldn't wick above that again**. It can. If you want to raise your
+> stop losses, you easily can, but I like to put them right above pretty much **that last big
+> wick that it made**, because I don't believe it's going to wick there again."
+
+Not the newest wick, and not the swing extreme — the **longest** one. On his own GBPAUD short
+it came out **17.3 pips and sat ten pips BELOW the swing high his fibonacci was anchored to**,
+so it genuinely disagrees with both alternatives.
+
+**Built beside the 0.764 rule rather than replacing it.** 0.764 was measured across four of his
+setups in one video; the biggest wick is stated outright in another. Both are his, both are in,
+neither is deleted, and the switch is documented with both quotes.
+
+Measured on US30: both fire **123 of 1,000**, and the biggest-wick stop comes out **77 points
+against 41** for the 0.764. Nearly double — which matches his own GBPAUD stop landing at fib
+**0.872**, wider than 0.764, when he used the wick rule.
+
+That is now three stop rules of his, all sourced, all built:
+* **the trigger candle's own extreme** — "that last candle where we broke, the high of that candle"
+* **the 0.764 fib level** — measured across four setups
+* **the biggest wick** — "it shouldn't wick above that again"
+
+None of them is a distance I chose.

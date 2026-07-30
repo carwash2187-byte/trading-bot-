@@ -118,6 +118,7 @@ class MambaFib(Strategy):
         fib_near: float = 0.5,
         fib_far: float = 0.618,
         fib_stop: float = 0.764,
+        stop_at_biggest_wick: bool = False,
         ma_fast: int = 8,
         ma_slow: int = 50,
         higher_tf_bars: int = 0,
@@ -139,6 +140,7 @@ class MambaFib(Strategy):
         # That replaces stop_beyond_pct, which was a distance I invented. His stop
         # is a fib level, so it needs no width of mine.
         self.fib_stop = fib_stop
+        self.stop_at_biggest_wick = stop_at_biggest_wick
         self.ma_fast = ma_fast
         self.ma_slow = ma_slow
         self.higher_tf_bars = (higher_tf_bars if higher_tf_bars > 0
@@ -328,6 +330,34 @@ class MambaFib(Strategy):
                     return push
         return None
 
+    def _biggest_wick_stop(self, candles: list[Candle], up: bool) -> float | None:
+        """His other stop rule, stated outright rather than measured:
+
+            "right above that final wick -- NOT that final wick, THE BIGGEST WICK
+             it pretty much made, because IT SHOULDN'T WICK ABOVE THAT AGAIN. It
+             can. If you want to raise your stop losses, you easily can, but I like
+             to put them right above pretty much that last big wick that it made
+             because I don't believe it's going to wick there again."
+
+        Not the newest wick and not the swing extreme -- the LONGEST one. Measured
+        on his own GBPAUD short it came out 17.3 pips and sat ten pips BELOW the
+        swing high his fibonacci was anchored to, so it is genuinely a different
+        answer from both.
+
+        This lives beside the 0.764 rule rather than replacing it: 0.764 was
+        measured across four of his setups in one video, the biggest wick is stated
+        in another. Both are his, so both are here and neither is deleted.
+        """
+        window = candles[-30:]
+        if len(window) < 5:
+            return None
+        if up:
+            # A long retraces down, so the wick that matters hangs BELOW the body.
+            worst = max(window, key=lambda c: min(c.open, c.close) - c.low)
+            return worst.low
+        worst = max(window, key=lambda c: c.high - max(c.open, c.close))
+        return worst.high
+
     def _ma_agrees(self, candles: list[Candle], up: bool) -> bool:
         """"the MA is our crossing over on the h4... crossed over on the 15".
 
@@ -423,6 +453,10 @@ class MambaFib(Strategy):
             # that lands on his 0.764. The fib supplies it; no width of mine.
             size = push.high - push.low
             stop = push.high - size * self.fib_stop
+            if self.stop_at_biggest_wick:
+                wick = self._biggest_wick_stop(candles, up=True)
+                if wick is not None and wick < bar.close:
+                    stop = wick
             if stop >= bar.close:
                 return []
             risk = bar.close - stop
@@ -436,6 +470,10 @@ class MambaFib(Strategy):
             return []
         size = push.high - push.low
         stop = push.low + size * self.fib_stop
+        if self.stop_at_biggest_wick:
+            wick = self._biggest_wick_stop(candles, up=False)
+            if wick is not None and wick > bar.close:
+                stop = wick
         if stop <= bar.close:
             return []
         risk = stop - bar.close
