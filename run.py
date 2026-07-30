@@ -234,6 +234,10 @@ REGISTRY = {
     "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
     # Round the clock, for reference. Worse on both counts.
     "mamba_signals_247": lambda: MambaSignals(min_votes=2, session=""),
+    # UK100 is on his screen and tradable on the account, so it is available as a
+    # ninth market. FRA40 is also on his screen but the broker does not offer it.
+    # Nine markets: 0.89x on 2.96 a day against 1.21x on eight.
+    #   --symbols XAUUSD,US30,NAS100,GBPUSD,BTCUSD,ETHUSD,LTCUSD,XRPUSD,UK100
     # His stated ORDER, which is direction first from the higher timeframes and
     # patterns confirming inside it: "first off i need to determine are we going
     # up are we going down are we in a bullish trend or a bearish trend... and

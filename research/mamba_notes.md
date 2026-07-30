@@ -1615,3 +1615,83 @@ the both-gates 0.62x, so his preference for the H4 does hold).
 **THE BACKLOG IS COMPLETE.** All eight items built: Fibonacci, fair value gaps,
 liquidity, double tops, engulfing candles, MACD divergence, his crypto markets, the
 1-minute chart, and the daily.
+
+---
+
+## PIXEL READ — "MAMBAFX Scalping LIVE Making $30,000 Trading" (1v4ssSHMEdc)
+
+Backlog complete, so this is new material read off the screen rather than the audio.
+A live trade with his order buttons armed. What is actually measurable:
+
+### HIS RISK-REWARD, MEASURED OFF THE DRAWN BOXES
+
+He has TWO position tools on the chart at once, one long and one short, because he
+has not committed yet -- the same "price will either respect this or hit that, one
+or the other" logic as the channel video.
+
+* **Long setup:** red risk box 46,790 -> 46,811 (**21 points**), green reward box
+  46,811 -> 46,960 (**149 points**). That is **1:7.1**.
+* **Short setup:** red risk 46,790 -> 46,811 (**21 points**), green reward
+  46,620 -> 46,790 (**170 points**). That is **1:8.1**.
+
+**Pixel confirmation of "we have a fat one to seven, one to 10 risk to reward."** Not
+1:3 on this one. The 1:3 videos are his indices day trade; the 1:7-1:8 boxes are what
+he actually draws when flipping.
+
+### PIXEL CONFIRMATION OF HIS START TIME
+
+Chart clock reads **06:35 on Tue 07 Oct '25**, with the entry forming right there.
+That is his "6:20, 6:30 a.m." said in a different video, now confirmed on screen.
+
+### TIMEFRAME
+
+**5m** highlighted in the toolbar. 1m / 5m / 15m / 30m / 1h / 4h / D available.
+
+### A FIBONACCI TOOL IS ON THE CHART
+
+Levels are labelled with prices beside them, drawn across the push into the entry --
+so the gold zone is not just something he says, it is loaded while he trades.
+
+### AN ASCENDING TRENDLINE, and price sitting on it
+
+Drawn from the 04:30 low up through the subsequent lows, with price at it when the
+entry forms. This is the "I drew my trend line... we're getting in as soon as this
+trend line or the support zone breaks" mechanic, visible in the wild.
+
+### HIS WATCHLIST IS WIDER THAN WHAT IS BUILT
+
+Titled "Scalping BIG…" and reads: **XAUU (gold), GBPU (GBPUSD), UK10 (UK100),
+FRA4 (FRA40), BTCU, ETHU, XRPU, NAS1 (NAS100), US30, NQ1! (Nasdaq futures),
+YM1! (Dow futures)**.
+
+Built so far: gold, US30, NAS100, GBPUSD, BTC, ETH, LTC, XRP. **Missing from his
+screen: UK100, FRA40, and the NQ/YM futures contracts.** The futures are the same
+underlying as NAS100 and US30 so they add nothing, but the two European indices are
+markets he watches and the bot does not.
+
+### UK100 added, and a live-money bug found while fetching it
+
+UK100 is on his screen and tradable on the account, so it went in. FRA40 is on his
+screen but the broker does not offer it -- recorded rather than substituted, since
+swapping in a different index would not be copying him.
+
+| watchlist | growth | trades/day | win% | drop |
+|-----------|--------|-----------|------|------|
+| 8 markets | 1.21x | 2.98 | 47.1% | 27% |
+| 9 markets, + UK100 | 0.89x | 2.96 | 45.3% | 31% |
+
+**Fetching it exposed a bug that would have cost real money.** TradeLocker answers an
+over-wide time range with an EMPTY bar list rather than a short one. On UK100, asking
+for 5,000 bars of 15m returned 5,000; asking for 20,000 returned **zero**, because
+20,000 bars of 15m requests a 626-day window and the endpoint declines it.
+
+An empty candle list is indistinguishable from an instrument with no history. A live
+strategy pointed at any market thinner than US30 would have received nothing, taken no
+trades, and looked exactly like a strategy with no signal -- the same failure shape as
+every other silent bug in this project, except this one happens with money at stake.
+
+Fixed: the request now halves the window and retries rather than accepting the silence,
+warns when the server had fewer bars than asked for, and raises if there is genuinely
+no history at any width. UK100 now returns 19,618 bars where it returned 0. Three
+regression tests cover the narrowing, the short-history case, and the genuinely-empty
+case.

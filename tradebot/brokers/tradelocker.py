@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import math
 import urllib.error
+import logging
 import urllib.parse
 import urllib.request
 from datetime import datetime, timedelta, timezone
@@ -41,6 +42,8 @@ from .base import (
     TradingMode,
     utcnow,
 )
+
+log = logging.getLogger("tradebot.tradelocker")
 
 DEMO_HOST = "https://demo.tradelocker.com/backend-api"
 LIVE_HOST = "https://live.tradelocker.com/backend-api"
@@ -338,27 +341,57 @@ class TradeLockerBroker(Broker):
         # than N periods of wall-clock time.
         minutes = timeframe_minutes(timeframe)
         span = timedelta(minutes=minutes * count * 3 + 1440)
-        params = urllib.parse.urlencode(
-            {
-                "routeId": self._route(symbol, "INFO"),
-                "tradableInstrumentId": iid,
-                "resolution": resolution,
-                "from": int((end - span).timestamp() * 1000),
-                "to": int(end.timestamp() * 1000),
-            }
-        )
-        payload = self._request("GET", f"/trade/history?{params}")
-        out = []
-        for bar in payload.get("d", {}).get("barDetails", []):
-            out.append(
-                Candle(
-                    timestamp=datetime.fromtimestamp(int(bar["t"]) / 1000, tz=timezone.utc),
-                    open=float(bar["o"]),
-                    high=float(bar["h"]),
-                    low=float(bar["l"]),
-                    close=float(bar["c"]),
-                    volume=float(bar.get("v", 0) or 0),
-                )
+
+        # Asking for a window the server will not serve comes back EMPTY, not
+        # short. Measured on UK100: 5,000 bars of 15m returns 5,000, while 20,000
+        # returns zero -- because 20,000 bars asks for a 626-day range and the
+        # endpoint simply declines it. An empty list is indistinguishable from a
+        # market with no history, so a strategy pointed at a thinner instrument
+        # would silently never trade and look like it had no signal.
+        #
+        # So halve the span and retry rather than accept the silence. Each retry
+        # still returns the most recent bars, which is what a strategy needs.
+        out: list[Candle] = []
+        for _ in range(6):
+            params = urllib.parse.urlencode(
+                {
+                    "routeId": self._route(symbol, "INFO"),
+                    "tradableInstrumentId": iid,
+                    "resolution": resolution,
+                    "from": int((end - span).timestamp() * 1000),
+                    "to": int(end.timestamp() * 1000),
+                }
+            )
+            payload = self._request("GET", f"/trade/history?{params}")
+            bars = payload.get("d", {}).get("barDetails", [])
+            if bars:
+                for bar in bars:
+                    out.append(
+                        Candle(
+                            timestamp=datetime.fromtimestamp(
+                                int(bar["t"]) / 1000, tz=timezone.utc
+                            ),
+                            open=float(bar["o"]),
+                            high=float(bar["h"]),
+                            low=float(bar["l"]),
+                            close=float(bar["c"]),
+                            volume=float(bar.get("v", 0) or 0),
+                        )
+                    )
+                break
+            span = span / 2
+            if span < timedelta(minutes=minutes * 20):
+                break
+
+        if not out:
+            raise BrokerError(
+                f"no history returned for {symbol} {timeframe} after narrowing "
+                f"the window; the instrument may have none"
+            )
+        if len(out) < count:
+            log.warning(
+                "%s %s: asked for %d bars, server had %d",
+                symbol, timeframe, count, len(out),
             )
         return out[-count:]
 
