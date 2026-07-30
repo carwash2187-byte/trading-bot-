@@ -3725,3 +3725,64 @@ I had been reading that as "he is selective".
 
 The number 3 was right. What was being counted was wrong, and it made the bot roughly nine
 times too quiet.
+
+## `push_bars` and `min_push_pct` DELETED — and deleting them exposed a dead strategy
+
+Removing my 60-bar search window and my 0.4% size floor did not just remove two numbers. It
+uncovered that **`mamba_fib` was firing 3 times in 3,920 bars — 0.08% — and had been all
+along.** The two parameters were masking it.
+
+Four attempts to fix, and the gate counts found it in the end:
+
+    bars checked        2000
+    push found            52
+    H4 agrees             51
+    MA 8/50 agrees        32
+    double top/bottom     32
+    price IN gold zone     0     <-- everything died here
+
+**Two separate bugs, both mine:**
+
+1. **The leg was anchored to the last 8 bars.** So price was still AT the extreme and by
+   construction had never retraced into the 0.5-0.618 zone. His fib is drawn *after* the
+   push finishes — "we wait for it to come back and reject our gold zone."
+2. **The disqualifier broke on the first candidate every time.** It tested origins one bar
+   at a time, and a two-bar leg always gives back more than half of itself, so it returned
+   None on all 62 swing highs tested.
+
+Rebuilt as what he actually describes:
+
+* **The swing is selected by where price is now.** "we wait for it to come back and REJECT
+  OUR GOLD ZONE" is the selection rule — he does not pick a swing and hope price visits it,
+  he watches the zone price is sitting in. Every recent swing extreme is a candidate and the
+  most recent one whose band the current bar touches is the trade. No lookback window needed.
+* **The origin slides FORWARD past the retracement**, which is his sentence exactly: "the
+  push is not down in here, because yeah it push, but then it came back down. **THIS** is
+  where the main push is." Take the extreme before the swing, measure the deepest giveback
+  inside the leg, and if it handed back more than half, restart the leg at that giveback's
+  low. Repeat until clean.
+
+**Measured after: 94 entries in 1,000 bars against 3 in 3,920 before. Median stop 53 points,
+median ratio 1:3.00** — and 1:3 is the ratio he states outright, arrived at without being
+told. Leg building went from 0 of 62 swing highs to 56 of 62.
+
+## "I asked ChatGPT" (0KRT1dNnR0Y) — no chart, but it settles the GBP/JPY question
+
+No platform, no chart, no order panel. He types questions into ChatGPT and reads the answers.
+
+**It does resolve a contradiction though.** He reaches for GBP/JPY on reflex — "or **GBP/JPY,
+come on that's basic, that's easy**" — and **every single trading conversation in his ChatGPT
+sidebar is GBPJPY**: "Stop Loss Size GBPJPY Scalping", "GBPJPY Scalping Time Query", "Forex
+GBPJPY Breakout Strategy", "GBPJPY Scalping Stop Loss". That is strong evidence against the
+recession video's "I'm not going to be trading GBP/JPY", which was advice for a crisis rather
+than his practice.
+
+He also confirms his family of setup: "I like the second one because **that's how I trade** --
+a breakout strategy... identifying key levels of support resistance". And two refusals:
+**position trading** — "get out of here with that, I'm not trading that" — and **deliberately
+trading fakeouts** — "I've never traded fake outs purposely".
+
+**DELIBERATELY NOT BUILT:** the "5-10 pips" stop and the ATR stop in this video are
+**ChatGPT's words**, which he reads aloud and calls "good data". They are not his rule. On
+GBP/JPY, where the spread alone runs 2-4 pips, a 5-pip stop is close to unusable. Treating
+read-aloud on-screen text as his instruction would poison every rule in this project.

@@ -83,8 +83,17 @@ class MambaFib(Strategy):
     """Trade the rejection of his 0.5-0.618 gold zone.
 
     Args:
-        push_bars: Bars searched for the impulse move to measure across.
-        min_push_pct: How large the move must be, as a fraction of price, before
+        (push_bars and min_push_pct deleted. He gives NEITHER a lookback nor a
+        minimum size -- his rule is "I'm drawing it from that MAIN PUSH, where the
+        market structure really starts to go" and "the push is not down in here
+        because YEAH IT PUSH, BUT THEN IT CAME BACK DOWN -- this is where the main
+        push is". The walk-back below already stops itself on exactly that: it
+        breaks the moment price retraces more than half the progress made. A leg
+        that survives that test IS his main push, whatever its size and however far
+        back it started. My 60-bar window truncated legs he would have kept, and my
+        0.4% floor threw away legs he never measured.)
+
+        (removed: how large the move must be, as a fraction of price, before
             it counts as a push at all. This is the code for "this candlestick to
             me is not really set as that push".
         fib_near: 0.5. "the zero five zone".
@@ -106,8 +115,6 @@ class MambaFib(Strategy):
 
     def __init__(
         self,
-        push_bars: int = 60,
-        min_push_pct: float = 0.004,
         fib_near: float = 0.5,
         fib_far: float = 0.618,
         fib_stop: float = 0.764,
@@ -121,8 +128,6 @@ class MambaFib(Strategy):
         require_double: bool = False,
         require_macd_divergence: bool = False,
     ) -> None:
-        self.push_bars = push_bars
-        self.min_push_pct = min_push_pct
         self.fib_near = fib_near
         self.fib_far = fib_far
         # 0.764, NOT the standard 0.786. Read off his tool on five separate draws,
@@ -154,7 +159,8 @@ class MambaFib(Strategy):
 
     # -- drawing it the way he draws it ----------------------------------
 
-    def _push(self, candles: list[Candle]) -> Push | None:
+    def _push_from(self, candles: list[Candle], end_i: int,
+                   up: bool) -> Push | None:
         """The impulse to measure across -- the LAST CLEAN one, not the biggest.
 
         He states this rule twice and it is the whole skill as he presents it:
@@ -181,57 +187,97 @@ class MambaFib(Strategy):
         on a leg too vertical to have left wicks behind, which is why a leg needs
         enough bars to have structure rather than merely enough size.
         """
-        window = candles[-self.push_bars:]
+        # No window of mine: the walk-back terminates on his own rule.
+        window = candles
         if len(window) < 15:
             return None
 
         last = window[-1]
-        # Which way the recent leg runs, from the freshest extreme.
-        recent = window[-8:]
-        up = recent[-1].close >= sum(c.close for c in recent) / len(recent)
 
         # Walk back while the run holds. It breaks when price retraces more than
         # `break_frac` of the progress made so far -- that is the "it came back
         # down" he names.
+        # HIS DISQUALIFICATION, MEASURED PROPERLY.
+        #
+        #   "the push is not down in here, because YEAH IT PUSH, BUT THEN IT CAME
+        #    BACK DOWN. this is where the main push is."
+        #
+        # An earlier origin is wrong when the move from it already pushed and gave
+        # the ground back. So each candidate origin is tested by the DEEPEST
+        # PULLBACK inside the leg it would create: if price ever handed back more
+        # than half of what it had made, that origin contains a "came back down"
+        # and the last good one stands.
+        #
+        # The previous version compared the leg high against the highest high from
+        # the candidate onwards, which is not a retracement at all -- it shrinks as
+        # you walk back, so the loop broke almost immediately. push_bars=60 kept
+        # the damage inside a small window and hid it. Unbounded, it fired 3 times
+        # in 3,920 with stops ten times his width, which is how the bug surfaced.
+        # HIS RULE, AND IT MOVES THE ORIGIN FORWARD RATHER THAN WALKING BACK.
+        #
+        #   "the push is not down in here, because YEAH IT PUSH, BUT THEN IT CAME
+        #    BACK DOWN. THIS is where the main push is."
+        #
+        # He starts from the furthest origin, notices the leg contains a big
+        # retracement, and slides the start forward to AFTER it. So: take the
+        # extreme before the swing, measure the deepest drawdown inside the leg,
+        # and if it handed back more than half, restart the leg at that drawdown's
+        # low. Repeat until the leg is clean.
+        #
+        # The previous walk-back tested candidate origins one bar at a time and
+        # broke on the FIRST one, because a two-bar leg always pulls back more than
+        # half of itself -- so it returned None every single time (0 of 62 swing
+        # highs). That is what made the whole strategy silent.
         break_frac = 0.5
+
+        def deepest(seg: list, upward: bool) -> tuple[float, int]:
+            """Biggest giveback inside the segment, and where it bottomed."""
+            worst, at = 0.0, 0
+            if upward:
+                peak = seg[0].high
+                for k, c in enumerate(seg):
+                    peak = max(peak, c.high)
+                    if peak - c.low > worst:
+                        worst, at = peak - c.low, k
+            else:
+                trough = seg[0].low
+                for k, c in enumerate(seg):
+                    trough = min(trough, c.low)
+                    if c.high - trough > worst:
+                        worst, at = c.high - trough, k
+            return worst, at
+
         if up:
-            end_v = max(c.high for c in window[-8:])
-            start_v = end_v
-            start_i = len(window) - 1
-            best = end_v
-            for i in range(len(window) - 1, -1, -1):
-                c = window[i]
-                if c.low < start_v:
-                    start_v = c.low
-                    start_i = i
-                # progress so far, and how far price came back inside the leg
-                if best - start_v > 0:
-                    pull = (best - max(x.high for x in window[i:])) / (best - start_v)
-                    if pull > break_frac:
-                        break
-            low_v, high_v = start_v, end_v
-            low_i, high_i = start_i, len(window) - 1
+            end_v = window[end_i].high
+            origin = min(range(end_i + 1), key=lambda k: window[k].low)
+            for _ in range(20):
+                leg = end_v - window[origin].low
+                if leg <= 0:
+                    return None
+                worst, at = deepest(window[origin:end_i + 1], True)
+                if worst / leg <= break_frac or at == 0:
+                    break
+                origin = origin + at        # "this is where the main push is"
+            low_v, high_v = window[origin].low, end_v
+            low_i, high_i = origin, end_i
         else:
-            end_v = min(c.low for c in window[-8:])
-            start_v = end_v
-            start_i = len(window) - 1
-            worst = end_v
-            for i in range(len(window) - 1, -1, -1):
-                c = window[i]
-                if c.high > start_v:
-                    start_v = c.high
-                    start_i = i
-                if start_v - worst > 0:
-                    pull = (min(x.low for x in window[i:]) - worst) / (start_v - worst)
-                    if pull > break_frac:
-                        break
-            low_v, high_v = end_v, start_v
-            low_i, high_i = len(window) - 1, start_i
+            end_v = window[end_i].low
+            origin = max(range(end_i + 1), key=lambda k: window[k].high)
+            for _ in range(20):
+                leg = window[origin].high - end_v
+                if leg <= 0:
+                    return None
+                worst, at = deepest(window[origin:end_i + 1], False)
+                if worst / leg <= break_frac or at == 0:
+                    break
+                origin = origin + at
+            low_v, high_v = end_v, window[origin].high
+            low_i, high_i = end_i, origin
 
         if low_i == high_i:
             return None
         size = high_v - low_v
-        if size <= 0 or size / last.close < self.min_push_pct:
+        if size <= 0:
             return None
 
         # The retracement runs back from the end of the push toward its start.
@@ -243,6 +289,43 @@ class MambaFib(Strategy):
             far = low_v + size * self.fib_far
 
         return Push(low=low_v, high=high_v, up=up, zone_near=near, zone_far=far)
+
+    def _push(self, candles: list[Candle]) -> Push | None:
+        """The swing whose gold zone price is sitting in RIGHT NOW.
+
+        "we wait for it to come back and REJECT OUR GOLD ZONE."
+
+        That sentence is the selection rule, and it needs no lookback window. He
+        does not pick a swing and then hope price visits its zone -- he watches the
+        zone price is currently in. So every recent swing extreme is a candidate
+        and the one that matters is the most recent whose 0.5-0.618 band the
+        current bar is actually touching.
+
+        Anchoring to a single extreme instead (the highest bar in the window) is
+        what produced ZERO entries in 2,000 bars: by the time that bar is the
+        highest of 350, price has usually retraced far past its zone. The gate
+        counts showed it exactly -- 32 setups survived every other test and 0 were
+        in the zone.
+        """
+        if len(candles) < 15:
+            return None
+        bar = candles[-1]
+        n = len(candles)
+        # Swing extremes, minimally defined: higher than the bar either side. That
+        # is structure, not a tuned parameter -- there is no width to choose.
+        for i in range(n - 3, 2, -1):
+            c = candles[i]
+            if c.high > candles[i - 1].high and c.high > candles[i + 1].high:
+                push = self._push_from(candles, i, True)
+                if push is not None and bar.low <= push.zone_near \
+                        and bar.close > push.zone_far:
+                    return push
+            if c.low < candles[i - 1].low and c.low < candles[i + 1].low:
+                push = self._push_from(candles, i, False)
+                if push is not None and bar.high >= push.zone_near \
+                        and bar.close < push.zone_far:
+                    return push
+        return None
 
     def _ma_agrees(self, candles: list[Candle], up: bool) -> bool:
         """"the MA is our crossing over on the h4... crossed over on the 15".
@@ -276,7 +359,7 @@ class MambaFib(Strategy):
 
     def evaluate(self, context: StrategyContext) -> list[Action]:
         candles = context.candles
-        if len(candles) < max(self.push_bars, self.higher_tf_bars, self.ma_slow) + 5:
+        if len(candles) < max(self.higher_tf_bars, self.ma_slow) + 20:
             return []
         if context.has_position:
             return []
