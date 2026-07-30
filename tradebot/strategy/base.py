@@ -152,6 +152,8 @@ class Enter(Action):
         # happening, the human. Refusals by the risk layer still return False
         # above: being told "no" is a decision, not a failure.
         broker.submit_bracket(order)
+        # Count it against today, so per-day caps survive the trade closing.
+        risk.record_entry(self.comment or "")
         return True
 
 

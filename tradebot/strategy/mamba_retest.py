@@ -291,11 +291,14 @@ class MambaRetest(Strategy):
         return best
 
     def _trades_today(self, context: StrategyContext) -> int:
-        today = context.now.astimezone(timezone.utc).date()
-        return sum(
-            1 for p in context.open_positions
-            if p.comment == self.name and p.opened_at.date() == today
-        )
+        """How many trades this strategy has opened today.
+
+        Read from the risk layer, not from open positions. Counting open
+        positions makes "max N trades a day" mean "max N at once", because a
+        closed trade disappears from the list -- which let 4.4 trades a day
+        through a cap of 3.
+        """
+        return context.risk.trades_today(self.name)
 
     # -- the rules -------------------------------------------------------
 

@@ -140,3 +140,63 @@ def _context_with_position(now: datetime, opened_at: datetime):
         open_positions=[pos], news=None,
         risk=RiskManager(RiskLimits()), now=now,
     )
+
+
+def test_backtest_rolls_the_risk_day_over() -> None:
+    """The backtest must age the risk day, or everything daily is a no-op.
+
+    The engine never called update_equity, so RiskState.current_day stayed empty
+    for an entire run. Two things silently did nothing as a result: the
+    daily-loss breaker never armed, and the per-strategy daily trade counter
+    never reset -- turning "max 3 trades a day" into "max 3 trades ever". A
+    3.5-month run took 3 trades and looked like a strategy with no signal.
+    """
+    from tradebot.backtest import run_backtest
+    from tradebot.strategy.base import Enter, Strategy
+    from tradebot.brokers.base import OrderSide
+
+    class OnePerDay(Strategy):
+        """Wants one trade every bar; a working cap should hold it to one a day."""
+
+        name = "one_per_day"
+        timeframe = "15m"
+        lookback = 5
+
+        def evaluate(self, context):
+            if context.has_position:
+                return []
+            if context.risk.trades_today(self.name) >= 1:
+                return []
+            # Both sides must be reachable within a bar or two, or the first
+            # trade never closes and has_position blocks the rest of the run --
+            # which looks exactly like a broken daily counter.
+            return [Enter(
+                side=OrderSide.BUY,
+                stop_loss=context.bid - 80.0,
+                take_profit=context.bid + 80.0,
+                comment=self.name,
+            )]
+
+    start = datetime(2025, 3, 3, tzinfo=timezone.utc)
+    candles = []
+    price = 40_000.0
+    for i in range(300):
+        price += 20 if (i // 7) % 2 == 0 else -18
+        candles.append(Candle(
+            timestamp=start + timedelta(minutes=15 * i),
+            open=price, high=price + 60, low=price - 60,
+            close=price, volume=1.0,
+        ))
+
+    result = run_backtest(
+        OnePerDay(), candles, symbol="US30", timeframe="15m", instrument=INST,
+        starting_balance=100_000.0, risk_per_trade=0.01,
+        spread_pct=0.0, fee_pct=0.0,
+    )
+    days = len({c.timestamp.date() for c in candles})
+    assert days > 2, "test needs to span several days"
+    # One a day, not one for the whole run.
+    assert len(result.trades) >= days - 1, (
+        f"{len(result.trades)} trades across {days} days -- the daily counter "
+        "is not resetting"
+    )

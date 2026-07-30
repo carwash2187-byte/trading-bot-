@@ -934,3 +934,45 @@ So he has (at least) three distinct trades, and I have now seen all three:
    time limit, all of which are mine rather than his.
 
 Next: build #3 properly as `mamba_ny.py` on 5-minute bars.
+
+### Cycle 4-5: `mamba_ny.py` built, and a fourth silent-rule bug found
+
+`mamba_ny.py` is his New York session break: level with two touches, price breaks
+it, current direction agrees, structural stop, 1:3 target, 13:30-17:00 UTC only,
+held about 35 minutes. On 5m data (3.5 months, all that exists) at 3% risk it runs
+US30 0.63x and NAS100 1.16x. Weak, and the sample is short.
+
+**But building it exposed the worst bug in the project so far.** MambaNY was taking
+4.4 trades a day through a cap set to 3. Two causes, both the same shape as the
+clock bug from earlier today:
+
+1. `_trades_today` counted OPEN positions. A closed trade vanishes from that list,
+   so "max 3 trades a day" actually meant "max 3 open at once". Present in
+   `mamba_channel` and `mamba_retest` too -- so **his stated 2-3 a day has never
+   been enforced in any test in this file.**
+2. `run_backtest` never called `risk.update_equity` at all, so `RiskState.current_day`
+   stayed empty for entire runs. That disabled everything keyed to a day: the
+   per-strategy trade counter never reset, **and the daily-loss breaker never armed
+   in a single backtest ever run on this project.**
+
+Fixed: RiskState now carries `trades_today` per strategy, `Enter.execute` records it,
+both backtest loops roll the day over on simulated time, and all three strategies
+read the real counter. Regression test spans four days and asserts one trade per day
+rather than one per run.
+
+Re-measured afterwards on US30 15m at 6%, 10 months:
+
+| build | growth | trades/day | win% | drop |
+|-------|--------|-----------|------|------|
+| mamba_both | 11.05x | 0.52 | 28.7% | 55% |
+| mamba | 5.15x | 0.23 | 25.5% | 36% |
+| mamba_channel | 1.28x | 1.24 | 15.0% | 83% |
+
+The headline 11.05x survives the fix. mamba_channel's per-day cap now binds for the
+first time and it is much worse than previously recorded -- 1.28x against 4.59x,
+because the old number came from a cap that was never applied.
+
+**Fourth instance of one pattern**: `2h` missing from the timeframe table, wall-clock
+position stamps, an exit behind an entry gate, and now a calendar that never advanced.
+Every one produced plausible numbers. The tell is always that a rule which should
+change behaviour changes nothing.

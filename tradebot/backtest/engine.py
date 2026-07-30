@@ -301,6 +301,14 @@ def run_backtest(
             continue
 
         bid, ask = broker.get_price(symbol)
+        # Roll the risk day over on SIMULATED time. The live cycle does this
+        # every pass; the backtest never did, so `current_day` stayed empty for
+        # the whole run. That silently disabled everything keyed to a day: the
+        # daily-loss breaker never armed, and the per-strategy daily trade
+        # counter never reset, which turned "max 3 trades a day" into "max 3
+        # trades ever" -- 3 trades across 3.5 months.
+        risk.update_equity(broker.get_account().equity, candle.timestamp)
+
         context = StrategyContext(
             symbol=symbol,
             instrument=inst,
@@ -423,6 +431,9 @@ def run_portfolio_backtest(
     equity_curve: list[tuple[datetime, float]] = []
 
     for stamp in timeline:
+        # Same day-roll the single-symbol loop needs, on simulated time.
+        risk.update_equity(broker.get_account().equity, stamp)
+
         for symbol, bars in series.items():
             i = indexes[symbol].get(stamp)
             if i is None:

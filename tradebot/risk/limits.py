@@ -96,6 +96,12 @@ class RiskState:
     current_day: str = ""
     halted: bool = False
     halt_reason: str = NO_BREACH
+    # Trades opened today, per strategy name. A strategy cannot count these for
+    # itself: the only per-trade information in a StrategyContext is the list of
+    # OPEN positions, so the moment a trade closes it stops being counted and a
+    # "max 3 trades a day" rule silently becomes "max 3 at once". Measured on
+    # MambaNY that let 4.4 trades a day through a cap set to 3.
+    trades_today: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -104,6 +110,7 @@ class RiskState:
             "current_day": self.current_day,
             "halted": self.halted,
             "halt_reason": self.halt_reason,
+            "trades_today": dict(self.trades_today),
         }
 
     @classmethod
@@ -114,6 +121,10 @@ class RiskState:
             current_day=str(raw.get("current_day", "")),
             halted=bool(raw.get("halted", False)),
             halt_reason=str(raw.get("halt_reason", NO_BREACH)),
+            trades_today={
+                str(k): int(v)
+                for k, v in dict(raw.get("trades_today", {})).items()
+            },
         )
 
 
@@ -138,6 +149,7 @@ class RiskManager:
             # New trading day: reset the daily baseline and clear a daily halt.
             self.state.current_day = today
             self.state.day_start_equity = equity
+            self.state.trades_today = {}
             if self.state.halt_reason == DAILY_LOSS:
                 self.state.halted = False
                 self.state.halt_reason = NO_BREACH
@@ -145,6 +157,16 @@ class RiskManager:
         if self.state.day_start_equity <= 0:
             self.state.day_start_equity = equity
         self.state.peak_equity = max(self.state.peak_equity, equity)
+
+    def record_entry(self, strategy: str) -> None:
+        """Count a trade opened today by ``strategy``."""
+        if not strategy:
+            return
+        self.state.trades_today[strategy] = self.trades_today(strategy) + 1
+
+    def trades_today(self, strategy: str) -> int:
+        """How many trades ``strategy`` has opened today."""
+        return int(self.state.trades_today.get(strategy, 0))
 
     # -- derived numbers -------------------------------------------------
 
