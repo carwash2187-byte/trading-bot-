@@ -77,9 +77,10 @@ class Action(abc.ABC):
 class Enter(Action):
     """Open a position, sized by the risk layer and protected by a bracket.
 
-    The strategy supplies direction and price levels; it never supplies a lot
-    size. Sizing is the framework's job so risk-per-trade and the contract
-    multiplier are applied consistently.
+    The strategy supplies direction and price levels, and sizing is normally the
+    framework's job so risk-per-trade and the contract multiplier are applied
+    consistently. A strategy may override that with ``lots`` when the method it
+    copies sizes trades a different way -- see the field comment.
     """
 
     side: OrderSide
@@ -88,6 +89,19 @@ class Enter(Action):
     risk_pct: float | None = None       # defaults to the configured limit
     comment: str = ""
     quote_to_account_rate: float = 1.0
+    # A fixed lot size, instead of one derived from a risk percentage.
+    #
+    # This is how MambaFX keeps a losing trade barely visible: "if you're using a
+    # 0.01 that would have been a dollar sixty loss for a five dollar and 10 cent
+    # gain". Under percentage sizing a tighter stop simply buys more lots and the
+    # cash loss is unchanged -- 2% is 2% whether the stop is 10 pips or 100. His
+    # small losses come from a small FIXED lot meeting a tight stop; it takes both
+    # together. On $150 at 0.01 lots a 16-pip stop costs 1.07% and a 10-pip stop
+    # 0.67%, against a flat 2% at any stop width.
+    #
+    # Still capped by free margin, so it cannot ask for a size the account cannot
+    # carry.
+    lots: float | None = None
 
     def execute(
         self,
@@ -124,22 +138,29 @@ class Enter(Action):
                 / notional_per_lot
             )
 
-        sized = size_position(
-            instrument=context.instrument,
-            equity=context.account.equity,
-            risk_pct=self.risk_pct or risk.limits.risk_per_trade,
-            entry_price=entry_price,
-            stop_price=self.stop_loss,
-            quote_to_account_rate=self.quote_to_account_rate,
-            max_lots=affordable,
-        )
-        if not sized.tradable:
-            return False
+        if self.lots is not None:
+            lots = context.instrument.round_lots(min(self.lots, affordable)
+                                                 if affordable > 0 else self.lots)
+            if lots < context.instrument.min_lot:
+                return False
+        else:
+            sized = size_position(
+                instrument=context.instrument,
+                equity=context.account.equity,
+                risk_pct=self.risk_pct or risk.limits.risk_per_trade,
+                entry_price=entry_price,
+                stop_price=self.stop_loss,
+                quote_to_account_rate=self.quote_to_account_rate,
+                max_lots=affordable,
+            )
+            if not sized.tradable:
+                return False
+            lots = sized.lots
 
         order = BracketOrder(
             symbol=context.symbol,
             side=self.side,
-            lots=sized.lots,
+            lots=lots,
             stop_loss=self.stop_loss,
             take_profit=self.take_profit,
             comment=self.comment,

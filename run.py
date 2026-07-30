@@ -240,6 +240,14 @@ REGISTRY = {
     #
     # Ten months, 2%, eight markets: 1.22x with full stops on 6.0% of trades
     # against 6.7% without.
+    # His literal sizing -- a fixed 0.01 lot, "if you're using a 0.01 that would
+    # have been a dollar sixty loss for a five dollar and 10 cent gain" -- with
+    # his tight stop. Safe on forex, dangerous on gold and crypto where 0.01 lots
+    # is a large bet for a small account: worst single loss 8.02% against 2.04%
+    # under percentage sizing.
+    "mamba_signals_fixedlot": lambda: MambaSignals(
+        min_votes=2, fixed_lots=0.01, max_stop_pct=0.0020,
+    ),
     "mamba_signals_noloss": lambda: MambaSignals(
         min_votes=2, breakeven_at=2.0, breakeven_pad=0.1, scale_at=2.0,
         exit_on_reason_gone=True,

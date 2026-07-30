@@ -1820,3 +1820,78 @@ doing nothing.
 
 The reason-gone exit is the one addition that measurably improves the loss side: full
 stops 6.7% -> 6.0%.
+
+---
+
+## "SO HE BARELY LOSES MONEY" — mastered, and the answer is not the stop
+
+Leo: "remember the specific way he does a stoploss if he loses the trade so he barely
+loses money so it looks like he barely traded at all".
+
+### HIS STOP SIZES, every one he states
+
+> "**22 pips stop-loss** with a 50 80 take profit"
+> "**16 pips stop-loss** 51 pip take profit... if you get stopped out on a setup like
+> this on a 15 minute **you're gonna lose very little**"
+> "**13 pip stop loss**"
+> "i have a **10 pip stop loss 50 pip take profit** and uh we've just been smashing it"
+> "we have a **44 45 pip stop**"
+> "let's do a **30-tick stop loss, which should be just underneath that low**, and then
+> let's do a 60-tick TP"
+> "I'm only gonna have a **25 Point slash 250 pip stop loss**" (for a 1000-pip target)
+
+### AND HE NAMES TIGHTNESS AS THE KEY
+
+> "here's the key with the strategy, **super, super tight stop losses**"
+> "I'm having a **super super super tight stop loss**"
+> "I want to get in **very fast, tight stop loss, and I want that one to five**"
+> "try this strategy, **super tight stop losses, go for those one to fives**"
+
+### HIS LOSS-AGAINST-WIN MATH
+
+> "I know that if this hits a loss I'll probably **lose 50 bucks** if this hits a win
+> I'm gonna **make 500**"
+> "I had you know **10 pip loss 15 pip loss** uh 10 pips and 20 pips profit"
+
+### A STOP LOCATION NOT BUILT UNTIL NOW
+
+> "have our **stops just below our moving average** because price pretty much respects
+> it as a support"
+> "**stops are gonna be just below that moving average**"
+
+### THE ACTUAL MECHANIC, and it took measuring to see
+
+A tighter stop does NOT make the cash loss smaller when the position is sized to a
+risk percentage. Sizing to 2% means 2% is lost whether the stop is 10 pips or 100 --
+the tighter stop just buys more lots:
+
+| stop | lots bought | loss if stopped |
+|------|-------------|-----------------|
+| 10 pips | 0.030 | 2.00% |
+| 16 pips | 0.019 | 2.00% |
+| 100 pips | 0.003 | 2.00% |
+
+**His small losses come from a small FIXED lot meeting a tight stop.** That is what
+"if you're using a 0.01 that would have been a dollar sixty loss for a five dollar and
+10 cent gain" describes -- 0.01 lots, 16 pips, $1.60. At a fixed 0.01 lot the stop
+width IS the loss: 10 pips costs 0.67% of $150, 16 pips 1.07%, 44 pips 2.93%.
+
+Built `lots` on `Enter` so a strategy can size his way instead of by percentage.
+
+### But measured on Leo's actual account size, his sizing is the dangerous one
+
+| sizing | growth | worst single loss | avg loss | drop |
+|--------|--------|-------------------|----------|------|
+| risk 2% (registered) | 1.21x | **2.04%** | **0.70%** | 27% |
+| fixed 0.01 lots | 0.18x | **54.57%** | 1.80% | 88% |
+| fixed 0.01 + tight stop 0.20% | 0.52x | 8.02% | 0.81% | 57% |
+| fixed 0.02 lots | 0.11x | 37.12% | 3.52% | 89% |
+
+A fixed 0.01 lot is only small on FOREX. On gold 0.01 lots is an ounce, and on BTC it
+is about $1,200 of notional -- so one bad candle is a third of a $150 account. His
+"$1.60 loss" was a forex pair with a 16-pip stop, not gold or crypto.
+
+**The percentage sizing already delivers what Leo is asking for**: worst single loss
+2.04%, average loss 0.70%, and full stops on only 6% of trades. That is a bot whose
+losses barely register. It gets there by sizing down rather than by tightening the
+stop, which is the same destination by the arithmetic his own numbers imply.

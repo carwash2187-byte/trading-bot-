@@ -106,6 +106,10 @@ class MambaSignals(Strategy):
         scale_at: float = 0.0,
         exit_on_reason_gone: bool = False,
         breakeven_pad: float = 0.0,
+        max_stop_pct: float = 0.0,
+        skip_if_stop_too_wide: bool = True,
+        stop_at_ma: bool = False,
+        fixed_lots: float | None = None,
     ) -> None:
         self.min_votes = min_votes
         self.session = session
@@ -176,6 +180,39 @@ class MambaSignals(Strategy):
         # entry, so a scratch is fractionally green rather than exactly flat.
         # Expressed as a fraction of the original risk.
         self.breakeven_pad = breakeven_pad
+        # "here's the key with the strategy, SUPER, SUPER TIGHT STOP LOSSES."
+        # "I'm having a super super super tight stop loss."
+        # "I want to get in very fast, tight stop loss, and I want that one to five."
+        #
+        # This is why his losses barely register. His stated stop sizes across the
+        # videos: 10, 13, 16, 22, 25, 30, 44 pips -- against targets of 50, 51,
+        # 60, 80, 250, 1000. On a 1.30 pair, 16 pips is 0.12% of price.
+        #
+        # "I know that if this hits a loss I'll probably lose 50 bucks if this hits
+        # a win I'm gonna make 500."
+        # "I had you know 10 pip loss 15 pip loss uh 10 pips and 20 pips profit."
+        #
+        # Expressed as a fraction of price. Zero disables.
+        self.max_stop_pct = max_stop_pct
+        # When the structural stop comes out wider than his cap, does he skip the
+        # trade or tighten the stop? He says he WANTS tight stops, which reads as
+        # picking setups that offer them -- so skipping is the default. Tightening
+        # instead is available because a tight stop on a wide structure is still a
+        # trade he might take with a mental stop.
+        self.skip_if_stop_too_wide = skip_if_stop_too_wide
+        # "have our stops just below our moving average because price pretty much
+        # respects it as a support" / "stops are gonna be just below that moving
+        # average". A stop location I had not built.
+        self.stop_at_ma = stop_at_ma
+        # "if you're using a 0.01 that would have been a dollar sixty loss for a
+        # five dollar and 10 cent gain."
+        #
+        # A fixed lot is what makes his losses look like nothing happened. Under
+        # percentage sizing a tight stop buys more lots and the cash loss is
+        # unchanged; under a fixed lot the tight stop IS the small loss. On a $150
+        # account at 0.01 lots, a 16-pip stop costs 1.07% and a 10-pip stop 0.67%,
+        # against a flat 2% however wide the stop is.
+        self.fixed_lots = fixed_lots
 
     # -- asking each pattern which way it points -------------------------
 
@@ -383,21 +420,44 @@ class MambaSignals(Strategy):
         bar = candles[-1]
         window = candles[-self.stop_bars:]
         # "stops are right above the highs" / "below the low right here to the left"
+        # "stops are gonna be just below that moving average"
+        ma_level = None
+        if self.stop_at_ma:
+            closes = [c.close for c in candles]
+            slow = ema(closes, self.ma_slow)
+            if slow and slow[-1] is not None:
+                ma_level = slow[-1]
+
         if direction > 0:
             structure = min(c.low for c in window)
+            if ma_level is not None and ma_level < bar.close:
+                structure = max(structure, ma_level)
             stop = structure - structure * self.zone_pct
             if stop >= bar.close:
                 return []
             risk = bar.close - stop
+            # "super, super tight stop losses"
+            if self.max_stop_pct > 0 and risk > bar.close * self.max_stop_pct:
+                if self.skip_if_stop_too_wide:
+                    return []
+                stop = bar.close - bar.close * self.max_stop_pct
+                risk = bar.close - stop
             return [Enter(side=OrderSide.BUY, stop_loss=stop,
                           take_profit=bar.close + risk * self.reward,
-                          comment=self.name)]
+                          comment=self.name, lots=self.fixed_lots)]
 
         structure = max(c.high for c in window)
+        if ma_level is not None and ma_level > bar.close:
+            structure = min(structure, ma_level)
         stop = structure + structure * self.zone_pct
         if stop <= bar.close:
             return []
         risk = stop - bar.close
+        if self.max_stop_pct > 0 and risk > bar.close * self.max_stop_pct:
+            if self.skip_if_stop_too_wide:
+                return []
+            stop = bar.close + bar.close * self.max_stop_pct
+            risk = stop - bar.close
         return [Enter(side=OrderSide.SELL, stop_loss=stop,
                       take_profit=bar.close - risk * self.reward,
-                      comment=self.name)]
+                      comment=self.name, lots=self.fixed_lots)]
