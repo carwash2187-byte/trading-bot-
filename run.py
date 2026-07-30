@@ -402,7 +402,6 @@ REGISTRY = {
         # A 1R trail converts his 2.7R average winner into 1.3R. At 6R the trail
         # sits beyond every target he draws, so it only ever manages a trade that
         # has already run past its zone, which is the case he is describing.
-        trail_after=6.0,
         # He says "h4 OR daily" must agree, so this belongs on. It is off because
         # I do not yet know HOW he reads the daily -- my stand-in (position within
         # a 384-bar range) is my invention, not his, and it costs 2.13x -> 1.06x.

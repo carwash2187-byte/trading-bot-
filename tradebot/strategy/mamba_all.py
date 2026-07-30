@@ -67,7 +67,7 @@ class MambaAll(Strategy):
             trend_bars=48 // scale or 16,
             max_hold_minutes=35 * scale,
         )
-        self.retest = retest or MambaRetest(ma_period=50, trail_after=6.0)
+        self.retest = retest or MambaRetest(ma_period=50)
         self.channel = channel or MambaChannel(higher_tf_bars=32)
 
         # All three tag their orders with this bot's name, so the risk layer and

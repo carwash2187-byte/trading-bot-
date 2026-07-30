@@ -93,7 +93,7 @@ class MambaComplete(Strategy):
         self.fib = MambaFib(require_double=True)
 
         # 3. Break and retest, with his 50 moving average and his trail.
-        self.retest = MambaRetest(ma_period=50, trail_after=6.0,
+        self.retest = MambaRetest(ma_period=50,
                                   breakeven_at=2.0, scale_at=2.0)
 
         # 4. The three-confirmation setup at the settings he reads out loud.

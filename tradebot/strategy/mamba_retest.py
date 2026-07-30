@@ -105,7 +105,7 @@ class MambaRetest(Strategy):
         max_trades_per_day: int = 2,
         ma_period: int = 50,
         daily_tf_bars: int = 0,
-        trail_after: float = 0.0,
+        trail_candles: bool = True,
         sessions: tuple[str, ...] = ("newyork",),
         window_minutes: int = 210,
         breakeven_at: float = 0.0,
@@ -134,7 +134,7 @@ class MambaRetest(Strategy):
         # "i'm going to trail my stop-loss all the way up." Expressed in R: once
         # a trade is this far ahead, the stop follows it at that distance behind.
         # Zero disables.
-        self.trail_after = trail_after
+        self.trail_candles = trail_candles
         # "The first thing being is you only trade during New York session."
         # "you trade during New York session open, which is around 6:20, 6:30 a.m."
         # 6:30 Pacific is 9:30 Eastern is 13:30 UTC, which is the newyork open
@@ -360,18 +360,23 @@ class MambaRetest(Strategy):
         # trade comes before deciding whether to open another one, and before
         # any entry gate -- a gate that returns early would silently disable
         # this, which is exactly how the hold cap broke.
-        if self.trail_after > 0:
+        # HIS TRAIL IS CANDLE BY CANDLE, and he describes it as a movement rather
+        # than a threshold:
+        #
+        #   "just trail your stop-loss, CHASE THIS TRADE with your stop-loss --
+        #    HERE, next candle HERE, next candle HERE, next candle HERE"
+        #
+        # There is no R multiple to wait for and no distance to hold. The stop
+        # goes to the last closed candle's own extreme, and only when that is an
+        # improvement -- so a candle that does not advance simply leaves it be.
+        # The old trail_after=6.0 was mine, and 6R is a level his trades almost
+        # never reach, which made the whole trail decorative.
+        if self.trail_candles and len(context.candles) >= 2:
+            last = context.candles[-1]
             for pos in context.open_positions:
                 if pos.comment != self.name or pos.stop_loss is None:
                     continue
-                risk = abs(pos.entry_price - pos.stop_loss)
-                if risk <= 0:
-                    continue
-                price = context.bid if pos.is_long else context.ask
-                ahead = (price - pos.entry_price) if pos.is_long else (pos.entry_price - price)
-                if ahead < risk * self.trail_after:
-                    continue
-                want = (price - risk) if pos.is_long else (price + risk)
+                want = last.low if pos.is_long else last.high
                 better = want > pos.stop_loss if pos.is_long else want < pos.stop_loss
                 if better:
                     return [AdjustStop(ticket=pos.ticket, stop_loss=want,

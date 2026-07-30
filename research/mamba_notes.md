@@ -3480,3 +3480,58 @@ His NAS100 shows **$100 per point per lot**. A follower's screenshot in the same
 same symbol, same platform, same 10 lots, shows **$1 per point per lot** — 100× smaller,
 and the same ratio found earlier between his US30 and Leo's. **The bot must never assume
 his contract size.** It reads the broker's own, which it now does.
+
+---
+
+# CYCLE 8 — 2026-07-30
+
+## `trail_after` DELETED — his trail is a movement, not a threshold
+
+> "just trail your stop-loss, **CHASE THIS TRADE with your stop-loss -- HERE, next candle
+> HERE, next candle HERE, next candle HERE**"
+
+No R multiple. No distance. The stop goes to the last closed candle's own extreme, and only
+when that is an improvement, so a candle that fails to advance simply leaves it alone.
+
+My `trail_after=6.0` waited for **6R** before doing anything — a level his trades almost
+never reach, since his measured fills run 0.5-2.8R. The trail was decorative by
+construction. Fires now on **3436 checks and holds on 3098**, banking 97-142 points in the
+sampled cases.
+
+## "PERFECT Entries Using FIBONACCI" (v-0dOEDqglA) — mamba_fib confirmed by independent measurement
+
+Everything I rebuilt in `mamba_fib` last cycle came back confirmed off his pixels:
+
+* **The stop is the 0.764 level.** Measured across four setups, his stops land at
+  **0.694-0.818 of the fib leg** — at or just past 0.764. His fib tool is customised to
+  **0.764, not the standard 0.786.**
+* **The entry zone is 0.5 to 0.618**, all four setups.
+* **The anchor rule is the last clean impulse**, which is the exact quote the `_push`
+  rewrite was built on: "the push is not down in here because **yeah it push, but then it
+  came back down** -- this is where the main push is."
+* **A retracement that only reaches 0.382 is a NO TRADE** — he draws one, then abandons it:
+  "we almost have the three-eight-two rejections but couldn't really quite get there."
+
+Measured stops: **18.5 / 22.6 / 26.2 / 31.2 pips**. Measured R:R **3.51 / 8.52 / 2.69 /
+6.67** against his tool's own 3.46 / 8.3 / 2.62 / 6.47 — honest to within 4%.
+
+### AND THE THIRD VIDEO SHOWING HE SIZES BY FIXED CASH, NOT PERCENT
+
+His risk field reads **$750 on all four setups** — 750.04, 750.06, 750.05, 750.09 — with
+the quantity back-solved from the stop distance (801 → 1351 units as the stop tightens from
+31.2 to 18.5 pips). I watched it recalculate: at a 59.4-pip stop the size was 420; tightened
+to 22.6 pips it became 1106, and the cash risk never moved.
+
+That is now **three independent videos** with the same structure: the $750 fixed risk here,
+the $750 fixed risk on his NAS100 and missed-breakout boxes, and the flat $250 arithmetic in
+the 3-weeks video where the fourth trade still risks $250 after three losses have shrunk the
+account.
+
+**He does not risk a percentage. He risks a fixed amount and lets the stop decide the size.**
+The bot risks a percentage of live equity, which is a different model: his stays flat as the
+account grows, the bot's compounds. Recorded as a structural difference, not silently
+changed — and the percentage behind $750 is unknowable because he never shows the account.
+
+Also here: **H1 only, USD/JPY only, MA 21 and EMA 8 loaded** — and he never once says the
+words "moving average", "EMA" or "indicator", yet all four entries land exactly on the MA 21.
+A third timeframe answer, against "always H4" and "5 and 15 minute, that's all".
