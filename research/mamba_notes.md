@@ -3693,3 +3693,35 @@ Against "just master **GBP/JPY**, wake up during London session, trade it" in an
 and GBPJPY being the pair whose currency bug cost this project 14 setups. Both recorded.
 
 His whitelist here: **NASDAQ, US30, GOLD** — on screen as a card.
+
+---
+
+# CYCLE 9 — 2026-07-30
+
+## `min_votes` FIXED — his three confirmations are STAGES, not a quorum
+
+> "So, if price is **TRENDING** to the downside and we see **SUPPORT** here, there's only
+> one more thing we need. We got two confirmations. Our **THIRD CONFIRMATION IS A BREAK OF
+> THAT SUPPORT.**"
+
+That is the only time he counts, and the three things he counts are **one per stage of his
+sequence**: trend, level, trigger. `min_votes=3` counted three *chart-pattern detectors* out
+of a pool of seven agreeing with each other — the same number, an entirely different thing.
+He never counts detectors. He has never mentioned a detector quorum in any video watched.
+
+Rebuilt in his order:
+
+1. **TREND** — the H4/daily direction, checked first because he checks it first:
+   "first off i need to determine are we going up are we going down."
+2. **THE LEVEL** — "we see support here". Price must actually be AT one, taken from the
+   same wick-clustered map his zones come from.
+3. **THE TRIGGER** — "our third confirmation is a break of that support". One signal firing
+   in the trend's direction, not a quorum.
+
+**Measured: 13 entries under my quorum, 119 under his three.** Nine times as many, and 119
+across the sample is about **0.7 setups a day on one symbol** — finally in the range of a
+man who takes one or two a day across a watchlist. My version was firing on 0.08 a day and
+I had been reading that as "he is selective".
+
+The number 3 was right. What was being counted was wrong, and it made the bot roughly nine
+times too quiet.

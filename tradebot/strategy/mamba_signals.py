@@ -50,6 +50,8 @@ from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
 from .mamba_patterns import (
     buildup_zone,
+    level_map,
+    snap_to_level,
     ma_curve,
     obv_divergence,
     double_top_bottom,
@@ -125,6 +127,7 @@ class MambaSignals(Strategy):
     def __init__(
         self,
         min_votes: int = 3,
+        his_three: bool = True,
         btc_gates_alts: bool = True,
         session: str = "newyork",
         sessions: tuple[str, ...] = (),
@@ -156,6 +159,7 @@ class MambaSignals(Strategy):
         fixed_lots: float | None = None,
     ) -> None:
         self.min_votes = min_votes
+        self.his_three = his_three
         # "anytime bitcoin falls or gets pumped most other cryptos... are going to
         # pump up as well." An alt only trades in the direction Bitcoin is going.
         self.btc_gates_alts = btc_gates_alts
@@ -660,7 +664,43 @@ class MambaSignals(Strategy):
         buys = sum(1 for v in votes.values() if v > 0)
         sells = sum(1 for v in votes.values() if v < 0)
 
-        if buys >= self.min_votes and buys > sells:
+        if self.his_three:
+            # HIS THREE CONFIRMATIONS, IN HIS ORDER AND HIS TAXONOMY.
+            #
+            #   "So, if price is TRENDING to the downside and we see SUPPORT here,
+            #    there's only one more thing we need. We got two confirmations. Our
+            #    THIRD CONFIRMATION IS A BREAK OF THAT SUPPORT."
+            #
+            # One per stage of his sequence -- trend, level, trigger -- not three
+            # chart patterns agreeing with each other. min_votes=3 counted three
+            # detectors from a pool of seven, which happens to be the same number
+            # and is not the same thing at all. He never counts detectors.
+            #
+            # 1. TREND. He checks it first and everything else is downstream:
+            #    "first off i need to determine are we going up are we going down."
+            direction = self._higher_tf_gate(candles)
+            if direction == 0:
+                return []
+            # 2. THE LEVEL. "we see support here" -- price has to actually be at
+            #    one, from the same wick-clustered map his zones come from.
+            levels = level_map(candles)
+            if not levels:
+                return []
+            here = candles[-1]
+            at = snap_to_level(here.close, levels, -direction)
+            if at is None:
+                return []
+            near = here.close * 0.0006
+            reached = (here.low <= at + near if direction > 0
+                       else here.high >= at - near)
+            if not reached:
+                return []
+            # 3. THE TRIGGER. "our third confirmation is a break of that support"
+            #    -- one signal firing in the trend's direction, not a quorum.
+            agreeing = buys if direction > 0 else sells
+            if agreeing < 1:
+                return []
+        elif buys >= self.min_votes and buys > sells:
             direction = 1
         elif sells >= self.min_votes and sells > buys:
             direction = -1
