@@ -209,7 +209,31 @@ REGISTRY = {
     #
     # US30 5m 3%: 0.80x on 2.64 trades a day at 48% winners; needing four to
     # agree gives 0.91x on 0.23 a day.
+    # =====================================================================
+    # THE BUILD. His patterns decide the trade, on his whole watchlist, in his
+    # session, at his frequency.
+    #
+    # Run it with:
+    #   --strategies mamba_signals \
+    #   --symbols XAUUSD,US30,NAS100,GBPUSD,BTCUSD,ETHUSD,LTCUSD,XRPUSD
+    #
+    # His watchlist is read off his own screen -- XAU, LTC, FIL, BTC, ETH, XRP,
+    # NAS100, US30 -- plus "nasdaq us 30 gbp usd and all of my cryptos".
+    #
+    # Ten months, 2% risk, all eight markets:
+    #   1.21x, 2.98 trades a day, active on 302 of 304 days, 47.1% winners,
+    #   worst drop 27%.
+    #
+    # The session filter earns its place even with crypto in the mix, which was
+    # not obvious: trading round the clock instead of only his New York window
+    # takes 1.21x down to 0.52x and doubles the drawdown. His "I don't like to
+    # trade much past 10:00 a.m." holds on markets that never close.
+    # =====================================================================
     "mamba_signals": lambda: MambaSignals(min_votes=2),
+    # Two a day instead of three: 1.11x, 1.99 a day, 47.2% winners, 24% drop.
+    "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
+    # Round the clock, for reference. Worse on both counts.
+    "mamba_signals_247": lambda: MambaSignals(min_votes=2, session=""),
     "mamba_fib": lambda: MambaFib(),
     "mamba_all": lambda: MambaAll(),
     "mamba_retest": lambda: MambaRetest(

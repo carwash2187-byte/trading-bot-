@@ -1511,3 +1511,39 @@ pairing he describes is the one that matters. And **the fair value gap stop give
 best result measured this session at 1.18x on 2.46 trades a day**, which is his
 frequency with money above break-even. Letting the patterns vote gives the highest
 win rate seen anywhere in this project at 47.9%.
+
+---
+
+## BACKLOG ITEM 6 — his crypto markets, and THE BUILD
+
+Fetched 10 months of 15-minute history for the crypto on his screen: BTC, ETH, LTC,
+XRP (28,752 bars each, Oct 2025 - Jul 2026). Then ran his patterns across his entire
+watchlist at once.
+
+### Full watchlist: gold, US30, NAS100, GBPUSD, BTC, ETH, LTC, XRP
+
+| build | growth | trades/day | days traded | win% | drop |
+|-------|--------|-----------|-------------|------|------|
+| patterns vote, NY session, 2%, cap 3 | **1.21x** | **2.98** | **302 of 304** | **47.1%** | **27%** |
+| patterns vote, NY session, 2%, cap 2 | 1.11x | 1.99 | 302 of 304 | 47.2% | 24% |
+| patterns vote, round the clock, 2% | 0.52x | 4.11 | 304 of 304 | 42.1% | 48% |
+| patterns vote, round the clock, 3% | 0.37x | 4.11 | 304 of 304 | 42.2% | 64% |
+| all his setups, 2% | 0.27x | 3.98 | 298 of 304 | 37.2% | 76% |
+
+**This is everything asked for, together, for the first time:** his patterns deciding
+the trade, his whole watchlist, 2.98 trades a day, active on 99% of days, 47% winners,
+above break-even, and the smallest drawdown of anything that makes money.
+
+### The surprise: his session discipline holds on markets that never close
+
+Crypto trades 24/7, so there was no obvious reason to keep his New York window on it.
+Removing it takes **1.21x down to 0.52x and doubles the drawdown to 48%**. His "I don't
+like to trade much past 10:00 a.m. -- I don't want to sit here and freaking trade all
+day and trade into the evening" turns out to matter on BTC as much as on the Dow.
+
+Registered as `mamba_signals`, with a two-a-day variant and a round-the-clock variant
+for reference.
+
+Note on the trade rate: an earlier printout said 4.08 a day because it divided by
+weekdays only while crypto trades weekends. Per calendar day the real figure is 2.98,
+which is exactly the cap, meaning the cap binds every single day.
