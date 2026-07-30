@@ -4236,3 +4236,78 @@ unit in his videos.** Everything in this project is measured in points off the a
 > fire, just fire**"
 
 Still no mechanical trigger for it anywhere. Recorded as NOT FOUND YET.
+
+## "Scalping Strategy For SMALL Accounts" (o8TCjsQyCtM) — AND A CORRECTION TO MY OWN CLAIM
+
+### THE $750 MAY BE A TOOL DEFAULT, NOT HIS RISK SETTING
+
+I have written "fixed cash risk, confirmed a fifth time" into these notes and into commit
+messages. **A second agent challenged it and the challenge is fair.**
+
+Its observation: in this video the position tool's `Amount: 750` is **pinned at 750 in every
+frame regardless of how far he drags the stop**, and he never reads it aloud. Its verdict:
+an unedited TradingView default, not a stated rule.
+
+**What is actually established, and what is not:**
+
+* **Established, and still solid:** in the fib video the quantity *recalculated live* — 420
+  units at a 59.4-pip stop, 1,106 at 22.6 pips — while the risk figure held. That is the tool
+  solving for size from the stop distance, which is the *structure* of fixed-cash risk.
+* **NOT established:** that the number itself is his choice. It reads 750 in every video and
+  on every account, which is equally consistent with a setting he picked once and with a
+  default he never touched.
+* **He has never once said a cash risk figure out loud**, in any of the 31 videos watched.
+
+So the honest claim is narrower than the one I made: **his tool is configured to hold risk
+constant and solve for size, and the specific figure is unattributed.** The bot does not use
+the number and never did, so nothing in the code changes — but the note does, and the
+overclaim is corrected here rather than left standing.
+
+### HIS FIBONACCI LEVEL SET, READ OFF THE TOOL — AND IT MATCHES WHAT IS BUILT
+
+    1  ·  0.764  ·  0.618  ·  0.5  ·  0.382  ·  0.236  ·  0  ·  -0.25  ·  -0.618
+
+**0.764, not the standard 0.786** — third independent confirmation. Two negative extensions
+added, nothing above 1. Exactly the set `mamba_fib` carries.
+
+> "rejections to **the 0.5 and the 618 zone, which are the gold zone. It's the best zone ever**"
+> "**I love the Fibonacci, it's like all I use**"
+> "You draw it from where that **main push** was, like that **impulse push**. And this is where
+> market structure was broke."
+
+His trade sat at fib 0.6495 on entry, 0.872 on the stop, and the target landed at **-0.655**,
+just past his own -0.618 extension.
+
+### HIS STOP IS THE BIGGEST WICK, NOT THE SWING HIGH
+
+> "right above that final wick -- **not that final wick, the BIGGEST wick it pretty much
+> made**, because it shouldn't wick above that again"
+
+Measured: **17.3 pips**, sitting on the lower edge of the 4-hour zone — and **10 pips BELOW
+the fib swing high**. He deliberately does not use the swing extreme.
+
+### AND A SMALL-ACCOUNT REFUSAL THAT MATTERS HERE
+
+> "obviously you're not going to enter off of this because that's too big. **If you have a
+> small account, YOU CAN'T MAKE TRADES OFF THE FOUR HOUR.**"
+
+The 4-hour supplies the direction; the entry must come off a lower timeframe because the stop
+would otherwise be too wide for the account. That is exactly the H4-for-bias / lower-for-entry
+structure already built.
+
+### THE "SCALPING" VIDEO'S OWN TRADE RAN 2 HOURS 45 MINUTES
+
+Measured across 11 fifteen-minute candles. Against "**30 minutes, 35 minutes at the most**"
+and "**one hour at the most**" from two other videos. **Nothing in a video titled "Scalping
+Strategy" is a scalp by his own definition.**
+
+### ENTRY: DOUBLE TOP AT THE GOLD ZONE, TAKEN ON THE WICK
+
+> "**Double tops being made, huge rejections.** Whenever the market makes **M's or W's**, it's
+> a beautiful thing... **Once I see that double top being made, I'm definitely in. So I'm
+> going to get in RIGHT ON THAT WICK.**"
+
+Pixel-confirmed: the two double-top candles share a high of 1.98315 and his entry line is
+1.98313. **He entered at the wick high itself, intra-candle** — while waiting for the *retrace*
+candle to close before drawing the fib. Both "waits for the close" and "does not wait for the
+close" are true of him, at different stages of the same setup.
