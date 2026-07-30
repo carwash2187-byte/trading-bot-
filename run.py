@@ -39,6 +39,7 @@ from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.mamba_fib import MambaFib
 from tradebot.strategy.mamba_ny import MambaNY
 from tradebot.strategy.mamba_retest import MambaRetest
+from tradebot.strategy.mamba_levels import MambaLevels
 from tradebot.strategy.mamba_room import MambaRoom
 from tradebot.strategy.mamba_signals import MambaSignals
 from tradebot.strategy.mamba_rsi import MambaRsi
@@ -281,6 +282,26 @@ REGISTRY = {
     #
     #   --strategies mamba_room --symbols US30 --risk-per-trade 0.10
     "mamba_room": lambda: MambaRoom(),
+    # HIS ARCHITECTURE, not another parameter set. He draws the level map first and
+    # selects entry, stop and targets off it -- proven on the $250k trade where all
+    # five prices matched lines already on his chart within 3.5 points.
+    #
+    # Nothing is set here that he does not set. No stop distance: the stop is the
+    # level below entry. No target multiple: the target is the next level up the
+    # map, and if the map has nothing in range there is no trade rather than a
+    # fallback ratio.
+    #
+    # The proof this is right: with no width and no ratio configured, it produces
+    # 22-28 point stops at 1:1.9 to 1:2.8 -- which is where his measured live trades
+    # actually sit (28-34 point stops, 1.5-2.8R). The map reproduces his numbers
+    # without being told them.
+    #
+    # And the ratios differ per trade, as his do: two of his gold entries shared
+    # identical targets and produced 2.62R and 4.44R, which is impossible if targets
+    # are multiples.
+    "mamba_levels": lambda: MambaLevels(),
+    # Round the clock, for gold and crypto where he trades outside New York.
+    "mamba_levels_247": lambda: MambaLevels(session=""),
     "mamba_indices": lambda: MambaSignals(
         min_votes=2, allow_reentry=True,
         window_minutes=30, flatten_at_window_end=True,

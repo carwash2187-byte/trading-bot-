@@ -2849,3 +2849,32 @@ the case they were invented for: **no level in range means no target he would ha
 so there is no trade** rather than a number I made up.
 
 That is the route to deleting the rest of them rather than tuning them.
+
+## Cycle 2 — his architecture built and registered as `mamba_levels`
+
+Selects rather than computes. No stop distance is configured: the stop is the level below
+entry. No target multiple: the target is the next level up the map, and when the map has
+nothing in range there is **no trade** rather than a fallback ratio.
+
+**The evidence it is right:** with no width and no ratio set anywhere, it produces **22-28
+point stops at 1:1.9 to 1:2.8** on US30. His measured live trades sit at **28-34 point
+stops, 1.5-2.8R**. The map reproduces his numbers without being told them, which is what a
+faithful architecture should do and what no amount of tuning a `stop_bars` knob achieved.
+
+And the ratios differ trade to trade, as his do. Two of his gold entries carried identical
+targets and produced 2.62R and 4.44R — impossible if the targets were multiples.
+
+Fires on 8.8% of sampled bars.
+
+## Cycle 2 — a real constraint on the parallel plan
+
+Six subagents launched at once and **all six died on server overload (HTTP 529)**, as did a
+seventh on retry. The plan assumed the only limit on watching all 162 was doing them one at
+a time; there is a second limit, which is how many can run at once before the API refuses.
+
+Not retried immediately, because relaunching into an overloaded service makes it worse.
+Working solo in the meantime and dropping the fan-out width when it resumes.
+
+Honest revision: **all 162 in eleven hours is not achievable at this fan-out**. Two or three
+agents at a time is likely the practical ceiling, which is perhaps 30-50 videos in the
+window rather than 162. The tracker means the next run continues rather than restarts.
