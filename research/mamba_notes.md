@@ -2185,3 +2185,48 @@ Registered as a variant rather than a default.
 Note the lookback is also what the live cycle requests from the broker, so it is the
 real ceiling on what any rule here can look at. Worth checking against before adding a
 long window.
+
+---
+
+## MEASURED: his tutorials carry the rules, his live streams do not
+
+I told Leo the three live streams would be the best material there is and put them at
+priority 0. **That was wrong, and measuring it says so plainly.** Counting how often
+each video contains a buildable rule word -- stop loss, take profit, moving average,
+fibonacci, a stated ratio, crossover, engulfing, buildup, timeframe -- per 1000 words:
+
+| video | rules per 1k words |
+|-------|--------------------|
+| **tutorial, built on a blank chart** (Gav-iFiFDYs) | **34.5** |
+| tutorial, futures (-VdyJZlCG1M) | 13.3 |
+| tutorial, RSI + Bollinger (UQQnN6cry8A) | 12.7 |
+| tutorial, $100 account (I_33XcywuIo) | 11.1 |
+| live stream, Cave Talk (48 min) | 4.5 |
+| live stream 1 (52 min) | 3.2 |
+| live stream 2 (65 min) | **1.5** |
+
+**The tutorials are 3x to 23x denser.** The live streams are largely chat with the
+audience -- an hour of stream yields fewer buildable rules than four minutes of a
+tutorial. And the single richest video in the catalogue is the one where he sets the
+whole thing up on a blank chart and reads out every value, which is the one that gave
+the SMA 8 and 50, the buildup zone, the swoop and the 1:1 target.
+
+Tracker re-prioritised: anything that teaches the setup is now priority 0; the live
+streams are demoted to 2.
+
+### What the live stream did give — two clean confirmations
+
+His entry rule, as compactly as he has ever put it:
+
+> "**I'm going to take a sell if we're in a selling market and I see a support break.**"
+> "**I'm going to take a buy if we flip to a buy market.**"
+
+That is exactly what `MambaNY` does -- direction first, then the level giving way -- now
+confirmed from a live session rather than a lesson.
+
+And a risk-to-reward figure in passing:
+
+> "you're still going to get that **130 pip move** and you only have to **risk, you know,
+> 50 pips**"
+
+1:2.6, consistent with the 1:3 he quotes elsewhere.
