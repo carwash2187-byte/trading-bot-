@@ -2740,3 +2740,78 @@ Also measured there: every ratio he speaks matches his tool exactly -- "one to s
 five" against a displayed 7.51, "one to six" against 6.07, "one to almost five" against
 4.48. **When he quotes a number off his screen he is accurate.** It is his *account* that
 tells a different story from his *teaching*, not his arithmetic.
+
+## Cycle 1 — video hGPg7_ZE1DM, "COMPLETELY FREE DAY TRADING COURSE" (18:58)
+
+**The video contains no trading rules.** 0:00-7:10 is an advertisement for his Discord,
+7:10-18:58 is a cigar-shopping vlog. He never opens a chart to teach, never draws a level,
+never states an entry, a stop, a target or a risk figure. There is no new strategy in it.
+
+Recorded because a null result is worth as much as a finding when the job is deciding
+what to watch: **a video titled as a course can carry nothing**, and rule density has to be
+measured rather than assumed from the title. Everything below was read off his screen
+during the Discord walkthrough, not from his words.
+
+### THIRD INDEPENDENT CONFIRMATION: he teaches high reward and takes low reward
+
+Measured from his members' own trade screenshots in his win channel:
+
+* stops: **28-34 index points** on US30 and NAS100
+* runners: **45-84 points**
+* so live risk-to-reward roughly **1.5-2.8 : 1**
+
+against the **4.93 : 1** box he narrates over the same trade as a win.
+
+That is now measured three separate ways from three different videos:
+
+| source | what he teaches | what the numbers show |
+|--------|-----------------|----------------------|
+| his own live week, 6 trades | 1:4 and 1:5 throughout | **0.5R average** |
+| his NAS100 $250k trade | 3.68R planned | exited **2.90R**, "I got out early" |
+| his members' fills | 4.93R narrated | **1.5-2.8R** |
+
+**He is consistently more conservative in the execution than in the teaching.** Not a
+contradiction I am inventing to justify a change -- it is the same gap measured from his
+account, his trade and his community, independently.
+
+### THE TARGET LADDER IS ~1R EQUAL STEPS — measured, and it corroborates mamba_room
+
+Pixel-measured inside his reward boxes: rungs at 0.83R, 1.61R, 2.74R with even spacing of
+**0.87R per step** on one setup, and a clean **1.0R ladder** fitting every line on another.
+The number of rungs varies per trade (3 to 5+), which is why the total varies while the
+spacing does not.
+
+`mamba_room` was built from his posted cards as 1/2/3/4/6R. Equal ~1R steps with a varying
+final rung is the same shape, arrived at from different evidence.
+
+### HIS NEW YORK WINDOW IS TIGHTER STILL
+
+Member fill timestamps cluster **16:30-16:37 broker time** -- the first **seven minutes**
+after the 09:30 ET cash open. One member held a US30 trade for **53 seconds**.
+
+So there are now three widths from him: 210 minutes (futures video), 30 minutes (indices
+video), and a ~7-minute cluster in his own room. All his.
+
+### AND HIS OWN CHART HERE IS COMPLETELY BARE
+
+Candles plus one horizontal line. **No moving averages, no volume pane, no oscillator.**
+
+That is a third distinct indicator setup: SMA 8 and 50 in the blank-chart video, EMA 8 with
+MA 21 and OBV in the 3k video, eight collapsed studies in the six-figures video, and
+nothing at all here. His chart is not a fixed thing.
+
+### THREE SESSIONS, confirmed again
+
+> "in the live trading room, we trade **New York session, Tokyo session, and London
+> session**" / "you're getting **three live trading sessions** every single day"
+
+### AND THE MAP OF HIS METHOD, read off his course channel
+
+Thirteen sections: start now · where to trade · what to trade · contracts and ticks ·
+analyzing time frames · price action and market structure · support and resistance ·
+sessions to trade · **volume** · **using data** · **stop loss adjustments** · psychology ·
+trading account guide.
+
+None of it plays in this video, but it names the parts he considers the method -- and
+"stop loss adjustments" being its own section confirms that moving stops is central rather
+than incidental.
