@@ -4135,3 +4135,36 @@ the levels are **75 / 25**, so the levels are OUTSIDE the bands and requiring bo
   two things this video cannot supply, and anything put there is mine rather than his.
 * Three moving averages sit on his price chart in every frame and he **never opens, names or
   mentions them**. Settings unreadable. Recorded as unknown rather than guessed.
+
+---
+
+# CYCLE 13 — 2026-07-30
+
+## HIS NAMED STRATEGY IS TWO CONFIRMATIONS, AND BOTH ARE ON THE OSCILLATOR
+
+> "all it is is like a **TWO CONFIRMATION** pretty much scalping strategy where you're gonna
+> use bollinger bands and rsi **and that's pretty much it**"
+
+His two are **the RSI breaking its band** and **the RSI breaking 75/25**. Both live on the
+oscillator. He draws **no support, no resistance and no zones** on that chart at all — the
+agent checked every frame and the Objects panel held nothing but teaching arrows.
+
+The code required a third: price sitting at a level from the map. That was mine, carried in
+from a different video where he counts three. Both readings are his, so it is a flag rather
+than a silent choice, and his named version is the default.
+
+**Measured:**
+
+| | setups | median ratio |
+|---|---|---|
+| **His two (band + 75/25)** | **134** | **1:4.06** |
+| With my level as a third | 46 | 1:3.22 |
+
+His version finds nearly three times as many setups **and** at a better ratio — and 1:4.06
+sits squarely inside his own "I want 1:3, 1:5 are amazing". Every time I have added a
+confirmation of my own, it has cost trades and made the remaining ones worse.
+
+The level is still used for the stop when the flag is on, because his named video specifies
+**no stop at all** and one has to come from somewhere he actually said. With the flag off the
+stop is the trigger candle's own extreme — "that last candle where we broke, the high of that
+candle" — which is his rule from another video and is what the rest of the project already uses.

@@ -118,6 +118,7 @@ class MambaRsi(Strategy):
         zone_pct: float = 0.0006,
         min_touches: int = 3,
         require_rsi: bool = True,
+        require_level: bool = False,
         max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
         stop_after_win: bool = True,
@@ -133,6 +134,7 @@ class MambaRsi(Strategy):
         # 3, and he counts them: "We're stuck. 1 2 3. We can't break it."
         self.min_touches = min_touches
         self.require_rsi = require_rsi
+        self.require_level = require_level
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
         self.stop_after_win = stop_after_win
@@ -348,9 +350,22 @@ class MambaRsi(Strategy):
         # The wick-clustered map already answers "which level is price at", and it
         # is the same map his zones come from everywhere else in this project.
         # Resistance above for a sell, support below for a buy.
+        # BUT HIS NAMED STRATEGY USES NO PRICE LEVEL AT ALL, so this is a switch.
+        #
+        # In the video where he calls this "the Mamba sniping scalping perfect
+        # entry strategy" he says outright: "all it is is like a TWO CONFIRMATION
+        # pretty much scalping strategy where you're gonna use bollinger bands and
+        # rsi AND THAT'S PRETTY MUCH IT." His two are the RSI breaking its band and
+        # the RSI breaking 75/25 -- both on the oscillator, neither on price. He
+        # draws no support, no resistance and no zones on that chart at all.
+        #
+        # A different video gives three confirmations with a level among them, so
+        # both readings are his and this is a flag rather than a silent choice. The
+        # level is still used for the STOP when it is on, because his named video
+        # specifies no stop whatsoever and one has to come from somewhere he said.
         bar_now = candles[-1]
         level = snap_to_level(bar_now.close, level_map(candles), -direction)
-        if level is None:
+        if self.require_level and level is None:
             return []
 
         bar = candles[-1]
@@ -365,11 +380,11 @@ class MambaRsi(Strategy):
         # His behaviour is a touch and a rejection: "price came down, tapped it,
         # and rejected." So the bar has to REACH the level and close back on the
         # correct side of it.
-        if direction < 0:
-            if bar.high < level - zone or bar.close > level + zone:
-                return []
-        else:
-            if bar.low > level + zone or bar.close < level - zone:
+        if self.require_level:
+            if direction < 0:
+                if bar.high < level - zone or bar.close > level + zone:
+                    return []
+            elif bar.low > level + zone or bar.close < level - zone:
                 return []
 
         # Three: the band break, plus the RSI he pairs with it.
@@ -405,7 +420,8 @@ class MambaRsi(Strategy):
         min_reward = 3.0
 
         if direction < 0:
-            stop = self._wick_stop(candles, level, short=True)
+            stop = (self._wick_stop(candles, level, short=True)
+                    if level is not None else bar.high)
             if stop <= bar.close:
                 return []
             need = (stop - bar.close) * min_reward
@@ -418,7 +434,8 @@ class MambaRsi(Strategy):
                           take_profit=target,
                           comment=self.name)]
 
-        stop = self._wick_stop(candles, level, short=False)
+        stop = (self._wick_stop(candles, level, short=False)
+                if level is not None else bar.low)
         if stop >= bar.close:
             return []
         need = (bar.close - stop) * min_reward
