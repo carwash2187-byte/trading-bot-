@@ -1387,3 +1387,77 @@ same breath as the gold zone.
 US30 0.39x on 0.34/day, NAS100 0.82x on 0.47/day, GBPUSD 0.77x on 0.08/day, gold
 took no trades at all -- the minimum push size is likely too large for gold's range
 and wants a per-market value.
+
+---
+
+## BACKLOG ITEMS 2-5 — the four patterns he names, all built
+
+`tradebot/strategy/mamba_patterns.py`. Every one from his own words.
+
+### DOUBLE TOP / BOTTOM — he reads them as letters
+
+> "whenever the market makes an **m** uh it's pretty obvious what's going to happen
+> right we have a **double top resistance** while the beginning of the letter m has
+> been created"
+> "on the h4 you want to find either a major support or major resistance that price
+> has showed it's going to respect for example right what do we have here beautiful
+> beautiful **double bottom strong support** made"
+
+And he feeds it straight into the gold zone:
+> "I know a lot of you guys are asking **you see a double top** like why is this your
+> entry check this out you're gonna take... my **Fibonacci** I'm gonna draw from this
+> low to this high... look at this beautiful **50 and a 6-1-8 rejection**"
+
+### ENGULFING CANDLE — his test is SIZE, not the textbook shape
+
+> "we had a beautiful beautiful **bearish engulfing candle**... overall this is pretty
+> much **engulfing every candle from the last it's been a cool minute since it's been
+> that big**"
+> "why do I still believe this is a bullish trade because **look at the size of this
+> candle** this is a very **large engulfing bullish candle**"
+> "we saw this candle here closed not only a **ginormous bullish engulfing candle** but
+> it **closed above the tops of those rejections**"
+
+Three conditions because he names three: swallows the previous bar, large against the
+recent average, and closes beyond the level being tested.
+
+### FAIR VALUE GAP
+
+> "Right here, we're going to have a **fair value gap**."
+> "We have that other **fair value gap now supporting price**."
+> "maybe go to break even once we get down into this **order block** here, just in case
+> price does react off of it"
+
+### LIQUIDITY SWEEP
+
+> "I'm liking this **liquidity that we're building up** up here."
+> "our entry came from this **4-hour liquidity sweep**"
+> "the next point could be here as an **area of liquidity**"
+
+Built as the failure rather than the break: price pushes past an old extreme and
+closes straight back inside it.
+
+### MACD DIVERGENCE
+
+> "**lower lows higher high on our macd** all that means is that price is **bound to
+> reverse**"
+
+### VERIFIED FIRING — the check that matters given this project's history
+
+US30 15m, 3,960 sample points:
+
+| pattern | fires |
+|---------|-------|
+| fair value gap | 66.2% of bars |
+| double top/bottom | 26.3% |
+| MACD divergence | 25.8% |
+| liquidity sweep | 15.3% |
+| engulfing | 3.8% |
+
+None is a silent no-op. The double-top detector needed two fixes to get there: at my
+first tolerance it fired on **81.7%** of bars, and tightening the tolerance alone only
+took it to 77.7%. The actual bug was searching every historical pair in the window --
+a double top he would point at is one whose **second peak is what price is doing right
+now**, so it now requires the pattern to have formed within the last few bars. A
+detector that is true 82% of the time is the same as no detector, which is the fifth
+time this project has produced a rule that silently did nothing.
