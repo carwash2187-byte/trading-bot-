@@ -72,11 +72,24 @@ jobs:
           # number, so the fatal line is a constant. It backstops the cached
           # state above: a cache miss degrades the breakers, never this.
           TRADEBOT_START_BALANCE: "2635.39"
+          # His news rule needs a calendar feed. Without one this stays empty and
+          # the rule is INERT -- he says "when there's a news event I don't
+          # recommend you trade it, wait a day or two", and with no feed the bot
+          # cannot know an event happened. Set the repo variable to switch it on.
+          TRADEBOT_NEWS_URL: ${{ vars.TRADEBOT_NEWS_URL }}
         run: |
+          # HIS build, HIS settings. What ran here before was gold_scalper at
+          # 1.5% behind a 3% daily brake and a 6% drawdown brake -- none of it
+          # his, and the two brakes are the ones that replaced his method with
+          # mine on his first losing trade. His own day rule governs instead:
+          # two trades, two losses, or one win, and he is finished.
+          #
+          # Still --mode demo. Going live needs BOTH --mode live and
+          # TRADEBOT_ALLOW_LIVE=yes, and that is Leo's call to make, not this
+          # file's.
           python3 run.py \
             --broker tradelocker --mode demo \
-            --symbols XAUUSD --strategies gold_scalper \
-            --risk-per-trade 0.015 \
-            --daily-loss-limit 0.03 \
-            --max-drawdown-limit 0.06 \
+            --symbols XAUUSD --strategies mamba_complete \
+            --risk-per-trade 0.10 \
+            --news-url "$TRADEBOT_NEWS_URL" \
             --verbose

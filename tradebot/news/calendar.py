@@ -241,7 +241,16 @@ class NewsDetector:
         self,
         calendar: EconomicCalendar,
         pre_window: float = 300.0,
-        post_window: float = 300.0,
+        # HIS NUMBER, and it is not five minutes:
+        #
+        #   "when there's a news event I don't recommend you trade it. I recommend
+        #    that you WAIT -- wait for the markets to cool down, WAIT A DAY OR TWO,
+        #    and then trade."
+        #
+        # A day is the minimum he states, so a day is what this is. The old 300
+        # seconds was mine and let the bot back in while the move was still
+        # unwinding, which is the exact window he tells people to sit out.
+        post_window: float = 86400.0,
         min_impact: Impact = Impact.HIGH,
     ) -> None:
         self.calendar = calendar

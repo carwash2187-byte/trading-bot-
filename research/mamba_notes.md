@@ -3535,3 +3535,58 @@ changed — and the percentage behind $750 is unknowable because he never shows 
 Also here: **H1 only, USD/JPY only, MA 21 and EMA 8 loaded** — and he never once says the
 words "moving average", "EMA" or "indicator", yet all four entries land exactly on the MA 21.
 A third timeframe answer, against "always H4" and "5 and 15 minute, that's all".
+
+## "5 Tips" (JSLsfp4_BqA) — a win ends his day, CONFIRMED TWICE, and his news rule
+
+### THE WIN-ENDS-THE-DAY RULE, INDEPENDENTLY CONFIRMED
+
+> "go to your one session, you trade, and **that's it, you're done for the day** -- enjoy
+> time with your family, go try some more side hustles"
+> "just master GBP/JPY, wake up during London session, **trade it and then enjoy the rest
+> of your day**"
+
+Built last cycle from a different video. Two independent sources now say the same thing.
+
+### HIS NEWS RULE — AND MINE WAS 288 TIMES TOO SHORT
+
+> "when there's a news event **I don't recommend you trade it**. I recommend that you
+> **WAIT -- wait for the markets to cool down, WAIT A DAY OR TWO**, and then trade."
+
+The detector waited **300 seconds**. His minimum is a **day**. Mine let the bot back in
+while the move was still unwinding, which is precisely the window he tells people to sit
+out. Now 86,400 seconds — proven to block from the release through 23.9 hours and release
+at 26.
+
+**AND IT IS STILL INERT IN PRODUCTION.** The news rule only runs when `--news-url` is
+passed, and the scheduled job never passed it. Wired to a repo variable now; until that
+variable is set the bot cannot know an event happened, and I would rather say that plainly
+than let it look built.
+
+### WHAT ACTUALLY RUNS — AND IT WAS NOT HIM AT ALL
+
+The scheduled job has been running, this whole time:
+
+    --symbols XAUUSD --strategies gold_scalper
+    --risk-per-trade 0.015
+    --daily-loss-limit 0.03
+    --max-drawdown-limit 0.06
+
+**Not one line of that is his.** Not the strategy, not the risk, and the two brakes are the
+exact ones named in the prompt as having replaced his method with mine on his first losing
+trade every day. Every rule built in this project has been sitting in files that never ran.
+
+Now: `--strategies mamba_complete --risk-per-trade 0.10`, both brakes gone, his own day
+rule governing instead — two trades, two losses, or one win, and he is finished. Still
+`--mode demo`; going live needs both `--mode live` and `TRADEBOT_ALLOW_LIVE=yes`, which is
+Leo's call and not this file's.
+
+### HIS OTHER NUMBERS HERE
+
+* **"I'm in these trades for one hour at the most, one hour, and I'm out"** — against
+  "30 minutes, 35 minutes at the most" elsewhere. Both his. Recorded, neither deleted.
+* **"all I'm doing is going on the five minute chart"** — a *fourth* timeframe answer,
+  narrower than "5 and 15 minute, that's all" and flatly against "always H4".
+* **06:30 AM PST for NASDAQ**, London session for GBP/JPY.
+* **"stick to one session... stick to one or two pairs"** — a refusal, so a rule.
+* **"catch my thousand pips and I'm out"** — flagged as unusable. A 1,000-pip target on a
+  5-minute breakout inside an hour would mean the bot never takes profit. NOT built.
