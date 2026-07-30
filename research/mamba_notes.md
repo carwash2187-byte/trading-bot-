@@ -3167,3 +3167,42 @@ holds if he enters the bar after the rejection wick, which he never says.
 
 Also: "26 pips stop loss, 62 take profit" — the label on his own screen reads **68.7**. His
 other quoted numbers all match his labels exactly.
+
+## Cycle 4 — the channel numbers deleted, and a silent rule I created and caught inside one cycle
+
+### FIVE OF MY PARAMETERS GONE FROM `mamba_channel`
+
+`edge_pct` (0.15), `stop_pct` (0.08), `target_pct` (0.8), `min_width_pct` (0.004) and the
+old `lookback_bars` — every one flagged unsourced in the audit, because he states a number
+for none of them.
+
+His rule needs none either:
+
+> "price will either **respect this channel or hit this support**, one or the other"
+> "I believe price is going to crash down and **hit the bottom of our channel**"
+
+Edge, stop and target are all *levels*, and the level map already supplies levels. So the
+edges now come from the map, the stop is the level beyond the edge, and the target is the
+far side. Nothing of mine chooses how far anything sits.
+
+Measured after: fires on **6.2%** of bars, stops of 25-169 points straight off the map, and
+ratios ranging **1:1.58 to 1:20** — wildly variable, which is his behaviour rather than a
+flaw. His targets are structural and the ratio is whatever falls out; two of his own gold
+entries proved that with identical targets giving 2.62R and 4.44R.
+
+### AND THE TWELFTH SILENT RULE, THREE MINUTES OLD
+
+The first version of this refactor **fired zero times in 2,786 samples**. The bug: I asked
+for a level *beyond* the top edge, while using the highest level in the map as that edge —
+so there was never anything above it, `snap_to_level` returned None, and every evaluation
+returned nothing.
+
+It looked right. It read right. It did nothing.
+
+Caught only because the discipline is to prove a rule fires before believing it, and that
+check ran within three minutes of writing the code. The fix is that the edge he fades is
+the outermost level that still has a level beyond it, since that beyond-level is the stop.
+
+Twelve now, and this one is worth more than the others precisely because it was mine and
+fresh: **the failure mode is not a legacy problem, it is what happens by default every time
+a rule is written and not checked.**

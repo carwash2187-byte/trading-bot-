@@ -42,7 +42,7 @@ class MambaBoth(Strategy):
         self.breakout = breakout or MambaBreakout(
             wait_for_close=False, stop_candle_frac=0.5, reward=8.0
         )
-        self.channel = channel or MambaChannel(target_pct=1.0)
+        self.channel = channel or MambaChannel()
         # Both halves tag their orders with this bot's name, so the portfolio
         # manager and the risk layer see one strategy rather than two fighting
         # over the same symbol.

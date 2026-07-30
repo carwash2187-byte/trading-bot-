@@ -39,6 +39,7 @@ from datetime import datetime, timedelta, timezone
 
 from ..brokers.base import Candle, OrderSide
 from .base import Action, Enter, Strategy, StrategyContext
+from .mamba_patterns import level_map, snap_to_level
 
 
 @dataclass(frozen=True)
@@ -82,21 +83,24 @@ class MambaChannel(Strategy):
 
     def __init__(
         self,
-        lookback_bars: int = 96,
-        edge_pct: float = 0.15,
+        map_lookback: int = 300,
         min_touches: int = 2,
-        stop_pct: float = 0.08,
-        target_pct: float = 0.8,
-        min_width_pct: float = 0.004,
         max_trades_per_day: int = 3,
         higher_tf_bars: int = 0,
     ) -> None:
-        self.lookback_bars = lookback_bars
-        self.edge_pct = edge_pct
+        # THE GEOMETRY IS GONE. edge_pct, stop_pct, target_pct and min_width_pct
+        # were all mine -- he states no number for any of them, and the audit
+        # flagged every one as unsourced.
+        #
+        # His rule needs none of them: "price will either respect this channel or
+        # hit this support, one or the other", and "I believe price is going to
+        # crash down and hit the bottom of our channel". Edge, stop and target are
+        # all levels, and the level map already supplies levels. So the edges come
+        # from the map, the stop is the level beyond the edge, and the target is
+        # the far side -- exactly as he describes, with nothing of mine choosing
+        # how far anything sits.
+        self.map_lookback = map_lookback
         self.min_touches = min_touches
-        self.stop_pct = stop_pct
-        self.target_pct = target_pct
-        self.min_width_pct = min_width_pct
         self.max_trades_per_day = max_trades_per_day
         # "If it's gonna fall on the H4, that means price is really gonna fall
         # on the M15." "We got two time frames looking good."
@@ -150,54 +154,45 @@ class MambaChannel(Strategy):
         if context.news is not None and context.news.active:
             return []
 
-        channel = self._channel(candles)
-        if channel is None:
+        levels = level_map(candles, lookback=self.map_lookback,
+                           min_touches=self.min_touches)
+        if len(levels) < 4:
             return []
 
         bar = candles[-1]
+        near = bar.close * 0.0006
 
-        # Which way the bigger picture points, measured the way he reads it by
-        # eye: where price sits within the higher-timeframe range.
+        # Which way the bigger picture points, read as he reads it: where price
+        # sits within the higher-timeframe range. "if it's gonna fall on the H4,
+        # that means price is really gonna fall on the M15."
         allow_short = allow_long = True
         if self.higher_tf_bars > 0 and len(candles) > self.higher_tf_bars:
             htf = candles[-self.higher_tf_bars:]
             mid = (max(c.high for c in htf) + min(c.low for c in htf)) / 2.0
-            allow_short = bar.close < mid      # only fade down in a down bias
+            allow_short = bar.close < mid
             allow_long = bar.close > mid
 
-        band = channel.width * self.edge_pct
-        stop_room = channel.width * self.stop_pct
+        # The edge he fades is not the outermost level -- it is the outermost one
+        # that still has a level BEYOND it, because that beyond-level is where the
+        # stop goes. Using levels[-1] as the edge asks for something above the
+        # highest level in the map, which never exists, so the strategy silently
+        # took zero trades in 2,786 samples. Twelfth rule in this project to be
+        # present, correct-looking and inert.
+        top, top_stop = levels[-2], levels[-1]
+        bottom, bottom_stop = levels[1], levels[0]
 
-        # At the top: the trade is that the channel holds and price returns.
-        # Requires the bar to have REACHED the zone and CLOSED back inside it.
-        # A close above the high is the channel breaking, and fading that is
-        # the losing side of this trade.
-        if (allow_short
-                and channel.high_touches >= self.min_touches
-                and bar.high >= channel.high - band
-                and bar.close < channel.high):
-            stop = channel.high + stop_room
-            risk = stop - bar.close
-            if risk > 0:
-                return [Enter(
-                    side=OrderSide.SELL,
-                    stop_loss=stop,
-                    take_profit=bar.close - channel.width * self.target_pct,
-                    comment=self.name,
-                )]
+        # At the top of the range: the trade is that it holds and price returns to
+        # the far side. The bar must REACH the level and close back inside -- a
+        # close beyond it is the range breaking, and fading a break is how this
+        # family of trade destroys an account.
+        if allow_short and bar.high >= top - near and bar.close < top:
+            if top_stop > bar.close:
+                return [Enter(side=OrderSide.SELL, stop_loss=top_stop,
+                              take_profit=bottom, comment=self.name)]
 
-        if (allow_long
-                and channel.low_touches >= self.min_touches
-                and bar.low <= channel.low + band
-                and bar.close > channel.low):
-            stop = channel.low - stop_room
-            risk = bar.close - stop
-            if risk > 0:
-                return [Enter(
-                    side=OrderSide.BUY,
-                    stop_loss=stop,
-                    take_profit=bar.close + channel.width * self.target_pct,
-                    comment=self.name,
-                )]
+        if allow_long and bar.low <= bottom + near and bar.close > bottom:
+            if bottom_stop < bar.close:
+                return [Enter(side=OrderSide.BUY, stop_loss=bottom_stop,
+                              take_profit=top, comment=self.name)]
 
         return []

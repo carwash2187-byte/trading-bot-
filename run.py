@@ -98,7 +98,7 @@ REGISTRY = {
     #
     # Wants ~2% risk, not the breakout's 6%: more trades at a 15% win rate
     # means longer losing runs, and 6% turns a 39% drawdown into 83%.
-    "mamba_channel": lambda: MambaChannel(target_pct=1.0),
+    "mamba_channel": lambda: MambaChannel(),
     # Both his trades in one bot, which is how he actually trades: breakout
     # when a level gives way, channel fade when it holds. 4.59x over ten
     # months of US30 15m at 2% risk on 1.08 trades a day, up in three quarters
@@ -414,7 +414,7 @@ REGISTRY = {
         breakout=MambaBreakout(
             wait_for_close=False, stop_candle_frac=0.5, reward=8.0
         ),
-        channel=MambaChannel(target_pct=1.0, higher_tf_bars=32),
+        channel=MambaChannel(higher_tf_bars=32),
     ),
     "big_runner": BigRunner,
     "breakout_rider": BreakoutRider,

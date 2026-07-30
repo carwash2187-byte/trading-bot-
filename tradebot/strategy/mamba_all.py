@@ -68,7 +68,7 @@ class MambaAll(Strategy):
             max_hold_minutes=35 * scale,
         )
         self.retest = retest or MambaRetest(ma_period=50, trail_after=6.0)
-        self.channel = channel or MambaChannel(target_pct=1.0, higher_tf_bars=32)
+        self.channel = channel or MambaChannel(higher_tf_bars=32)
 
         # All three tag their orders with this bot's name, so the risk layer and
         # the portfolio manager see one strategy rather than three fighting over

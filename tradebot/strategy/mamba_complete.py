@@ -100,7 +100,7 @@ class MambaComplete(Strategy):
         self.rsi = MambaRsi()
 
         # 5. The channel fade, with the two-timeframe rule he applies to it.
-        self.channel = MambaChannel(target_pct=1.0, higher_tf_bars=32 // scale or 32)
+        self.channel = MambaChannel(higher_tf_bars=32 // scale or 32)
 
         # 6. Pattern confluence, WITH his direction rule doing the gating --
         #    "first off i need to determine are we going up are we going down...
