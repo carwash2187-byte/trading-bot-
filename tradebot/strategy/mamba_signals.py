@@ -95,6 +95,9 @@ class MambaSignals(Strategy):
         use_ma: bool = True,
         ma_fast: int = 9,
         ma_slow: int = 21,
+        h4_bars: int = 0,
+        daily_bars: int = 0,
+        higher_tf_gates: bool = True,
         max_trades_per_day: int = 3,
         max_losses_per_day: int = 2,
         breakeven_at: float = 0.0,
@@ -110,6 +113,29 @@ class MambaSignals(Strategy):
         self.use_ma = use_ma
         self.ma_fast = ma_fast
         self.ma_slow = ma_slow
+        # "how i'm trading it is first off i need to determine are we going up are
+        # we going down are we in a bullish trend or a bearish trend... and that's
+        # going to be from the daily and the four hour."
+        #
+        # So the higher timeframes have exactly ONE job -- direction. Not levels,
+        # not zones. That is why the earlier attempt at a "daily filter" failed:
+        # it was measuring where price sat inside a daily range, which is not what
+        # he uses the daily for.
+        #
+        # And he ranks them: "we're gonna start on the h4 always h4 you can use
+        # the daily as well i like the h4." H4 first, daily optional.
+        #
+        # Counted in bars of this strategy's own timeframe. On 5m: 48 bars is 4
+        # hours, 288 is a day. Zero disables either.
+        self.h4_bars = h4_bars
+        self.daily_bars = daily_bars
+        # His ORDER matters, not just his ingredients. "first off i need to
+        # determine are we going up are we going down... and that's going to be
+        # from the daily and the four hour." Direction is decided FIRST, by the
+        # higher timeframes, and the patterns then confirm inside it. Treating
+        # them as equal votes alongside the patterns is a different strategy and
+        # a worse one -- it dilutes five pattern votes with two trend votes.
+        self.higher_tf_gates = higher_tf_gates
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
         self.breakeven_at = breakeven_at
@@ -150,6 +176,15 @@ class MambaSignals(Strategy):
             elif gap[0] > close:
                 out["gap"] = -1     # gap above, capping price
 
+        # The higher timeframes only join the vote when they are NOT acting as
+        # the gate. As a gate they come first and outrank everything, which is
+        # his stated order.
+        if not self.higher_tf_gates:
+            for key, bars in (("h4", self.h4_bars), ("daily", self.daily_bars)):
+                d = self._tf_direction(candles, bars)
+                if d:
+                    out[key] = d
+
         # "our moving averages are above everything... gonna pull our trade to
         # the downside"
         if self.use_ma:
@@ -160,6 +195,37 @@ class MambaSignals(Strategy):
                 out["ma"] = 1 if fast[-1] > slow[-1] else -1
 
         return out
+
+    def _tf_direction(self, candles: list[Candle], bars: int) -> int:
+        """Up or down over ``bars``. Zero when disabled or flat."""
+        if bars <= 0 or len(candles) < bars:
+            return 0
+        window = candles[-bars:]
+        first = window[: len(window) // 2]
+        last = window[len(window) // 2:]
+        a = sum(c.close for c in first) / len(first)
+        b = sum(c.close for c in last) / len(last)
+        if b > a:
+            return 1
+        if b < a:
+            return -1
+        return 0
+
+    def _higher_tf_gate(self, candles: list[Candle]) -> int:
+        """"first off i need to determine are we going up are we going down...
+        that's going to be from the daily and the four hour."
+
+        He prefers the H4 -- "always h4 you can use the daily as well i like the
+        h4" -- so the H4 decides and the daily may only veto by disagreeing.
+        Returns 0 when there is no usable opinion, which means no trade.
+        """
+        h4 = self._tf_direction(candles, self.h4_bars)
+        daily = self._tf_direction(candles, self.daily_bars)
+        if self.h4_bars > 0 and self.daily_bars > 0:
+            if h4 == 0 or daily == 0 or h4 != daily:
+                return 0
+            return h4
+        return h4 or daily
 
     def _in_session(self, now) -> bool:
         if not self.session:
@@ -235,6 +301,12 @@ class MambaSignals(Strategy):
             direction = -1
         else:
             return []
+
+        # The higher timeframes get the final say, because he checks them first.
+        if self.higher_tf_gates and (self.h4_bars > 0 or self.daily_bars > 0):
+            gate = self._higher_tf_gate(candles)
+            if gate == 0 or gate != direction:
+                return []
 
         bar = candles[-1]
         window = candles[-self.stop_bars:]

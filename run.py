@@ -234,6 +234,25 @@ REGISTRY = {
     "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
     # Round the clock, for reference. Worse on both counts.
     "mamba_signals_247": lambda: MambaSignals(min_votes=2, session=""),
+    # His stated ORDER, which is direction first from the higher timeframes and
+    # patterns confirming inside it: "first off i need to determine are we going
+    # up are we going down are we in a bullish trend or a bearish trend... and
+    # that's going to be from the daily and the four hour". He prefers the H4 --
+    # "always h4 you can use the daily as well i like the h4" -- so the H4 gates
+    # and the daily can only veto.
+    #
+    # Ten months, 2%, all eight markets: H4 gating gives 0.76x on 2.98 a day
+    # against 1.21x ungated; H4 and daily both gating gives 0.62x.
+    "mamba_signals_h4": lambda: MambaSignals(min_votes=2, h4_bars=16),
+    "mamba_signals_h4_daily": lambda: MambaSignals(
+        min_votes=2, h4_bars=16, daily_bars=96
+    ),
+    # On his 1-minute chart -- "It's very important that you use a 5-minute or
+    # 1-minute chart simply because we are super scalping." 45 days of 1m bars at
+    # 2%: BTC 1.04x on 2.75 a day, LTC 0.92x, ETH 0.97x, US30 0.78x.
+    "mamba_signals_1m": lambda: MambaSignals(
+        min_votes=2, max_hold_minutes=35, stop_bars=20
+    ),
     "mamba_fib": lambda: MambaFib(),
     "mamba_all": lambda: MambaAll(),
     "mamba_retest": lambda: MambaRetest(

@@ -1547,3 +1547,71 @@ for reference.
 Note on the trade rate: an earlier printout said 4.08 a day because it divided by
 weekdays only while crypto trades weekends. Per calendar day the real figure is 2.98,
 which is exactly the cap, meaning the cap binds every single day.
+
+---
+
+## BACKLOG ITEM 7 — his 1-minute chart
+
+> "It's very important that you use a **5-minute or 1-minute chart** simply because we
+> are **super scalping**."
+> "with these **one minute trades you got to get in you got to get up quick**... they're
+> **reversing and they reverse fast**"
+
+Fetched 45 days of 1-minute history for BTC, ETH and LTC (about 64,800 bars each);
+US30 1m was already on disk. His patterns on 1-minute bars at 2% risk:
+
+| market | out in 10 min | out in 35 min |
+|--------|---------------|---------------|
+| BTC | 0.93x on 2.84/day | **1.04x on 2.75/day, 45.5% win** |
+| ETH | 0.79x on 2.80/day | 0.97x on 2.61/day |
+| LTC | 0.92x on 2.68/day | 0.81x on 2.68/day |
+| US30 | 0.82x on 1.85/day | 0.78x on 1.87/day |
+
+## BACKLOG ITEM 8 — the daily, built right this time
+
+The first attempt was switched off because I had guessed what the daily was for. He
+says outright what it is for, and it is ONE thing:
+
+> "how i'm trading it is **first off i need to determine are we going up are we going
+> down** are we in a bullish trend or a bearish trend are you making bullish moves or
+> bearish moves right and **that's going to be from the daily and the four hour**"
+
+**Direction. Not levels, not zones.** My earlier stand-in measured where price sat
+inside a daily range, which is why it was useless.
+
+And he ranks them, which settles which one leads:
+
+> "we're gonna **start on the h4 always h4** you can **use the daily as well i like the
+> h4**"
+
+So the H4 decides and the daily can only disagree. Also worth recording, on how far
+back to look:
+
+> "I'd go on the weekly and then slowly go down to the 5minut chart and it's like,
+> holy [bleep] **do I really need to see every single thing that's happened for the last
+> 20 years?**"
+
+And the stack he names for levels:
+> "remember guys, **H4 support resistance daily and weekly**"
+> "Looking at our **weekly**, we actually may be coming to a support as well, which is
+> **good confluence**"
+
+### Numbers, 10 months, 2% risk, all eight markets
+
+| build | growth | trades/day | win% | drop |
+|-------|--------|-----------|------|------|
+| no higher-timeframe gate | 1.21x | 2.98 | 47.1% | 27% |
+| H4 gates direction | 0.76x | 2.98 | 44.9% | 36% |
+| H4 over 8 hours | 0.67x | 2.98 | 43.8% | 51% |
+| daily gates direction | 0.65x | 2.85 | 44.5% | 46% |
+| H4 and daily must agree | 0.62x | 2.70 | 44.0% | 55% |
+| as equal votes instead | 0.89x | 2.98 | 44.5% | 43% |
+
+Both registered: `mamba_signals_h4` and `mamba_signals_h4_daily` are his stated order,
+`mamba_signals` is the ungated version. His order also beats treating them as equal
+votes (0.76x against 0.89x is the wrong way round, but the H4-only gate at 0.76x beats
+the both-gates 0.62x, so his preference for the H4 does hold).
+
+**THE BACKLOG IS COMPLETE.** All eight items built: Fibonacci, fair value gaps,
+liquidity, double tops, engulfing candles, MACD divergence, his crypto markets, the
+1-minute chart, and the daily.
