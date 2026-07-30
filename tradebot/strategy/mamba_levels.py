@@ -61,7 +61,7 @@ from ..data.ohlc import timeframe_minutes
 from ..brokers.base import Candle, OrderSide
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
-from .mamba_patterns import level_map, snap_to_level
+from .mamba_patterns import in_zone, level_map, level_zones, snap_to_level
 
 
 class MambaLevels(Strategy):
@@ -72,10 +72,12 @@ class MambaLevels(Strategy):
         map_tolerance_pct: How close two wicks must be to count as the same level.
         map_min_touches: Wicks required before a price is a level. "boom boom boom
             boom boom" is five gestures; three is the floor seen in his drawings.
-        at_level_pct: How near a level price must be to count as being at it. He
-            enters before the break -- "I don't like to trade the breakouts
-            necessarily but the pre-breakouts, I like to get in there before it
-            breaks out" -- so this is an approach zone, not a break.
+        (at_level_pct deleted -- his zone has a real width and it is measurable.
+        "the demand is EVERYTHING TO THE SIDE OF IT as well, so this whole area
+        would be a demand zone." The wick cluster that makes a level also gives its
+        thickness, so price is either inside his rectangle or it is not. Measured on
+        US30 his zones run 15-18 points wide; my flat 0.0006 fraction was 27.6
+        points for every level regardless.)
         (trend_bars deleted -- his direction timeframe is the H4 and always was:
         "we're gonna start on the h4, ALWAYS h4, you can use the daily as well, i
         like the h4." Four hours is 240 minutes, so the bar count is 240 divided
@@ -100,7 +102,6 @@ class MambaLevels(Strategy):
         map_lookback: int = 300,
         map_tolerance_pct: float = 0.0004,
         map_min_touches: int = 3,
-        at_level_pct: float = 0.0006,
         trend_bars: int = 0,
         session: str = "newyork",
         # HIS WINDOW, HIS NUMBER: "6:30 a.m. Pacific Standard time is the only
@@ -120,7 +121,6 @@ class MambaLevels(Strategy):
         self.map_lookback = map_lookback
         self.map_tolerance_pct = map_tolerance_pct
         self.map_min_touches = map_min_touches
-        self.at_level_pct = at_level_pct
         self.trend_bars = (trend_bars if trend_bars > 0
                            else 240 // max(1, timeframe_minutes(self.timeframe)))
         self.session = session
@@ -158,13 +158,36 @@ class MambaLevels(Strategy):
                             second=0, microsecond=0)
         return start <= utc <= start + timedelta(minutes=self.window_minutes)
 
-    def _ladder(self, price: float, levels: list[float], side: int) -> list[float]:
-        """The next few levels in the trade's direction, nearest first."""
+    def _ladder(self, price: float, levels: list[float], side: int,
+                risk: float = 0.0) -> list[float]:
+        """The next few levels in the trade's direction, nearest first.
+
+        The FINAL rung has to clear his stated floor:
+
+            "when it comes to my risk-to-reward, I WANT 1:3. 1:5 are amazing, but
+             if I can at least get a 1:3, I'm going to be satisfied"
+            "I wasn't going for anything higher than a risk of one to one... I was
+             TIRED OF HITTING ONE TO ONES and maybe a one to two at best"
+
+        Taking the nearest three levels gave a median 1:1.20 -- the exact outcome he
+        says he got tired of. Zooming out until a level pays 3 to 1 is what he
+        describes doing: "i'll go ahead and ZOOM OUT and i'll target my next main
+        zone." No number of mine is involved; the 3 is his.
+        """
         if side > 0:
-            up = sorted(lv for lv in levels if lv > price)
-            return up[: self.rungs]
-        down = sorted((lv for lv in levels if lv < price), reverse=True)
-        return down[: self.rungs]
+            beyond = sorted(lv for lv in levels if lv > price)
+        else:
+            beyond = sorted((lv for lv in levels if lv < price), reverse=True)
+        if not beyond:
+            return []
+        if risk <= 0:
+            return beyond[: self.rungs]
+        far = [lv for lv in beyond if abs(lv - price) >= risk * 3.0]
+        if not far:
+            return []              # nothing pays his 1:3, so there is no trade
+        # Rungs on the way to it, then the target that actually clears the floor.
+        near = [lv for lv in beyond if abs(lv - price) < abs(far[0] - price)]
+        return (near + [far[0]])[-self.rungs:]
 
     # -- the rules --------------------------------------------------------
 
@@ -239,32 +262,41 @@ class MambaLevels(Strategy):
             return []
 
         bar = candles[-1]
-        near = bar.close * self.at_level_pct
+        # His rectangles, at their measured width -- no tolerance of mine.
+        zones = level_zones(
+            candles,
+            lookback=self.map_lookback,
+            tolerance_pct=self.map_tolerance_pct,
+            min_touches=self.map_min_touches,
+        )
+        here = in_zone(bar.low, bar.high, zones)
 
         # He enters AT a level in the direction of the higher timeframe, before the
         # break, not on it. So price must be approaching a level from the correct
         # side and have reached it with a wick -- his zones get pierced, and two of
         # three touches on his own chart closed outside the band.
         if direction > 0:
-            support = snap_to_level(bar.close, levels, -1)
-            if support is None or bar.low > support + near:
-                return []
+            if here is None or here[1] > bar.close:
+                return []          # not standing in a zone beneath price
+            support = here[0]
             stop = snap_to_level(support, levels, -1)
             if stop is None or stop >= bar.close:
                 return []
-            targets = self._ladder(bar.close, levels, 1)
+            targets = self._ladder(bar.close, levels, 1,
+                                   risk=bar.close - stop)
             if not targets:
                 return []          # no level to aim at is no trade, not a multiple
             return [Enter(side=OrderSide.BUY, stop_loss=stop,
                           take_profit=targets[-1], comment=self.name)]
 
-        resistance = snap_to_level(bar.close, levels, 1)
-        if resistance is None or bar.high < resistance - near:
-            return []
+        if here is None or here[0] < bar.close:
+            return []              # not standing in a zone above price
+        resistance = here[1]
         stop = snap_to_level(resistance, levels, 1)
         if stop is None or stop <= bar.close:
             return []
-        targets = self._ladder(bar.close, levels, -1)
+        targets = self._ladder(bar.close, levels, -1,
+                               risk=stop - bar.close)
         if not targets:
             return []
         return [Enter(side=OrderSide.SELL, stop_loss=stop,

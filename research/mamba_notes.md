@@ -4385,3 +4385,93 @@ own list of what matters.
 A video titled **SCALPING** in which his own signal service is described as averaging "**300
 pips take profit to 5,000 pips take profit per trade**". A 5,000-pip target is not a scalp.
 Recorded with the rest.
+
+---
+
+# CYCLE 16 — 2026-07-30
+
+## `at_level_pct` DELETED — his zone has a real, measurable width
+
+> "you have to remember, when you look at demand zones or supply zones, it's not just the very
+> bottom of that zone -- that's not the demand. To me **THE DEMAND IS EVERYTHING TO THE SIDE OF
+> IT AS WELL**, so this whole area would be a demand zone."
+> "Let me go and take out my little **handy dandy square tool**"
+
+He draws rectangles and never states a thickness — because he does not need to. **The wick
+cluster that makes a level also gives its width.** `level_map` was already computing that span
+while clustering and throwing it away, keeping only the midpoint, which is precisely why every
+caller then needed a fraction of mine to ask "is price near enough?"
+
+With the real span there is no "near enough": price is inside his rectangle or it is not.
+
+**Measured on US30 his zones run 15-18 points wide. My flat 0.0006 fraction was 27.6 points
+for every level regardless** — half again too wide, on every level, always.
+
+His own drawn zones, measured across videos: **41 pips** on GBPAUD H4, **18 pips** on a 15m
+target zone, **8.6 pips** on a double top, **15.6 / 6.4 / 10.5 points** on US30. An order of
+magnitude apart, which is why one percentage could never have stood in for them.
+
+## AND HIS 1:3 FLOOR APPLIED TO THE LEVEL LADDER
+
+Taking the nearest three levels gave a median **1:1.20** — the exact outcome he says he got
+tired of: "**I was tired of hitting one to ones** and maybe a one to two at best." Zooming out
+to the first level that pays his 3 is what he describes: "i'll go ahead and **zoom out** and
+i'll target my next main zone."
+
+After: fires **152 of 1,000**, stop median **41 points**, ratio median **1:3.41**, minimum
+**1:3.00** exactly.
+
+## "MY FOREX TRADING SETUP" (B0zzPVabhnU) — NINE OF HIS OWN POSTED SIGNALS, AND THEY UNDERCUT THE FLOOR
+
+His VIP Telegram, scrolled on camera. Nine complete signals with entry, stop and both targets
+— **texts he wrote himself**, not something read off a screen.
+
+| | stop | TP1 | TP2 |
+|---|---|---|---|
+| median | **29 pips** | **0.77R** | **1.59R** |
+| range | 10.1 - 70.8 pips | 0.47 - 1.09R | 1.25 - 2.30R |
+
+**TP1 is below 1R on eight of nine.** Every signal carries the same footer: "*(Please use
+proper risk management and only risk 1-3% per trade for the best results)*".
+
+**And he explains why, in his own writing:**
+
+> "we don't only look at risk to rewards... the reason it **doesn't look the most attractive**
+> is because we are **first targeting SL hunts with the banks** -- which usually reverse after.
+> But with the amount of wins we take it doesn't matter. **We've gone almost 30-5 in the last
+> 30 days**"
+
+**So the 1:3 floor I built this cycle is what he TEACHES, and 0.77R / 1.59R is what he POSTS.**
+That is now the fourth independent measurement of the same gap: his live week averaged 0.5R,
+his $250k trade closed 2.90R against a 3.68R plan, his members' fills ran 1.5-2.8R against
+4.93R narrated, and now nine written signals at 0.77R and 1.59R.
+
+His model is **low reward, high strike rate** — "we win probably **eight trades for every
+ten**" spoken, "almost **30-5**" written. A 1:3 floor is not that model. Recorded at full
+strength; the floor stays because it is his stated rule and it is a parameter, but anyone
+reading this should know his own signal book does not clear it.
+
+### HIS FX SIGNALS AND HIS INDEX SIGNALS ARE DIFFERENT BOOKS
+
+* **US30 room:** flat 25.0-point stop, ladder 1 / 2 / 3 / 4 / 6R.
+* **FX VIP:** stops 10-71 pips, exactly two targets, TP2 labelled "(MAIN TARGET)", 0.77R and
+  1.59R.
+
+Same man, two geometries. `mamba_room` implements the first; the second is recorded and not yet
+built.
+
+### AND MORE FROM IT
+
+* **H4 for bias, M15 for entry, on the same pair side by side** — "i like to have my h4 set up
+  here and i like to have my 15 set up here **on the same exact pair**... i can then go to my
+  smaller time frames look for better entries." His written rule is blunter: "**Never take an
+  entry from a higher timeframe.**"
+* **"we trade once a day"** — contradicted by his own log, which shows four pairs live in one
+  window and "either way **we are trading tonight some more**".
+* Management, in writing: partial at TP1, **stop to breakeven or one pip below**, let TP2 run.
+  And before news: "**adjust SL to entry or just below entry please**."
+* Measured hold times from his own message stamps: **1h, 2h09, 4h42, 7h44, up to 23h.** Against
+  "30 to 35 minutes at the most". Several ran overnight from the London open into New York.
+* **The moving-average gap is STILL open.** He says "we had a **moving average crossover** that
+  I speak about in a lot of my videos" and never opens a settings dialog. Three lines resolvable
+  on the H4, periods unreadable. Four videos have now failed to close it.
