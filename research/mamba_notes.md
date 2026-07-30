@@ -1930,3 +1930,128 @@ reason dies.
 
 Nothing in the file is tuned to improve a number. Where he gives a value it is his
 value; where he gives none it comes from what he draws on screen.
+
+---
+
+# PARAMETER AUDIT — every number in the code, his or mine
+
+Leo's instruction: "for EVERY number in every file, answer: did he say this, or did I
+pick it?" Here it is. 117 parameters across 9 files.
+
+## HIS — quoted, verbatim
+
+| parameter | value | his words |
+|-----------|-------|-----------|
+| `rsi_period` | 14 | "inputs are going to stay 14" |
+| `rsi_upper` | 75 | "the upper band needs to be 75" |
+| `rsi_lower` | 25 | "the lower band needs to be 25" |
+| `boll_period` | 34 | "we're going to change the inputs to 34" |
+| `fib_near` | 0.5 | "the zero five zone" |
+| `fib_far` | 0.618 | "the 0.61 our 0.618 zone" |
+| `ma_slow` | **50** | "You're going to make it a **50 simple** moving average" |
+| `ma_fast` | **8** | "make this a **eight**... a eight blue simple moving average" |
+| `max_hold_minutes` | 35 | "30 minutes, 35 minutes at the most" |
+| `max_trades_per_day` | 3 | "two, three when I like it" |
+| `max_losses_per_day` | 2 | "If the second one doesn't work out, we are done for the day" |
+| `window_minutes` | 210 | "6:20, 6:30 a.m." to "I don't like to trade much past 10:00 a.m." |
+| `session` | newyork | "you only trade during New York session" |
+| `reward` | 3.0 | "we can go for a nice little one to three" |
+| `reward` (flip) | 7.0 | "a fat one to seven, one to 10 risk to reward" |
+| `breakeven_at` | 2.0 | "we got to a 1 to two stops can go to break even" |
+| `min_touches` | 2 | "a couple touches... it's not perfect" |
+| `fixed_lots` | 0.01 | "if you're using a 0.01 that would have been a dollar sixty loss" |
+| `zone_pct` | 0.0004 | pixel-measured off his drawn bands: 15-20 points on 49,400 |
+| `wait_for_close` | False | "we're not waiting for candle to close" |
+
+## MINE — he never states these
+
+| parameter | value | verdict |
+|-----------|-------|---------|
+| `min_votes` | 2 | **mine.** He says "confluence" and "two confirmations if not like six", never a count. |
+| `push_bars` | 60 | mine |
+| `min_push_pct` | 0.004 | mine |
+| `level_bars` / `level_lookback` | 60 / 200 | mine |
+| `trend_bars` | 48, 60 | mine |
+| `stop_bars` | 24 | mine |
+| `retest_bars` | 24 | mine |
+| `stop_beyond_pct` | 0.0008 | mine |
+| `stop_zone_frac` | 0.5 | mine |
+| `target1` / `target2` | 1.5 / 4.0 | mine. He says "take profit one / take profit two" with no numbers. |
+| `boll_stdevs` | 2.0 | his by omission -- he changes the period and leaves this alone |
+| `edge_pct`, `stop_pct`, `target_pct`, `min_width_pct` | | mine, all in mamba_channel |
+| `trail_after` | 6.0 | mine. He says he trails, never how far. |
+
+## CORRECTED THIS CYCLE — three numbers that were wrong, not just unsourced
+
+**`ma_fast` and `ma_slow` were EMA 9 and 21. Both wrong, and the type was wrong too.**
+He builds them on a blank chart and reads out every setting:
+
+> "we need to set up two things. Okay, that's just **two simple moving averages**"
+> "You're going to make it a **50 simple moving average**. Go ahead and make it red."
+> "Then you're going to take another moving average and you're going to go ahead and
+> make this a **eight**. Okay, I make it blue... for me, it's a **eight blue simple
+> moving average**."
+> "You now have a **eight and a 50** moving average on your screen. **That's all we're
+> going to be using.**"
+> "**simple ones are a lot better** by the way"
+
+He names the 50 in **22 separate places** across the videos. He names 9 or 21 in
+**none**. Changed to SMA 8 and SMA 50 in both files that used them.
+
+**His entry trigger is the CROSSOVER, which was not built at all:**
+> "we're going to be looking for **crossovers on the 5 minute time frame**"
+> "We are now going to go to our **5m** and we're going to go ahead and see if we can
+> get a **moving average crossover**"
+
+A crossover is an event -- the 8 crossing the 50 on this bar -- not the state of being
+above it. Built as its own vote.
+
+## NEW LEVEL SHAPE — his "buildup zone", and every detector here was looking for the wrong thing
+
+> "support and resistance is **not always going to be what you think it is**. Okay,
+> it's not always going to look like right or this... all it really is, it's just a
+> **buildup**. When you have a **buildup in a zone on a H4**, a lot of times it's going
+> to get respected."
+> "That's support because it's rejecting that zone multiple times. It doesn't look like
+> one of those **solid supports**... It's just a **buildup in the moment off a bunch of
+> candles. It's a buildup zone. It's support.**"
+
+Every level detector in this project hunts swing highs and lows -- single extremes with
+bars either side. That finds exactly the "solid supports" he says a level is NOT always
+shaped like. A buildup is the opposite: a stack of ordinary candles congesting in a
+narrow band. Built as `buildup_zone`, and wired as a location that votes only when
+price returns to it and is refused, because that is the "respected" part.
+
+## HIS TIMEFRAME STACK, stated in full for the first time
+
+> "we're going to be based upon **higher time frame support resistances**... and then
+> **smaller time frame entries**"
+> "right here, **H4**, we have a support buildup"
+> "Looking at our **daily**, nothing's telling us that we're selling... **we check our
+> daily to make sure that that's the case**" -- so the daily is a VETO, which is how it
+> is built
+> "Looking at our **weekly**, we actually may be coming to a support as well, which is
+> **good confluence**"
+> "**don't use the hourly as much**"
+
+H4 for the level, daily to veto, weekly as bonus confluence, 5m for the entry. The
+weekly is still not built.
+
+## EVERY SIGNAL VERIFIED FIRING — US30 15m, 788 samples
+
+| signal | votes on |
+|--------|----------|
+| `ma` (side of the 50) | **100.0%** |
+| `gap` (fair value gap) | 56.0% |
+| `macd` divergence | 27.5% |
+| `double` top/bottom | 25.3% |
+| `sweep` (liquidity) | 15.6% |
+| `buildup` zone | 12.6% |
+| `engulfing` | 3.6% |
+| `ma_cross` | 2.5% |
+
+None is a silent no-op. But **`ma` voting on 100% of bars is a structural problem**:
+price is always one side of the 50, so the MA always contributes a vote, which means a
+threshold of two is really "the MA plus any one other thing". That is not the
+"confluence" he describes, and the vote threshold was already flagged as mine rather
+than his. Next cycle's job.

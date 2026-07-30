@@ -269,3 +269,82 @@ def macd_divergence(
             and max(m_last) < max(m_first)):
         return -1
     return 0
+
+
+@dataclass(frozen=True)
+class Buildup:
+    """A congestion zone: many candles stacked in a narrow band of price."""
+
+    low: float
+    high: float
+    candles_in: int     # how many bars congested there
+
+    @property
+    def mid(self) -> float:
+        return (self.low + self.high) / 2.0
+
+
+def buildup_zone(
+    candles: list[Candle],
+    lookback: int = 60,
+    band_pct: float = 0.0008,
+    min_candles: int = 8,
+    left_out: int = 3,
+) -> Buildup | None:
+    """His "buildup zone" — support that is congestion, not a swing.
+
+    He is explicit that this is a different animal from a textbook level:
+
+        "support and resistance is not always going to be what you think it is.
+        Okay, it's not always going to look like right or this. Okay, sometimes
+        you're going to get a nice support that looks like this. Okay, all it
+        really is, it's just a buildup. When you have a buildup in a zone on a H4,
+        a lot of times it's going to get respected."
+
+        "That's support because it's rejecting that zone multiple times. It doesn't
+        look like one of those solid supports like this or, you know, where it
+        crosses, it comes back, you know, days later. It's just a buildup in the
+        moment off a bunch of candles. It's a buildup zone. It's support."
+
+    Every level detector in this project until now hunted swing highs and lows --
+    single extremes with bars either side. That finds the "solid supports" he says
+    are NOT always what a level looks like. A buildup is the opposite shape: a
+    cluster of ordinary candles sitting on top of each other in a narrow band,
+    which price then leaves and later respects.
+
+    Found by sliding a band of ``band_pct`` through the window and taking the band
+    holding the most candle bodies. Requires price to have since left the zone by
+    ``left_out`` bars, because a zone price is still sitting inside is not yet a
+    level -- it is the present.
+    """
+    window = candles[-lookback:]
+    if len(window) < min_candles + left_out + 5:
+        return None
+    price = window[-1].close
+    band = price * band_pct
+    if band <= 0:
+        return None
+
+    # Candidate band centres: every candle body midpoint.
+    best: Buildup | None = None
+    for c in window[:-left_out]:
+        centre = (c.open + c.close) / 2.0
+        lo, hi = centre - band, centre + band
+        inside = sum(
+            1 for b in window
+            if lo <= (b.open + b.close) / 2.0 <= hi
+        )
+        if inside < min_candles:
+            continue
+        if best is None or inside > best.candles_in:
+            best = Buildup(low=lo, high=hi, candles_in=inside)
+
+    if best is None:
+        return None
+
+    # Price must have LEFT the zone -- "it's just a buildup in the moment" that
+    # becomes support once price moves away and comes back to it.
+    recent = window[-left_out:]
+    if all(best.low <= b.close <= best.high for b in recent):
+        return None
+    return best

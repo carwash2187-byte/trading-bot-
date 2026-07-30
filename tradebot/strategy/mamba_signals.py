@@ -44,10 +44,11 @@ from __future__ import annotations
 from datetime import timedelta, timezone
 
 from ..brokers.base import Candle, OrderSide
-from ..data.indicators import ema
+from ..data.indicators import sma
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
 from .mamba_patterns import (
+    buildup_zone,
     double_top_bottom,
     engulfing,
     fair_value_gap,
@@ -95,13 +96,15 @@ class MambaSignals(Strategy):
         stop_bars: int = 24,
         zone_pct: float = 0.0004,
         use_ma: bool = True,
-        ma_fast: int = 9,
-        ma_slow: int = 21,
+        ma_fast: int = 8,
+        ma_slow: int = 50,
         h4_bars: int = 0,
         daily_bars: int = 0,
         higher_tf_gates: bool = True,
         max_trades_per_day: int = 3,
         max_losses_per_day: int = 2,
+        use_ma_crossover: bool = False,
+        use_buildup: bool = False,
         breakeven_at: float = 0.0,
         scale_at: float = 0.0,
         exit_on_reason_gone: bool = False,
@@ -135,6 +138,22 @@ class MambaSignals(Strategy):
         self.stop_bars = stop_bars
         self.zone_pct = zone_pct
         self.use_ma = use_ma
+        # His two moving averages, read out as he builds them on a blank chart:
+        #
+        #   "we need to set up two things. Okay, that's just TWO SIMPLE MOVING
+        #    AVERAGES."
+        #   "You're going to make it a 50 SIMPLE moving average. Go ahead and make
+        #    it red."
+        #   "Then you're going to take another moving average and you're going to
+        #    go ahead and make this a EIGHT. Okay, I make it blue... for me, it's a
+        #    eight blue simple moving average."
+        #   "You now have a EIGHT AND A 50 moving average on your screen. THAT'S
+        #    ALL WE'RE GOING TO BE USING."
+        #   "simple ones are a lot better by the way"
+        #
+        # I had 9 and 21, exponential. Wrong periods and wrong type -- he names 8
+        # and 50, simple, and says twice that is all he uses. He mentions the 50
+        # in 22 separate places across the videos and 9 or 21 in none.
         self.ma_fast = ma_fast
         self.ma_slow = ma_slow
         # "how i'm trading it is first off i need to determine are we going up are
@@ -162,6 +181,28 @@ class MambaSignals(Strategy):
         self.higher_tf_gates = higher_tf_gates
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
+        # "we're going to be looking for CROSSOVERS on the 5 minute time frame"
+        # "We are now going to go to our 5m and we're going to go ahead and see if
+        #  we can get a moving average crossover."
+        #
+        # A crossover is an event, not a state -- the 8 crossing the 50 on THIS
+        # bar, rather than merely sitting above it. That distinction is the whole
+        # difference between a signal and a condition.
+        self.use_ma_crossover = use_ma_crossover
+        # His "buildup zone", which is a level shape nothing else here looks for:
+        #
+        #   "support and resistance is not always going to be what you think it
+        #    is... all it really is, it's just a BUILDUP. When you have a buildup
+        #    in a zone on a H4, a lot of times it's going to get respected."
+        #   "It's just a buildup IN THE MOMENT OFF A BUNCH OF CANDLES. It's a
+        #    buildup zone. It's support."
+        #
+        # Every other detector here hunts swing extremes -- the "solid supports"
+        # he says a level is NOT always shaped like. A buildup is congestion: a
+        # stack of ordinary candles in a narrow band. It is a LOCATION rather than
+        # an event, so it votes only when price has come back to it and been
+        # turned away, which is the "respected" part.
+        self.use_buildup = use_buildup
         # "let's say we got to a 1 to two stops can go to break even and boom the
         # rest is history." Two, not one -- and every earlier test in this project
         # used one, which cut winners in half.
@@ -243,6 +284,20 @@ class MambaSignals(Strategy):
         if div:
             out["macd"] = div
 
+        # "when you have a buildup in a zone on a H4, a lot of times it's going
+        # to get respected" -- the vote is price returning to the zone and being
+        # refused, not the zone merely existing.
+        if self.use_buildup:
+            zone = buildup_zone(candles)
+            if zone is not None:
+                bar = candles[-1]
+                touched_below = bar.low <= zone.high and bar.close > zone.high
+                touched_above = bar.high >= zone.low and bar.close < zone.low
+                if touched_below:
+                    out["buildup"] = 1     # came down to it and held: support
+                elif touched_above:
+                    out["buildup"] = -1    # came up to it and failed: resistance
+
         # "that other fair value gap now supporting price"
         gap = fair_value_gap(candles)
         if gap is not None:
@@ -265,10 +320,18 @@ class MambaSignals(Strategy):
         # the downside"
         if self.use_ma:
             closes = [c.close for c in candles]
-            fast = ema(closes, self.ma_fast)
-            slow = ema(closes, self.ma_slow)
+            fast = sma(closes, self.ma_fast)
+            slow = sma(closes, self.ma_slow)
             if fast and slow and fast[-1] is not None and slow[-1] is not None:
                 out["ma"] = 1 if fast[-1] > slow[-1] else -1
+                # The crossover itself, as its own vote: the 8 crossing the 50 on
+                # this bar. "see if we can get a moving average crossover."
+                if (self.use_ma_crossover and len(fast) > 1 and len(slow) > 1
+                        and fast[-2] is not None and slow[-2] is not None):
+                    was = fast[-2] > slow[-2]
+                    now = fast[-1] > slow[-1]
+                    if was != now:
+                        out["ma_cross"] = 1 if now else -1
 
         return out
 
@@ -424,7 +487,7 @@ class MambaSignals(Strategy):
         ma_level = None
         if self.stop_at_ma:
             closes = [c.close for c in candles]
-            slow = ema(closes, self.ma_slow)
+            slow = sma(closes, self.ma_slow)
             if slow and slow[-1] is not None:
                 ma_level = slow[-1]
 

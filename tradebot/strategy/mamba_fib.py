@@ -63,7 +63,7 @@ from dataclasses import dataclass
 from datetime import timezone
 
 from ..brokers.base import Candle, OrderSide
-from ..data.indicators import ema
+from ..data.indicators import sma
 from .mamba_patterns import double_top_bottom, macd_divergence
 from .base import Action, Enter, Strategy, StrategyContext
 
@@ -110,8 +110,8 @@ class MambaFib(Strategy):
         min_push_pct: float = 0.004,
         fib_near: float = 0.5,
         fib_far: float = 0.618,
-        ma_fast: int = 9,
-        ma_slow: int = 21,
+        ma_fast: int = 8,
+        ma_slow: int = 50,
         higher_tf_bars: int = 96,
         reward: float = 3.0,
         stop_beyond_pct: float = 0.0008,
@@ -179,12 +179,18 @@ class MambaFib(Strategy):
         return Push(low=low_v, high=high_v, up=up, zone_near=near, zone_far=far)
 
     def _ma_agrees(self, candles: list[Candle], up: bool) -> bool:
-        """"the MA is our crossing over on the h4... crossed over on the 15"."""
+        """"the MA is our crossing over on the h4... crossed over on the 15".
+
+        His pair is 8 and 50, SIMPLE: "you now have a eight and a 50 moving
+        average on your screen. That's all we're going to be using", and "simple
+        ones are a lot better by the way". This file previously used exponential
+        9 and 21, which were mine.
+        """
         if self.ma_fast <= 0 or self.ma_slow <= 0:
             return True
         closes = [c.close for c in candles]
-        fast = ema(closes, self.ma_fast)
-        slow = ema(closes, self.ma_slow)
+        fast = sma(closes, self.ma_fast)
+        slow = sma(closes, self.ma_slow)
         if not fast or not slow or fast[-1] is None or slow[-1] is None:
             return True
         return (fast[-1] > slow[-1]) if up else (fast[-1] < slow[-1])
