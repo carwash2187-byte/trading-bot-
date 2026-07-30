@@ -82,7 +82,13 @@ class MambaSignals(Strategy):
 
     name = "mamba_signals"
     timeframe = "5m"
-    lookback = 400
+    # Must exceed the longest window any rule asks for, or that rule silently
+    # never runs. The weekly view wants 480 bars of 15m and this was 400, so
+    # `weekly_bars=480` returned zero on every single bar -- the eleventh rule in
+    # this project that was present, correct, and unreachable. The live cycle
+    # requests exactly this many bars from the broker, so it is also the real
+    # ceiling on what any rule here can look at.
+    lookback = 600
 
     def __init__(
         self,
@@ -100,6 +106,9 @@ class MambaSignals(Strategy):
         ma_slow: int = 50,
         h4_bars: int = 0,
         daily_bars: int = 0,
+        weekly_bars: int = 0,
+        allow_reentry: bool = False,
+        reentry_bars: int = 24,
         higher_tf_gates: bool = True,
         max_trades_per_day: int = 3,
         max_losses_per_day: int = 2,
@@ -172,6 +181,32 @@ class MambaSignals(Strategy):
         # hours, 288 is a day. Zero disables either.
         self.h4_bars = h4_bars
         self.daily_bars = daily_bars
+        # "remember guys, H4 support resistance daily and weekly."
+        # "Looking at our weekly, we actually may be coming to a support as well,
+        #  which is GOOD CONFLUENCE, right? That's a good good confluence."
+        # "If we look at the weekly, we're at a 10-year support."
+        #
+        # He treats the weekly as a bonus rather than a requirement -- "good
+        # confluence" is how he phrases it, not a gate. So it votes; it does not
+        # veto. Measured in bars of this strategy's timeframe: on 15m, 480 bars is
+        # about a trading week.
+        self.weekly_bars = weekly_bars
+        # "trade number three was really TRADE NUMBER TWO PART TWO because it's
+        #  still the same move we're still going up on the same day and I decided
+        #  I GOT OUT TOO EARLY I WANT TO RE-ENTER this trade."
+        # "I'm going to go ahead and RE-ENTER LONGS right now."
+        # "now that we did break some highs, I think I MIGHT JUST REENTER longs."
+        # "I would RE-ENTER for a buy" (once price pushes back through the level)
+        #
+        # He goes again when he left too early and the move is still running. He
+        # does NOT re-enter after being stopped out -- every re-entry he narrates
+        # follows a manual exit, never a stop. So this only arms after the bot
+        # closed on the clock or because the reason died.
+        self.allow_reentry = allow_reentry
+        self.reentry_bars = reentry_bars
+        # Set when a position is closed manually, so the next bars can go again.
+        self._reentry_armed: int | None = None
+        self._reentry_side: int = 0
         # His ORDER matters, not just his ingredients. "first off i need to
         # determine are we going up are we going down... and that's going to be
         # from the daily and the four hour." Direction is decided FIRST, by the
@@ -307,6 +342,12 @@ class MambaSignals(Strategy):
             elif gap[0] > close:
                 out["gap"] = -1     # gap above, capping price
 
+        # "Looking at our weekly, we actually may be coming to a support as well,
+        # which is good confluence" -- a vote, never a veto.
+        wk = self._tf_direction(candles, self.weekly_bars)
+        if wk:
+            out["weekly"] = wk
+
         # The higher timeframes only join the vote when they are NOT acting as
         # the gate. As a gate they come first and outrank everything, which is
         # his stated order.
@@ -395,6 +436,11 @@ class MambaSignals(Strategy):
                     continue
                 held = (context.now - pos.opened_at).total_seconds() / 60
                 if held >= self.max_hold_minutes:
+                    # "I got out too early I want to re-enter this trade" -- a
+                    # clock exit is exactly the case he goes back into.
+                    if self.allow_reentry:
+                        self._reentry_armed = 0
+                        self._reentry_side = 1 if pos.is_long else -1
                     return [Exit(ticket=pos.ticket, reason="time-exit")]
 
         # "I ended up closing... just because I wasn't sure if price was going to
@@ -415,6 +461,9 @@ class MambaSignals(Strategy):
                 # Only leave when the chart has actively turned against the
                 # trade, not merely gone quiet.
                 if now_says != 0 and now_says != held:
+                    if self.allow_reentry:
+                        self._reentry_armed = 0
+                        self._reentry_side = held
                     return [Exit(ticket=pos.ticket, reason="reason-gone")]
 
         for pos in context.open_positions:
@@ -459,6 +508,44 @@ class MambaSignals(Strategy):
             return []
         if not self._in_session(context.now):
             return []
+
+        # "I got out too early I want to re-enter this trade." A re-entry needs
+        # only the move to still be going his way, not a fresh full setup -- he
+        # calls it "trade number two part two". It still counts against his day,
+        # because he numbers it as a trade.
+        if self.allow_reentry and self._reentry_armed is not None:
+            self._reentry_armed += 1
+            if self._reentry_armed > self.reentry_bars:
+                self._reentry_armed = None
+                self._reentry_side = 0
+            else:
+                v = self.votes(candles)
+                b = sum(1 for x in v.values() if x > 0)
+                sl = sum(1 for x in v.values() if x < 0)
+                still = 1 if b > sl else (-1 if sl > b else 0)
+                if still != 0 and still == self._reentry_side:
+                    bar = candles[-1]
+                    win = candles[-self.stop_bars:]
+                    if still > 0:
+                        structure = min(c.low for c in win)
+                        stop = structure - structure * self.zone_pct
+                        if stop < bar.close:
+                            self._reentry_armed = None
+                            risk = bar.close - stop
+                            return [Enter(
+                                side=OrderSide.BUY, stop_loss=stop,
+                                take_profit=bar.close + risk * self.reward,
+                                comment=self.name, lots=self.fixed_lots)]
+                    else:
+                        structure = max(c.high for c in win)
+                        stop = structure + structure * self.zone_pct
+                        if stop > bar.close:
+                            self._reentry_armed = None
+                            risk = stop - bar.close
+                            return [Enter(
+                                side=OrderSide.SELL, stop_loss=stop,
+                                take_profit=bar.close - risk * self.reward,
+                                comment=self.name, lots=self.fixed_lots)]
 
         # The chart decides the direction.
         votes = self.votes(candles)

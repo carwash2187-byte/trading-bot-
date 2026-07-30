@@ -2140,3 +2140,48 @@ therefore the tenth rule in this project that was present and inert.
 
 Next: place the stop AT his width rather than rejecting setups whose structure sits
 wider, so his 1:1 has something to reach.
+
+## Cycle 3 — his 1:1 made reachable, his re-entry built, an eleventh silent rule
+
+### HIS TARGET NOW EXISTS
+
+Clamping the stop to his 17-pip width instead of rejecting wider structure:
+
+| target | growth | trades | how they closed |
+|--------|--------|--------|-----------------|
+| 1:1 | 0.97x | 21 | manual 9, **take profit 7**, stop 5 |
+| 1:3 | 0.98x | 18 | manual 14, stop 4 |
+| 1:6 | 0.98x | 18 | manual 14, stop 4 |
+
+His 1:1 is hit **7 times out of 21**. Before the clamp all three targets returned
+byte-identical results because nothing ever reached any of them.
+
+### HIS RE-ENTRY — the best single addition measured all session
+
+> "trade number three was really **trade number two part two** because it's still the
+> same move we're still going up on the same day and I decided **I got out too early I
+> want to re-enter this trade**"
+> "I'm going to go ahead and **re-enter longs** right now"
+> "now that we did break some highs, I think I **might just reenter** longs"
+> "I would **re-enter for a buy**"
+
+Every re-entry he narrates follows him CLOSING a trade, never being stopped out of one.
+So it arms only after a manual exit -- the clock or the reason dying -- and not after a
+stop.
+
+**1.17x -> 1.36x on eight markets over ten months.** Registered as the default.
+
+### SILENT RULE NUMBER ELEVEN — the weekly could not be seen
+
+`weekly_bars=480` against a `lookback` of **400**. The rule asked for more bars than the
+strategy is ever handed, so it returned zero on every bar of every market. Adding it
+changed the result by exactly nothing, which is the signature.
+
+Raised the lookback to 600. With the weekly genuinely voting: **1.36x -> 0.77x**, so it
+hurts as an equal vote. He calls it "good confluence", not a requirement, which is the
+same shape as the H4 and daily -- they belong as context, not as votes among equals.
+Registered as a variant rather than a default.
+
+Note the lookback is also what the live cycle requests from the broker, so it is the
+real ceiling on what any rule here can look at. Worth checking against before adding a
+long window.

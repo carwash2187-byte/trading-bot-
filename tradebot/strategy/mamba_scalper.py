@@ -124,9 +124,10 @@ class MambaScalper(Strategy):
         require_buildup: bool = True,
         daily_bars: int = 0,
         reward: float = 1.0,
-        stop_bars: int = 6,
+        stop_bars: int = 3,
         zone_pct: float = 0.0004,
-        max_stop_pct: float = 0.0010,
+        max_stop_pct: float = 0.00087,
+        clamp_stop: bool = True,
         max_hold_minutes: int = 35,
         session: str = "newyork",
         window_minutes: int = 210,
@@ -153,9 +154,17 @@ class MambaScalper(Strategy):
         # here, it is what makes a small account able to take the trade at all.
         self.stop_bars = stop_bars
         self.zone_pct = zone_pct
-        # A hard ceiling in his own terms. "here's the key with the strategy,
-        # super, super tight stop losses."
+        # His own width. "we're going to put our stops below that previous support
+        # line. Okay, 17 PIPS" -- on GBPJPY at 195 that is 0.087% of price.
         self.max_stop_pct = max_stop_pct
+        # When the nearest structure sits wider than his width, does he skip the
+        # trade or put the stop at his width anyway? He describes placing it "below
+        # that previous support line" and reports 17 pips, so the width is the
+        # thing he keeps. Rejecting instead made his 1:1 target unreachable: at a
+        # 0.25% stop every trade closed on the 35-minute clock and 1:1, 1:3 and
+        # 1:6 all returned identical results, because neither side was ever hit.
+        # Clamping to his width is what lets his target exist at all.
+        self.clamp_stop = clamp_stop
         self.max_hold_minutes = max_hold_minutes
         self.session = session
         self.window_minutes = window_minutes
@@ -345,10 +354,12 @@ class MambaScalper(Strategy):
             if stop >= bar.close:
                 return []
             risk = bar.close - stop
-            # "super, super tight stop losses" -- past his width it is not his
-            # trade, so it is not taken.
+            # "super, super tight stop losses"
             if self.max_stop_pct > 0 and risk > bar.close * self.max_stop_pct:
-                return []
+                if not self.clamp_stop:
+                    return []
+                stop = bar.close - bar.close * self.max_stop_pct
+                risk = bar.close - stop
             return [Enter(side=OrderSide.BUY, stop_loss=stop,
                           take_profit=bar.close + risk * self.reward,
                           comment=self.name)]
@@ -359,7 +370,10 @@ class MambaScalper(Strategy):
             return []
         risk = stop - bar.close
         if self.max_stop_pct > 0 and risk > bar.close * self.max_stop_pct:
-            return []
+            if not self.clamp_stop:
+                return []
+            stop = bar.close + bar.close * self.max_stop_pct
+            risk = stop - bar.close
         return [Enter(side=OrderSide.SELL, stop_loss=stop,
                       take_profit=bar.close - risk * self.reward,
                       comment=self.name)]

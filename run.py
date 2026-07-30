@@ -230,7 +230,28 @@ REGISTRY = {
     # takes 1.21x down to 0.52x and doubles the drawdown. His "I don't like to
     # trade much past 10:00 a.m." holds on markets that never close.
     # =====================================================================
-    "mamba_signals": lambda: MambaSignals(min_votes=2),
+    "mamba_signals": lambda: MambaSignals(
+        min_votes=2,
+        # "I got out too early I WANT TO RE-ENTER this trade" / "I'm going to go
+        # ahead and RE-ENTER LONGS right now". He goes again when he left early
+        # and the move is still running, and he calls it "trade number two part
+        # two". Only arms after a manual exit, never after a stop -- every
+        # re-entry he narrates follows him closing, not being closed.
+        #
+        # Best single addition measured all session: 1.17x -> 1.36x.
+        allow_reentry=True,
+    ),
+    # His weekly as a vote. "Looking at our weekly, we actually may be coming to
+    # a support as well, which is good confluence." He calls it confluence rather
+    # than a requirement, and as an equal vote it dilutes the rest: 1.36x -> 0.77x.
+    "mamba_signals_weekly": lambda: MambaSignals(
+        min_votes=2, allow_reentry=True, weekly_bars=480
+    ),
+    # Everything of his at once, including the buildup zone. Smallest drawdown of
+    # any profitable variant: 1.31x on 2.98 a day with a 27% worst drop.
+    "mamba_signals_everything": lambda: MambaSignals(
+        min_votes=2, allow_reentry=True, weekly_bars=480, use_buildup=True,
+    ),
     # Two a day instead of three: 1.11x, 1.99 a day, 47.2% winners, 24% drop.
     "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
     # How he gets out of bad trades without paying for them. "I ended up closing
