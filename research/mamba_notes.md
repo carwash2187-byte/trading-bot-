@@ -3867,3 +3867,51 @@ He says 5 pips risk for 10 pips reward (2:1). The position tool he drew measures
 **0.90:1, then 1.34:1, then 1.42:1** as he re-drags it mid-sentence. He never draws the 2:1
 he states. And his own arithmetic — "0.01, 5 pips is 50 cents, you're down to $4.50" — is
 **exactly 10% of the account per trade**, the number another of his videos bans outright.
+
+## `breakeven_at` REPLACED — his trigger is HALF THE WAY TO TARGET, not an R multiple
+
+> "let's say you have a **15 to 20 pip take profit** and you're at like **eight or nine pips
+> profit** -- I really do recommend you put your stop loss to entry"
+
+8.5 of 17.5 is a half. That is a fraction of the **distance to target**, which is a
+different quantity from the R multiple I had. On a 1:3 trade, 2R is two thirds of the way —
+**so my number made him hold a third longer than he says he does before protecting the
+trade, on every single trade.**
+
+Measured on 538 open winners: his rule protects **372**, mine protected **327**. Forty-five
+trades that he would have made safe were left exposed, every time.
+
+His follow-through is hands-off, and there is no trail at all in this video: "**stop set
+entry, leave it alone** and let it take place... go do something, relax, take your mind off
+the trade and let it play out." And the reason: "stop losing so much — **it hurts to break
+even, but it's better than losing the account**."
+
+## THE WIN-ENDS-THE-DAY RULE IS NOW A SWITCH, BECAUSE HE SAYS BOTH
+
+    FOR:     "First trade works out, WE'RE DONE. We don't go for a second."
+    AGAINST: "whether it's two losses, TWO WINS, or one of each. Take your two trades,
+              you're done."
+
+The second was confirmed by **two independent viewings of the same video** — both agents
+transcribed it the same way, and one had to re-transcribe the audio from scratch because
+YouTube mis-detected the language as Dutch and every caption track was machine-translated
+gibberish.
+
+What all three videos agree on is the **two-trade cap**, so that stays unconditional and
+this is a flag with both quotes recorded beside it. `stop_after_win=False` gives the other
+reading.
+
+### ALSO FROM THIS VIDEO
+
+* **His stop goes below the moving averages** — not a swing, not a candle: "**stops below
+  these moving averages**, because if price comes back it might not be that good."
+* **Target is the next resistance on the ENTRY timeframe**, not the bias one: "we target our
+  **next resistance on that smaller time frame**." His clearest statement yet of which level
+  to aim at, and it matches the zoom-out rule built into `mamba_rsi` this cycle.
+* **8 and 50 SMA confirmed a third time.**
+* **He waits for the candle close, twice** — fourth data point in that four-way conflict.
+* **"Don't trade US30 or indices"**, said three seconds after "my last trade was on US 30".
+  The bot currently runs US30 and XAUUSD. Recorded as his refusal, not acted on, because
+  every other video has him trading exactly those two.
+* Measured drawn box: **1.45:1** while he says 1:2 in the same breath. His drawn boxes have
+  now disagreed with his spoken ratios in three separate videos.

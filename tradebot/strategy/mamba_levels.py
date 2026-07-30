@@ -106,6 +106,7 @@ class MambaLevels(Strategy):
         window_minutes: int = 210,
         max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
+        stop_after_win: bool = True,
         rungs: int = 3,
     ) -> None:
         self.map_lookback = map_lookback
@@ -118,6 +119,7 @@ class MambaLevels(Strategy):
         self.window_minutes = window_minutes
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
+        self.stop_after_win = stop_after_win
         self.rungs = rungs
 
     # -- his sequence -----------------------------------------------------
@@ -203,10 +205,18 @@ class MambaLevels(Strategy):
             return []
         if context.risk.trades_today(self.name) >= self.max_trades_per_day:
             return []
-        # "First trade works out, we're done. We don't go for a second. First
-        # trade doesn't work out, we look for a second one." A winner ends his
-        # day exactly like two losers do.
-        if context.risk.wins_today(self.name) >= 1:
+        # HE CONTRADICTS HIMSELF ON THIS ONE, SO IT IS A SWITCH RATHER THAN AN
+        # ASSUMPTION. Both quotes are his:
+        #
+        #   FOR:     "First trade works out, WE'RE DONE. We don't go for a second.
+        #             First trade doesn't work out, we look for a second one."
+        #   AGAINST: "whether it's two losses, TWO WINS, or one of each. Take your
+        #             two trades, you're done."
+        #
+        # The second was confirmed by two independent viewings of the same video.
+        # What all three videos agree on is the TWO-TRADE CAP above, which is why
+        # that one is unconditional and this one is a flag.
+        if self.stop_after_win and context.risk.wins_today(self.name) >= 1:
             return []
         if (self.max_losses_per_day > 0
                 and context.risk.losses_today(self.name) >= self.max_losses_per_day):

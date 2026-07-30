@@ -125,6 +125,7 @@ class MambaNY(Strategy):
         add_at: float = 0.0,
         max_adds: int = 1,
         max_losses_per_day: int = 2,
+        stop_after_win: bool = True,
         trendline_bars: int = 0,
         volume_leads_session: bool = False,
         skip_fridays: bool = True,
@@ -154,6 +155,7 @@ class MambaNY(Strategy):
         # "If the second one doesn't work out, we are done for the day and we
         # come back tomorrow and we do it again." Two losers ends his day.
         self.max_losses_per_day = max_losses_per_day
+        self.stop_after_win = stop_after_win
         # "I pretty much drew up my resistance, I drew up my support, and I drew
         # my trend line." / "we're getting in as soon as this trend line or the
         # support zone breaks." He draws one every session and names its break as
@@ -375,7 +377,23 @@ class MambaNY(Strategy):
                 price = context.bid if pos.is_long else context.ask
                 ahead = ((price - pos.entry_price) if pos.is_long
                          else (pos.entry_price - price))
-                if ahead < risk * self.breakeven_at:
+                # HIS TRIGGER IS HALF THE WAY TO TARGET, NOT A MULTIPLE OF RISK.
+                #
+                #   "let's say you have a 15 TO 20 PIP TAKE PROFIT and you're at
+                #    like EIGHT OR NINE PIPS PROFIT -- I really do recommend you
+                #    put your stop loss to entry"
+                #
+                # 8.5 of 17.5 is a half. That is a fraction of the DISTANCE TO
+                # TARGET, which is a different quantity from the R multiple this
+                # used: on a 1:3 trade, 2R is two thirds of the way, so my number
+                # made him hold a third longer than he says he does before
+                # protecting the trade. When there is no target to measure against,
+                # the R multiple still stands in.
+                if pos.take_profit is not None:
+                    span = abs(pos.take_profit - pos.entry_price)
+                    if span <= 0 or ahead < span * 0.5:
+                        continue
+                elif ahead < risk * self.breakeven_at:
                     continue
                 done = (pos.stop_loss >= pos.entry_price if pos.is_long
                         else pos.stop_loss <= pos.entry_price)
@@ -436,10 +454,18 @@ class MambaNY(Strategy):
             return []
         if self._trades_today(context) >= self.max_trades_per_day:
             return []
-        # "First trade works out, we're done. We don't go for a second. First
-        # trade doesn't work out, we look for a second one." A winner ends his
-        # day exactly like two losers do.
-        if context.risk.wins_today(self.name) >= 1:
+        # HE CONTRADICTS HIMSELF ON THIS ONE, SO IT IS A SWITCH RATHER THAN AN
+        # ASSUMPTION. Both quotes are his:
+        #
+        #   FOR:     "First trade works out, WE'RE DONE. We don't go for a second.
+        #             First trade doesn't work out, we look for a second one."
+        #   AGAINST: "whether it's two losses, TWO WINS, or one of each. Take your
+        #             two trades, you're done."
+        #
+        # The second was confirmed by two independent viewings of the same video.
+        # What all three videos agree on is the TWO-TRADE CAP above, which is why
+        # that one is unconditional and this one is a flag.
+        if self.stop_after_win and context.risk.wins_today(self.name) >= 1:
             return []
         # "we are done for the day and we come back tomorrow"
         if (self.max_losses_per_day > 0
