@@ -1742,3 +1742,81 @@ And on brokers, repeatedly: "there's **no spread** like it's pretty much zero", 
 enter that trade, I am **instantly in profit, if not at break even, because there's no
 spread at all**". Every backtest in this project charges spread, so the numbers here are
 pessimistic against the conditions he describes trading in.
+
+---
+
+## HOW HE AVOIDS LOSSES — Leo's question, and what the loss side actually shows
+
+Leo: "the trade doesnt go his way with stop loss its like he didnt even lose money".
+Real, and he describes several mechanics for it.
+
+### BREAKEVEN AT 1:2 — his number, and mine was wrong
+
+> "let's say we got to a **1 to two stops can go to break even** and boom the rest is
+> history"
+> "We're **taking some profit** and we are going to put uh **stops to break even, near
+> break even**, and pretty much just take profits along the way."
+> "after you **close partial profits and move stops to break-even**"
+> "price is already up 500 Pips **put your stops to break even** and the rest is going
+> to always be [profit]"
+
+**Two R, not one.** Every earlier breakeven test in this project used 1R, which is why
+it kept cutting winners in half.
+
+Note "**near** break even" -- a shade the right side of entry, so a scratch is
+fractionally green. Built as `breakeven_pad`.
+
+### HE LEAVES WHEN THE REASON DIES — the actual no-loss mechanic
+
+> "as price came down on this candle **I ended up closing around this area um just
+> because I wasn't sure if price was going to fully reverse here**"
+> "good for us **trend got broke** you know the **candle is closed below** it's just
+> **it's not going to come back**... it's not looking good"
+
+He does not sit and wait to be proved wrong by the stop. When the reason stops being
+true he leaves, and the trade costs a fraction of a stop instead of all of it. Built as
+`exit_on_reason_gone`: if the patterns turn against the open trade, close it.
+
+### STOPS NEVER WIDEN
+
+Searched all 144 transcripts for any mention of moving a stop further away: **zero
+statements**. So the rule is one-directional and now enforced -- a stop only ever moves
+toward profit.
+
+### RE-ENTRY after getting out
+
+> "I decided **I got out too early I want to re-enter this trade**"
+> "I'm going to go ahead and **re-enter longs** right now"
+> "I would **re-enter for a buy**" (after price pushes back above the resistance)
+
+### THE LOSS PROFILE, measured — 10 months, 8 markets, 2% risk
+
+| build | growth | full stops | scratched | win% |
+|-------|--------|-----------|-----------|------|
+| registered | 1.21x | **6.7%** | 46.1% | 47.1% |
+| breakeven at 1R | 1.21x | 6.8% | 46.1% | 47.0% |
+| breakeven at 2R (his) | 1.21x | 6.7% | 46.1% | 47.1% |
+| + exit when reason dies | **1.22x** | **6.0%** | 47.7% | 46.4% |
+| everything | 1.22x | **5.9%** | 47.6% | 46.4% |
+
+**Only 6% of trades take a full stop.** That is the profile Leo is describing, and it
+is already there.
+
+### But the honest reason why, which is not the breakeven rule
+
+Counting how trades actually end:
+
+| hold | closed by the clock | by the stop | by the target |
+|------|--------------------|-------------|---------------|
+| 35 min (registered) | **83%** | 15% | 2% |
+| 240 min | 54% | 38% | 8% |
+| no cap | 0% | 73% | 27% |
+
+**His 35-minute clock is what prevents the losses, not the breakeven move.** At 35
+minutes a trade almost never reaches 2R, so the breakeven rule has nothing to act on --
+it is built, correct, and inert at this hold length. Caught before claiming otherwise;
+that would have been the eighth rule in this project that looked like it worked while
+doing nothing.
+
+The reason-gone exit is the one addition that measurably improves the loss side: full
+stops 6.7% -> 6.0%.

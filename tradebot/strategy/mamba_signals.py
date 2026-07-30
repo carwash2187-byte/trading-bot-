@@ -104,6 +104,8 @@ class MambaSignals(Strategy):
         max_losses_per_day: int = 2,
         breakeven_at: float = 0.0,
         scale_at: float = 0.0,
+        exit_on_reason_gone: bool = False,
+        breakeven_pad: float = 0.0,
     ) -> None:
         self.min_votes = min_votes
         self.session = session
@@ -156,8 +158,24 @@ class MambaSignals(Strategy):
         self.higher_tf_gates = higher_tf_gates
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
+        # "let's say we got to a 1 to two stops can go to break even and boom the
+        # rest is history." Two, not one -- and every earlier test in this project
+        # used one, which cut winners in half.
         self.breakeven_at = breakeven_at
         self.scale_at = scale_at
+        # "I ended up closing around this area um just because I wasn't sure if
+        # price was going to fully reverse here."
+        # "trend got broke you know the candle is closed below it's just it's not
+        # going to come back... it's not looking good."
+        #
+        # This is the mechanic behind a trade that goes against him and still
+        # costs nothing: when the reason for being in it stops being true, he
+        # leaves. He does not sit and wait to be proved wrong by the stop.
+        self.exit_on_reason_gone = exit_on_reason_gone
+        # "put uh stops to break even, NEAR break even" -- a shade better than
+        # entry, so a scratch is fractionally green rather than exactly flat.
+        # Expressed as a fraction of the original risk.
+        self.breakeven_pad = breakeven_pad
 
     # -- asking each pattern which way it points -------------------------
 
@@ -279,6 +297,26 @@ class MambaSignals(Strategy):
                 if held >= self.max_hold_minutes:
                     return [Exit(ticket=pos.ticket, reason="time-exit")]
 
+        # "I ended up closing... just because I wasn't sure if price was going to
+        # fully reverse" / "trend got broke... it's not going to come back".
+        # Checked before the profit-taking rules, because the reason dying is a
+        # reason to leave regardless of where the trade currently sits.
+        if self.exit_on_reason_gone:
+            for pos in context.open_positions:
+                if pos.comment != self.name:
+                    continue
+                v = self.votes(candles)
+                if not v:
+                    continue
+                buys = sum(1 for x in v.values() if x > 0)
+                sells = sum(1 for x in v.values() if x < 0)
+                now_says = 1 if buys > sells else (-1 if sells > buys else 0)
+                held = 1 if pos.is_long else -1
+                # Only leave when the chart has actively turned against the
+                # trade, not merely gone quiet.
+                if now_says != 0 and now_says != held:
+                    return [Exit(ticket=pos.ticket, reason="reason-gone")]
+
         for pos in context.open_positions:
             if pos.comment != self.name or pos.stop_loss is None:
                 continue
@@ -298,8 +336,17 @@ class MambaSignals(Strategy):
                 if half >= 0.01 and pos.lots > 0.01:
                     return [Exit(ticket=pos.ticket, lots=half, reason="half-off")]
             if self.breakeven_at > 0 and not banked and ahead >= risk * self.breakeven_at:
-                return [AdjustStop(ticket=pos.ticket, stop_loss=pos.entry_price,
-                                   take_profit=pos.take_profit)]
+                # "stops to break even, NEAR break even" -- a shade the right side
+                # of entry. And a stop only ever moves toward profit: he never
+                # once mentions widening one, in 144 transcripts.
+                pad = risk * self.breakeven_pad
+                want = (pos.entry_price + pad if pos.is_long
+                        else pos.entry_price - pad)
+                better = (want > pos.stop_loss if pos.is_long
+                          else want < pos.stop_loss)
+                if better:
+                    return [AdjustStop(ticket=pos.ticket, stop_loss=want,
+                                       take_profit=pos.take_profit)]
 
         if context.has_position:
             return []

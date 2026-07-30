@@ -232,6 +232,18 @@ REGISTRY = {
     "mamba_signals": lambda: MambaSignals(min_votes=2),
     # Two a day instead of three: 1.11x, 1.99 a day, 47.2% winners, 24% drop.
     "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
+    # How he gets out of bad trades without paying for them. "I ended up closing
+    # around this area um just because I wasn't sure if price was going to fully
+    # reverse" / "trend got broke... it's not going to come back". Plus his own
+    # breakeven trigger, "we got to a 1 to two stops can go to break even" -- two
+    # R, not the one R every earlier test here used.
+    #
+    # Ten months, 2%, eight markets: 1.22x with full stops on 6.0% of trades
+    # against 6.7% without.
+    "mamba_signals_noloss": lambda: MambaSignals(
+        min_votes=2, breakeven_at=2.0, breakeven_pad=0.1, scale_at=2.0,
+        exit_on_reason_gone=True,
+    ),
     # Round the clock, for reference. Worse on both counts.
     "mamba_signals_247": lambda: MambaSignals(min_votes=2, session=""),
     # UK100 is on his screen and tradable on the account, so it is available as a
