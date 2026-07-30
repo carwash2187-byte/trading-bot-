@@ -2230,3 +2230,36 @@ And a risk-to-reward figure in passing:
 > 50 pips**"
 
 1:2.6, consistent with the 1:3 he quotes elsewhere.
+
+---
+
+# ELEVEN-HOUR RUN — CYCLE 1
+
+Eight subagents launched in parallel, one per priority-0 video: I_33XcywuIo, 9bPlk7zSJAI,
+prtpGhzb22g, hGPg7_ZE1DM, I2I4EVPFoak, 4JKwM9CeLig, qM4A_6i21I0, qAvSFpKE4aE, dOv1jOSsYLU.
+Each reads frames and audio and reports his words against all twenty dimensions.
+
+While they work, doing the code side they are not: deleting my parameters and fixing the
+H4/daily/weekly wiring, for which his words are already on record.
+
+## Cycle 1 — first parameter of mine DELETED rather than tuned
+
+`weekly_bars` is gone from `mamba_signals` and from the registry. Not defaulted off —
+removed.
+
+The reasoning, and it is the template for the rest of the deletions:
+
+> "remember guys, H4 support resistance daily and weekly."
+> "Looking at our weekly, we actually may be coming to a support as well, which is
+> **good confluence**, right? That's a good good confluence."
+> "If we look at the weekly, we're at a 10-year support."
+
+Every single time he mentions the weekly, it makes him feel better about a trade he is
+taking anyway. It never stops him and it never starts him. **A thing that cannot change
+the decision is not a rule.** Wiring it as a vote among equals gave it power he never
+gives it, and it outvoted the patterns that actually decide -- 1.36x down to 0.77x.
+
+He looks at the weekly. The bot does not need to, because looking without acting is not
+a behaviour a bot can have. So the parameter is deleted rather than kept at zero.
+
+32 strategies still construct, 258 tests pass.

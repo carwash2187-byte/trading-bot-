@@ -109,7 +109,6 @@ class MambaSignals(Strategy):
         ma_slow: int = 50,
         h4_bars: int = 0,
         daily_bars: int = 0,
-        weekly_bars: int = 0,
         allow_reentry: bool = False,
         reentry_bars: int = 24,
         higher_tf_gates: bool = True,
@@ -203,16 +202,22 @@ class MambaSignals(Strategy):
         # hours, 288 is a day. Zero disables either.
         self.h4_bars = h4_bars
         self.daily_bars = daily_bars
-        # "remember guys, H4 support resistance daily and weekly."
-        # "Looking at our weekly, we actually may be coming to a support as well,
-        #  which is GOOD CONFLUENCE, right? That's a good good confluence."
-        # "If we look at the weekly, we're at a 10-year support."
+        # THE WEEKLY IS DELETED, not disabled.
         #
-        # He treats the weekly as a bonus rather than a requirement -- "good
-        # confluence" is how he phrases it, not a gate. So it votes; it does not
-        # veto. Measured in bars of this strategy's timeframe: on 15m, 480 bars is
-        # about a trading week.
-        self.weekly_bars = weekly_bars
+        # "remember guys, H4 support resistance daily and weekly." / "Looking at
+        # our weekly, we actually may be coming to a support as well, which is GOOD
+        # CONFLUENCE, right?" / "If we look at the weekly, we're at a 10-year
+        # support."
+        #
+        # Every time he mentions the weekly it makes him feel better about a trade
+        # he is taking anyway. It never stops him and it never starts him. A thing
+        # that cannot change the decision is not a rule, and wiring it as a vote
+        # among equals gave it power he never gives it -- it turned 1.36x into
+        # 0.77x by outvoting the patterns that actually decide.
+        #
+        # So it is removed rather than defaulted off. He looks at the weekly; the
+        # bot does not need to, because looking without acting is not a behaviour a
+        # bot can have.
         # "trade number three was really TRADE NUMBER TWO PART TWO because it's
         #  still the same move we're still going up on the same day and I decided
         #  I GOT OUT TOO EARLY I WANT TO RE-ENTER this trade."
@@ -363,12 +368,6 @@ class MambaSignals(Strategy):
                 out["gap"] = 1      # gap below, holding price up
             elif gap[0] > close:
                 out["gap"] = -1     # gap above, capping price
-
-        # "Looking at our weekly, we actually may be coming to a support as well,
-        # which is good confluence" -- a vote, never a veto.
-        wk = self._tf_direction(candles, self.weekly_bars)
-        if wk:
-            out["weekly"] = wk
 
         # The higher timeframes only join the vote when they are NOT acting as
         # the gate. As a gate they come first and outrank everything, which is

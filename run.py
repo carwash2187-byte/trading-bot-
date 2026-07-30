@@ -241,16 +241,10 @@ REGISTRY = {
         # Best single addition measured all session: 1.17x -> 1.36x.
         allow_reentry=True,
     ),
-    # His weekly as a vote. "Looking at our weekly, we actually may be coming to
-    # a support as well, which is good confluence." He calls it confluence rather
-    # than a requirement, and as an equal vote it dilutes the rest: 1.36x -> 0.77x.
-    "mamba_signals_weekly": lambda: MambaSignals(
-        min_votes=2, allow_reentry=True, weekly_bars=480
-    ),
     # Everything of his at once, including the buildup zone. Smallest drawdown of
     # any profitable variant: 1.31x on 2.98 a day with a 27% worst drop.
     "mamba_signals_everything": lambda: MambaSignals(
-        min_votes=2, allow_reentry=True, weekly_bars=480, use_buildup=True,
+        min_votes=2, allow_reentry=True, use_buildup=True,
     ),
     # Two a day instead of three: 1.11x, 1.99 a day, 47.2% winners, 24% drop.
     "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
