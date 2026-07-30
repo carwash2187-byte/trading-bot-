@@ -3279,3 +3279,79 @@ His calendar shows three straight losses and then he takes the fourth trade. So 
 video **losses do not stop him** — which contradicts the "after two losses you should
 stop" rule built from another video. Both recorded; the two-loss rule stays because it is
 the more conservative of his own two statements and the only one he states as a rule.
+
+## "NEW METHOD" (U8nlmxICJwQ) — his day rules, stated strictly, and a direct contradiction
+
+### THE DAY RULE, VERBATIM — AND HALF OF IT WAS NEVER BUILT
+
+> "We want **two trades per day max**. **First trade works out, we're done. We don't go
+> for a second.** First trade doesn't work out, we look for a second one. **If the second
+> one doesn't work out, we are done for the day** and we come back tomorrow and we do it
+> again. We got to be very strict with that. **We cannot ever overtrade.**"
+
+Three separate rules in one breath, and the bot only had one of them:
+
+1. **Two trades a day, not three.** Every strategy said 3. His other video said "three
+   trades max... but I think two is better", so both of his statements land on 2. Fixed.
+2. **A WIN ENDS HIS DAY.** Never built, never even considered. The bot would bank a
+   winner and cheerfully keep trading all day. Now: one win and it stops.
+3. Two losses end it — already built.
+
+Proof it fires: 29 entries with nothing banked, **0 entries once a win is recorded**, and
+the engine now reports winners as well as losers so the counter is actually fed.
+
+### HIS WEEK IS MONDAY TO THURSDAY
+
+> "**I don't like to trade Fridays** cuz I like to have three days off... Psychology."
+
+A refusal is a rule. Built into his New York strategy.
+
+### HE DOES NOT WAIT FOR THE CANDLE TO CLOSE — SAID OUTRIGHT
+
+> "here's another little secret for you guys. **I do not wait for the candle to close.**
+> I'm not going to buy right here at this candle closure. Bam. I'm gonna buy **right as
+> we start to break**... I'm still missing out on 14 points... The stop loss isn't as tight."
+
+Measured cost of waiting: **12.7 points** against his spoken "14 points".
+
+### HIS TARGET RATIO, SPOKEN AND MEASURED TOGETHER
+
+> "**I want 1:3. 1:5 are amazing**, but if I can at least get a 1:3, I'm going to be
+> satisfied... it's going to allow me to then lose three trades in a row and still be
+> broke even."
+> "If the markets have been good lately, then I'm going to go for a 1 to five, but the
+> market's been a little more slow... so I'm just going to go for a 1 to three."
+
+Measured off his position tool: **3.10** and **3.02**. The ratio is conditional on regime,
+which is the first time he has given a rule for CHOOSING the ratio rather than a number.
+
+### AND A FLAT CONTRADICTION OF HIS OWN H4 RULE — RECORDED, NOT RESOLVED
+
+> "**5 minute time frame, 15-minute time frame. That's all**... **I don't go to the hourly**
+> and say, 'Hey, what's the hourly showing me? Hey, what's the daily showing me?'... I
+> want to know how the markets are today."
+
+Against, from another video:
+
+> "we're gonna start on the h4 **always h4** you can use the daily as well"
+> "remember guys, H4 support resistance daily and weekly"
+
+He states both. I am not picking a winner and quietly deleting the other — the H4 gate
+stays where it is built and this video's method stands as his 5m/15m-only build. Recorded
+as his conflict, not smoothed into my compromise.
+
+Also here: **"No indicators. None. Once you start adding indicators to the screen, you're
+[expletive]."** And his levels are drawn as **rectangles, not lines** — "my little handy
+dandy square tool" — measured 15.6 and 6.1 points thick. And **market structure comes
+first, then the zone, then the trade**: on a blank chart he draws the channel at 6:26, the
+zone at 6:50, the trade at 7:08. Levels are NOT pre-drawn in this video.
+
+Measured risk: **1.5%** ($750 on $50,000). Third different risk number from him.
+
+### THE THIRTEENTH BUG, AND THE FIRST THAT CRASHES
+
+`flatten_at_window_end` was a constructor argument that was **never stored on the object**,
+so `evaluate()` raised AttributeError the moment it reached the session check with enough
+candles to get there. The main build would have **died on the live account on its first
+real bar**. Twelve bugs went quiet and printed believable numbers; this one takes the bot
+down. Found because the win-gate check made me run the main build directly.

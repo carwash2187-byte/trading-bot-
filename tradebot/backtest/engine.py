@@ -314,8 +314,11 @@ def run_backtest(
         while broker.closed_trades and _reported < len(broker.closed_trades):
             done = broker.closed_trades[_reported]
             _reported += 1
+            who = str(done.get("comment") or strategy.name)
             if done.get("pnl", 0.0) < 0:
-                risk.record_loss(str(done.get("comment") or strategy.name))
+                risk.record_loss(who)
+            elif done.get("pnl", 0.0) > 0:
+                risk.record_win(who)
 
         context = StrategyContext(
             symbol=symbol,

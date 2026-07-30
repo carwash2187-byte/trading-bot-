@@ -116,7 +116,7 @@ class MambaFib(Strategy):
         higher_tf_bars: int = 96,
         reward: float = 3.0,
         stop_beyond_pct: float = 0.0008,
-        max_trades_per_day: int = 3,
+        max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
         require_double: bool = False,
         require_macd_divergence: bool = False,
@@ -281,6 +281,11 @@ class MambaFib(Strategy):
         if context.has_position:
             return []
         if context.risk.trades_today(self.name) >= self.max_trades_per_day:
+            return []
+        # "First trade works out, we're done. We don't go for a second. First
+        # trade doesn't work out, we look for a second one." A winner ends his
+        # day exactly like two losers do.
+        if context.risk.wins_today(self.name) >= 1:
             return []
         if (self.max_losses_per_day > 0
                 and context.risk.losses_today(self.name) >= self.max_losses_per_day):

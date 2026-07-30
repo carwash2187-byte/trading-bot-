@@ -129,6 +129,10 @@ class RiskState:
     # Losing trades closed today, per strategy. "If the second one doesn't work
     # out, we are done for the day and we come back tomorrow and we do it again."
     losses_today: dict = field(default_factory=dict)
+    # "First trade works out, we're done. We don't go for a second." A WIN ends
+    # his day just as two losses do, which nothing in this project counted until
+    # now -- the bot would happily take a second trade after a winner all day.
+    wins_today: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -139,6 +143,7 @@ class RiskState:
             "halt_reason": self.halt_reason,
             "trades_today": dict(self.trades_today),
             "losses_today": dict(self.losses_today),
+            "wins_today": dict(self.wins_today),
         }
 
     @classmethod
@@ -152,6 +157,10 @@ class RiskState:
             trades_today={
                 str(k): int(v)
                 for k, v in dict(raw.get("trades_today", {})).items()
+            },
+            wins_today={
+                str(k): int(v)
+                for k, v in dict(raw.get("wins_today", {})).items()
             },
             losses_today={
                 str(k): int(v)
@@ -183,6 +192,7 @@ class RiskManager:
             self.state.day_start_equity = equity
             self.state.trades_today = {}
             self.state.losses_today = {}
+            self.state.wins_today = {}
             if self.state.halt_reason == DAILY_LOSS:
                 self.state.halted = False
                 self.state.halt_reason = NO_BREACH
@@ -206,6 +216,14 @@ class RiskManager:
         if not strategy:
             return
         self.state.losses_today[strategy] = self.losses_today(strategy) + 1
+
+    def record_win(self, strategy: str) -> None:
+        """"First trade works out, we're done. We don't go for a second"."""
+        self.state.wins_today[strategy] = self.wins_today(strategy) + 1
+
+    def wins_today(self, strategy: str) -> int:
+        """How many winners this strategy has banked today."""
+        return int(self.state.wins_today.get(strategy, 0))
 
     def losses_today(self, strategy: str) -> int:
         """How many losing trades ``strategy`` has closed today."""

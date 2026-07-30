@@ -138,7 +138,7 @@ class MambaSignals(Strategy):
         allow_reentry: bool = False,
         reentry_bars: int = 24,
         higher_tf_gates: bool = True,
-        max_trades_per_day: int = 3,
+        max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
         use_ma_crossover: bool = False,
         use_buildup: bool = False,
@@ -175,6 +175,12 @@ class MambaSignals(Strategy):
         self.wait_for_close = wait_for_close
         self.reward = reward
         self.max_hold_minutes = max_hold_minutes
+        # THIRTEENTH BUG, and the first that CRASHES rather than going quiet:
+        # this was a constructor argument that was never stored, so evaluate()
+        # raised AttributeError the moment it reached the session check with
+        # enough candles to get there. The main build would have died on the
+        # live account on its first real bar.
+        self.flatten_at_window_end = flatten_at_window_end
         self.stop_bars = stop_bars
         self.zone_pct = zone_pct
         # DELETED: the side-of-the-average vote.
@@ -563,6 +569,11 @@ class MambaSignals(Strategy):
         if context.has_position:
             return []
         if context.risk.trades_today(self.name) >= self.max_trades_per_day:
+            return []
+        # "First trade works out, we're done. We don't go for a second. First
+        # trade doesn't work out, we look for a second one." A winner ends his
+        # day exactly like two losers do.
+        if context.risk.wins_today(self.name) >= 1:
             return []
         if (self.max_losses_per_day > 0
                 and context.risk.losses_today(self.name) >= self.max_losses_per_day):

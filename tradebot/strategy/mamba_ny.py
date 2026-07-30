@@ -113,7 +113,7 @@ class MambaNY(Strategy):
         trend_bars: int = 48,
         reward: float = 3.0,
         max_hold_minutes: int = 35,
-        max_trades_per_day: int = 3,
+        max_trades_per_day: int = 2,
         breakeven_at: float = 0.0,
         scale_at: float = 0.0,
         block_into_structure: float = 0.0,
@@ -122,6 +122,7 @@ class MambaNY(Strategy):
         max_losses_per_day: int = 2,
         trendline_bars: int = 0,
         volume_leads_session: bool = False,
+        skip_fridays: bool = True,
         use_engulfing: bool = False,
         use_liquidity_sweep: bool = False,
         use_fair_value_gap: bool = False,
@@ -161,6 +162,9 @@ class MambaNY(Strategy):
         # That is his rule -- not a threshold I picked, a superlative read off
         # his own screen. The old volume_mult=1.3 was mine and is deleted.
         self.volume_leads_session = volume_leads_session
+        # "I don't like to trade Fridays cuz I like to have three days off...
+        # Psychology." A refusal is a rule, so his week is Monday to Thursday.
+        self.skip_fridays = skip_fridays
         # "we saw this candle here closed not only a ginormous bullish engulfing
         # candle but it closed above the tops of those rejections" -- the
         # engulfing candle IS the trigger at the level, not a filter on it.
@@ -422,7 +426,14 @@ class MambaNY(Strategy):
 
         if context.has_position:
             return []
+        if self.skip_fridays and context.now.weekday() == 4:
+            return []
         if self._trades_today(context) >= self.max_trades_per_day:
+            return []
+        # "First trade works out, we're done. We don't go for a second. First
+        # trade doesn't work out, we look for a second one." A winner ends his
+        # day exactly like two losers do.
+        if context.risk.wins_today(self.name) >= 1:
             return []
         # "we are done for the day and we come back tomorrow"
         if (self.max_losses_per_day > 0

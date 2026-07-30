@@ -102,7 +102,7 @@ class MambaRetest(Strategy):
         retest_bars: int = 24,
         stop_zone_frac: float = 0.5,
         fallback_reward: float = 3.0,
-        max_trades_per_day: int = 3,
+        max_trades_per_day: int = 2,
         ma_period: int = 50,
         daily_tf_bars: int = 0,
         trail_after: float = 0.0,
@@ -380,6 +380,11 @@ class MambaRetest(Strategy):
         if context.has_position:
             return []
         if self._trades_today(context) >= self.max_trades_per_day:
+            return []
+        # "First trade works out, we're done. We don't go for a second. First
+        # trade doesn't work out, we look for a second one." A winner ends his
+        # day exactly like two losers do.
+        if context.risk.wins_today(self.name) >= 1:
             return []
         if context.news is not None and context.news.active:
             return []
