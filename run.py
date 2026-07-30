@@ -16,6 +16,7 @@ import argparse
 import logging
 import os
 import sys
+import time
 from datetime import timedelta
 from pathlib import Path
 
@@ -504,6 +505,19 @@ def build_broker(args):
     raise SystemExit(f"unknown broker {args.broker!r}")
 
 
+def _flatten(values: list[str]) -> list[str]:
+    """"--symbols NAS100,US30 GBPUSD" and "--symbols NAS100 US30 GBPUSD" both work."""
+    out: list[str] = []
+    for v in values:
+        out.extend(p.strip().upper() for p in str(v).split(",") if p.strip())
+    return out
+
+
+def _symbol_list(raw: str) -> str:
+    """Accept one symbol; comma-splitting happens after parsing."""
+    return raw.strip().upper()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run one trading cycle.")
     parser.add_argument("--broker", default="paper",
@@ -511,7 +525,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--mode", default="paper",
                         choices=["paper", "demo", "live"],
                         help="live also requires TRADEBOT_ALLOW_LIVE=yes")
-    parser.add_argument("--symbols", nargs="+", default=["XAUUSD"])
+    # HIS WATCHLIST, and it must accept commas.
+    #
+    # nargs="+" alone takes space-separated values, so "--symbols A,B,C" arrived
+    # as the single instrument "A,B,C" and every cycle failed with "unknown
+    # instrument". The scheduled job only ever passed one symbol, so multi-market
+    # was broken from the start and nothing revealed it.
+    #
+    # The default is the four he names on his own scalping watchlist, read off
+    # his screen: "i'm actually going to be full time trading just NASDAQ, US 30,
+    # GBP USD and all of my cryptos" and "if you trade the same indices as me,
+    # US30 and NASDAQ". Gold is the fourth -- "Tokyo session for me is better
+    # for gold".
+    parser.add_argument("--symbols", nargs="+", type=_symbol_list,
+                        default=["NAS100", "US30", "GBPUSD", "XAUUSD"])
     parser.add_argument("--account", default="")
     parser.add_argument("--username", default="")
     parser.add_argument("--password", default="")
@@ -554,6 +581,9 @@ def main(argv: list[str] | None = None) -> int:
     # newer information than the instruction was based on, and it is recorded here
     # next to the number so nobody has to go digging for it. Changing it is one
     # flag: --risk-per-trade 0.03.
+    parser.add_argument("--loop", type=float, default=0.0,
+                        help="stay awake and re-check every N seconds "
+                             "(0 = single pass, for schedulers)")
     parser.add_argument("--risk-per-trade", type=float, default=0.10)
     # HIS rule ends the day, not a percentage of mine: "If the second one doesn't
     # work out, we are done for the day and we come back tomorrow and we do it
@@ -659,7 +689,9 @@ def main(argv: list[str] | None = None) -> int:
         if args.news_url:
             calendar = EconomicCalendar(data_dir / "calendar.json")
             try:
-                count = calendar.refresh_from_url(args.news_url)
+                # Hourly at most -- the providers throttle, and events
+                # are published days ahead so intraday refreshes buy nothing.
+                count = calendar.refresh_if_stale(args.news_url)
                 log.info("calendar loaded: %d events", count)
             except Exception as err:  # noqa: BLE001 - never block trading on news
                 log.warning("calendar unavailable (%s); continuing without it", err)
@@ -685,20 +717,62 @@ def main(argv: list[str] | None = None) -> int:
             strategy=strategy,
             risk=risk,
             journal=journal,
-            symbols=[s.upper() for s in args.symbols],
+            symbols=_flatten(args.symbols),
             news=news,
         )
 
-        report = cycle.run_once()
-        state_store.save(risk.state.to_dict())
-        Heartbeat(data_dir / "heartbeat.json").beat(ok=report.ok, note=report.summary())
+        heartbeat = Heartbeat(data_dir / "heartbeat.json")
 
-        if report.halted:
-            log.warning("RISK HALT active: %s", report.halt_reason)
-        for err in report.errors:
-            log.error("cycle error: %s", err)
+        def one_pass():
+            report = cycle.run_once()
+            state_store.save(risk.state.to_dict())
+            heartbeat.beat(ok=report.ok, note=report.summary())
+            if report.halted:
+                log.warning("RISK HALT active: %s", report.halt_reason)
+            for err in report.errors:
+                log.error("cycle error: %s", err)
+            return report
 
-        return 0 if report.ok else 1
+        # STAY AWAKE INSTEAD OF BEING WOKEN UP.
+        #
+        # Without --loop this process does exactly one pass and exits, which is
+        # what a scheduler needs. That was the whole design, and it is the wrong
+        # design for copying a man who watches a live chart: the scheduled job
+        # fired every five minutes, and being a hosted scheduler it routinely ran
+        # five to fifteen minutes late on top of that. On a ninety-minute window
+        # with a thirty-five-minute hold, a setup could appear and be gone before
+        # the bot ever looked. "The only difference is speed" was not merely
+        # unmet -- it was backwards, and the bot was the slow one.
+        #
+        # With --loop it holds the instance lock and keeps checking, so the gap
+        # between a level breaking and the bot seeing it is the interval, not the
+        # interval plus somebody else's queue.
+        if args.loop <= 0:
+            report = one_pass()
+            return 0 if report.ok else 1
+
+        log.info("staying awake: checking every %.0fs across %s",
+                 args.loop, ",".join(_flatten(args.symbols)))
+        last_calendar = time.monotonic()
+        while True:
+            try:
+                one_pass()
+            except KeyboardInterrupt:
+                log.info("stopped by hand")
+                return 0
+            except Exception as err:  # noqa: BLE001
+                # One bad cycle must not end the session. A broker hiccup, a
+                # dropped socket or a bad tick is a reason to try again in a few
+                # seconds, not a reason to stop watching the market entirely.
+                log.error("cycle failed, continuing: %s", err)
+            # The calendar refreshes on its own hourly clock, not the trade clock.
+            if news is not None and time.monotonic() - last_calendar > 3600:
+                try:
+                    news.calendar.refresh_if_stale(args.news_url)
+                    last_calendar = time.monotonic()
+                except Exception as err:  # noqa: BLE001
+                    log.warning("calendar refresh failed: %s", err)
+            time.sleep(args.loop)
     finally:
         lock.release()
 

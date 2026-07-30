@@ -22,6 +22,7 @@ from __future__ import annotations
 import bisect
 import enum
 import json
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -115,7 +116,19 @@ class EconomicCalendar:
         this shape already or are a thin rename away.
         """
         try:
-            with urllib.request.urlopen(url, timeout=timeout) as resp:
+            # A bare urlopen sends Python's own user-agent, and the public forex
+            # calendars refuse it outright -- Forex Factory answers 403. That
+            # failure fell through to the disk cache, so with no cache the news
+            # rule raised, and WITH a stale cache it would have looked like it was
+            # working while serving last week's events. Neither is acceptable for
+            # a rule whose whole job is knowing what is happening right now.
+            req = urllib.request.Request(url, headers={
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                              "AppleWebKit/537.36 (KHTML, like Gecko) "
+                              "Chrome/124.0 Safari/537.36",
+                "Accept": "application/json",
+            })
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
             events = [self._parse(row) for row in payload]
             events = [e for e in events if e is not None]
@@ -128,6 +141,30 @@ class EconomicCalendar:
             if loaded == 0:
                 raise CalendarError(f"calendar fetch failed and no cache: {err}") from err
             return loaded
+
+    def refresh_if_stale(self, url: str, max_age: float = 3600.0,
+                         timeout: float = 10.0) -> int:
+        """Fetch only when the cached copy has aged out, otherwise reuse it.
+
+        `refresh_from_url` was being called on EVERY cycle. On a five-minute
+        schedule that is 288 fetches a day at one provider, and the public forex
+        calendars throttle long before that -- Forex Factory starts answering 429
+        after a couple of hits in quick succession. Every throttled call then fell
+        back to the cache silently, so the feed looked healthy while going stale.
+
+        An hour is the right window because the events themselves are published
+        days ahead; what changes intraday is only the actual-value column, which
+        this rule does not read.
+        """
+        try:
+            age = time.time() - self.cache_path.stat().st_mtime
+        except OSError:
+            age = float("inf")
+        if age < max_age:
+            loaded = self.load_from_cache()
+            if loaded:
+                return loaded
+        return self.refresh_from_url(url, timeout=timeout)
 
     def load_from_cache(self) -> int:
         if not self.cache_path.exists():

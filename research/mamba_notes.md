@@ -4620,3 +4620,52 @@ too long**."
 ---
 
 # CYCLE 19 — 2026-07-30
+
+## CLOSING THE SPEED GAP — the bot was SLOWER than him, not faster
+
+Three things were wrong, and together they made "the only difference is speed" false in the
+wrong direction.
+
+### 1. IT WOKE UP ON A TIMER INSTEAD OF STAYING AWAKE
+
+The process did **one pass and exited**, driven by a hosted scheduler firing every five
+minutes — which routinely runs another five to fifteen minutes late under load. On a
+**ninety-minute window** with a **thirty-five-minute hold**, a setup could appear and be gone
+before the bot ever looked.
+
+`--loop N` now holds the lock and keeps checking every N seconds. Proven running at a
+two-second interval across four markets, surviving errors without dying — one bad cycle logs
+and continues rather than ending the session.
+
+### 2. MULTI-MARKET HAD NEVER WORKED
+
+`--symbols NAS100,US30,GBPUSD,XAUUSD` arrived as **one instrument literally named
+"NAS100,US30,GBPUSD,XAUUSD"**, and every cycle failed with "unknown instrument". The
+scheduled job only ever passed a single symbol, so nothing revealed it. Commas and spaces both
+work now, and the default is his four:
+
+> "i'm actually going to be full time trading just **nasdaq, us 30, gbp usd** and all of my
+> cryptos" · "if you trade the same indices as me, **US30 and NASDAQ**" · "Tokyo session for
+> me is better for **gold**"
+
+His two indices were also **not registered at all** — added at the retail contract size of one
+unit per point, the spec measured on a follower's screenshot in his own video, explicitly as
+the paper fallback. Against a real broker the adapter still reads the broker's own numbers,
+which is what keeps his hundred-per-point contract from ever being assumed for someone else's
+account.
+
+### 3. THE NEWS FETCHER COULD NOT FETCH
+
+Two separate faults:
+
+* **It sent no browser identifier**, so Forex Factory answered **403 Forbidden**. That fell
+  through to the disk cache — meaning with no cache the rule raised, and *with* a stale cache
+  it would have looked healthy while serving last week's events. For a rule whose entire job
+  is knowing what is happening right now, that is the worst of the failure modes.
+* **It re-fetched on EVERY cycle.** At five-minute intervals that is 288 requests a day to one
+  provider, and it starts answering **429 Too Many Requests** after a handful in quick
+  succession. `refresh_if_stale` now fetches at most hourly, which is correct anyway: the
+  events are published days ahead.
+
+Verified against the live feed: **92 events, 19 of them high-impact**, and its fields
+(`title`, `country`, `date`, `impact`) map straight onto what the parser already accepted.

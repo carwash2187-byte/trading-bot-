@@ -176,6 +176,31 @@ DEFAULT_INSTRUMENTS: dict[str, Instrument] = {
         base_currency="XAU", quote_currency="USD", digits=2,
         description="Gold vs US Dollar (100 oz per lot)", correlation_group="METALS",
     ),
+    # HIS TWO INDICES. "if you trade the same indices as me, US30 and NASDAQ",
+    # and "i'm actually going to be full time trading just nasdaq, us 30, gbp usd
+    # and all of my cryptos". Without these registered, a run across his own
+    # watchlist failed every cycle with "unknown instrument".
+    #
+    # The contract size here is ONE unit per point, which is the retail spec --
+    # the same one measured on a follower's screenshot in his own video. HIS
+    # broker prices US30 at a hundred per point, a hundred times larger. These
+    # values are the paper-trading fallback ONLY: against a real broker the
+    # adapter calls get_instrument() and uses the broker's own numbers, which is
+    # what stops his contract size ever being assumed for someone else's account.
+    "US30": Instrument(
+        symbol="US30", contract_size=1, tick_size=0.1,
+        min_lot=0.01, max_lot=50.0, lot_step=0.01,
+        base_currency="US30", quote_currency="USD", digits=1,
+        description="Dow Jones 30 (retail spec: 1 unit per point)",
+        correlation_group="INDICES",
+    ),
+    "NAS100": Instrument(
+        symbol="NAS100", contract_size=1, tick_size=0.1,
+        min_lot=0.01, max_lot=50.0, lot_step=0.01,
+        base_currency="NAS100", quote_currency="USD", digits=1,
+        description="Nasdaq 100 (retail spec: 1 unit per point)",
+        correlation_group="INDICES",
+    ),
     "BTCUSD": Instrument(
         symbol="BTCUSD", contract_size=1, tick_size=0.01,
         min_lot=0.01, max_lot=10.0, lot_step=0.01,
