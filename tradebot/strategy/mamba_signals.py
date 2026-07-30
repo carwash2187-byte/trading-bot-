@@ -117,6 +117,7 @@ class MambaSignals(Strategy):
         session: str = "newyork",
         sessions: tuple[str, ...] = (),
         window_minutes: int = 210,
+        flatten_at_window_end: bool = False,
         wait_for_close: bool = True,
         reward: float = 3.0,
         max_hold_minutes: int = 35,
@@ -479,6 +480,13 @@ class MambaSignals(Strategy):
         candles = context.candles
         if len(candles) < 80:
             return []
+
+        # "getting a little later in the day... pack the books." When his window
+        # shuts, open trades go -- he does not carry a scalp past his own session.
+        if self.flatten_at_window_end and not self._in_session(context.now):
+            for pos in context.open_positions:
+                if pos.comment == self.name:
+                    return [Exit(ticket=pos.ticket, reason="window-closed")]
 
         # Managing what is open comes before any entry gate, always.
         if self.max_hold_minutes > 0:

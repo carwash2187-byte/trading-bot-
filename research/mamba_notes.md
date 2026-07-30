@@ -2454,3 +2454,79 @@ not the 1:2 scalp he draws.
 
 He says so himself: "i know i didn't break down too much of exactly how i trade word for
 word tool for tool".
+
+## Cycle 1 — video dOv1jOSsYLU, "How To Actually Make 6 Figures A Month" (16:51)
+
+Watched by subagent, which read his LIVE ACCOUNT PANEL and a full week of his trade
+history off the screen. This is the most consequential video watched so far, and not for
+the reason the title suggests.
+
+### HE HAS QUIT FOREX. INDICES ONLY.
+
+> "let's go to **us30 NASDAQ only** let's **stay away from S&P** let's **stay away from
+> gold** NASDAQ us30 let's stick there"
+> "**indices is the way to go** it's the most liquid Market it moves the best it respects
+> us the most... and that's part of the reason that I kind of **stopped trading Forex**
+> because I've realized the Forex markets can be just a little bit **too manipulated**"
+
+### HIS WINDOW IS THIRTY MINUTES, not 210
+
+> "I don't know the last time I traded at **8 a.m.** was but it's probably been months...
+> even by **7:00 a.m., 30 minutes in, I'm already getting ready to pack the books**"
+
+Triangulated three independent ways off his own screen: his chart timezone is UTC-8, the
+NFP release drop lands at 05:40 on it (8:30 ET = 5:30 PT, so the clock is Pacific), his
+own trade opened at **06:49**, and his community win posts cluster at 6:58, 7:03, 7:22.
+So 6:30 Pacific is the equity open and "30 minutes in" is literal.
+
+Both windows are his -- 210 minutes from the futures video, 30 from this one. Built as a
+parameter with a registered `mamba_indices` using 30, plus flattening open trades when
+the window shuts: "we're here to **get in and get out**... the longer you're there the
+worse your odds get."
+
+### INTRABAR ENTRY, stated flatly
+
+> "as it starts to break out **I do not wait for [candle] closure I get in as the market
+> is pushing and breaking through**"
+> "that'd be **right above these Wicks**"
+
+### HIS SIZING RULE, measured from three of his drawn setups
+
+| stop | target | ratio | quantity | risk | stop x qty |
+|------|--------|-------|----------|------|-----------|
+| 40.18 pts | 204.15 | 5.08 | 6 | $750 | 241.1 |
+| 40.30 pts | 164.47 | 4.08 | 6 | $750 | 241.8 |
+| 30.28 pts | 118.47 | 3.91 | 8 | $750 | 242.2 |
+
+**Risk held constant at $750, quantity scaled inversely to stop distance.** That is
+risk-per-trade sizing -- exactly what the bot already does -- and he never says it out
+loud. Good news for once: the sizing model in the code is his, confirmed by measurement.
+
+### AND THE THING THAT MATTERS MOST TODAY
+
+His live "Last Week" history, six round trips, every one a sell, every one a win. Points
+captured: **15.2, 7.2, 28.6, 37.6, 32.7, 2.8 — average 20.7 points.**
+
+Against the **40-point stop he teaches**, that is an average of **0.5R**.
+
+He narrates 1:4 and 1:5 all the way through the video — "if our stop-loss is 40 points and
+our Target is for instance 160 points we call this a 1 to four", "we're easily able to hit
+one to fives every single day", "you don't want one to ones, you don't want one to twos".
+
+**His own statement says he takes about half a stop.** One trade held for one minute
+(opened 06:49, closed 06:50).
+
+This is not me disagreeing with him. It is a contradiction inside him, measured off his
+own screen: **the targets he teaches and the exits he takes are irreconcilable.** A bot
+built to his words is a 4R runner; a bot built to his statement is a sub-1R scalper. They
+are different strategies and both are his.
+
+Also measured: a 40-point stop on his $844,006 account at the volumes shown risks
+**2.4%-4.7%**, far above the 1% he coaches students.
+
+### NOT OBTAINABLE FROM HIM
+
+His chart carries **8 indicators, legend permanently collapsed**, and he gates the
+settings behind his paid mentorship — his community has a locked channel called
+`secret-settings`. Also missing: touch count for a valid level, the exact breakeven
+trigger, the partial trigger, any re-entry rule, any post-loss sizing rule.

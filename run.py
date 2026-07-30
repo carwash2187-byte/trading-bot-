@@ -248,6 +248,29 @@ REGISTRY = {
     ),
     # Two a day instead of three: 1.11x, 1.99 a day, 47.2% winners, 24% drop.
     "mamba_signals_2": lambda: MambaSignals(min_votes=2, max_trades_per_day=2),
+    # HIS INDICES BUILD, and the numbers here are measured off his own live
+    # account rather than taken from his mouth.
+    #
+    # Markets: NAS100 and US30 only. "let's go to us30 NASDAQ only, let's stay away
+    # from S&P, let's stay away from gold" -- and he has quit forex outright: "I
+    # kind of stopped trading Forex because the Forex markets can be just a little
+    # bit too manipulated."
+    #
+    # Window: THIRTY minutes, not 210. "even by 7:00 a.m., 30 minutes in, I'm
+    # already getting ready to pack the books." Triangulated three ways off his
+    # screen -- chart timezone UTC-8, the NFP drop at 05:40 on it, his own trade
+    # opening at 06:49.
+    #
+    # Entry: intrabar, stated flatly. "I do not wait for closure, I get in as the
+    # market is pushing and breaking through."
+    #
+    #   --strategies mamba_indices --symbols NAS100,US30 --risk-per-trade 0.10
+    "mamba_indices": lambda: MambaSignals(
+        min_votes=2, allow_reentry=True,
+        window_minutes=30, flatten_at_window_end=True,
+        wait_for_close=False,
+        max_trades_per_day=2,
+    ),
     # How he gets out of bad trades without paying for them. "I ended up closing
     # around this area um just because I wasn't sure if price was going to fully
     # reverse" / "trend got broke... it's not going to come back". Plus his own
