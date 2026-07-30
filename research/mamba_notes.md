@@ -1461,3 +1461,53 @@ a double top he would point at is one whose **second peak is what price is doing
 now**, so it now requires the pattern to have formed within the last few bars. A
 detector that is true 82% of the time is the same as no detector, which is the fifth
 time this project has produced a rule that silently did nothing.
+
+---
+
+## Leo's second correction: THE PATTERNS DECIDE BUY OR SELL
+
+He said it plainly: "he said that determines if u buy or sell thats lit what he
+does those are important". Correct, and I had them as optional filters bolted onto
+a direction worked out some other way. That is backwards. Every pattern he names
+points a way, and the pattern IS his reason:
+
+> "whenever the market makes an **m** uh it's pretty obvious what's going to happen
+> right we have a **double top resistance**" -- M means sell.
+
+> "what i saw was a very **bearish candle that just engulfed all this** while our
+> **moving averages are above everything** i'm pretty sure the moving averages here
+> are just gonna **pull our trade to the downside**" -- bearish engulfing means sell.
+
+> "our **entry came from this 4-hour liquidity sweep**" -- highs swept and failed
+> means sell.
+
+> "**lower lows higher high on our macd** all that means is that price is **bound to
+> reverse**" -- divergence ends the move.
+
+> "We have that other **fair value gap now supporting price**" -- a gap under price
+> is a reason to buy.
+
+Built `mamba_signals.py`: every pattern votes, the trade goes the way they agree,
+and "two confirmations if not like six" is the vote threshold.
+
+### Wired in, and measured — 3% risk
+
+| build | growth | trades/day | win% | drop |
+|-------|--------|-----------|------|------|
+| fib alone, US30 15m | 0.40x | 0.34 | 13.2% | 62% |
+| **fib + his double top** | **1.05x** | 0.15 | 26.5% | 16% |
+| fib + macd divergence | 0.91x | 0.08 | 22.2% | 14% |
+| NY plain, US30 5m | 1.12x | 2.42 | 42.6% | 35% |
+| NY + engulfing trigger | 0.89x | 0.32 | 34.8% | 16% |
+| NY + liquidity sweep | 1.12x | 2.42 | 42.6% | 35% |
+| **NY + fair value gap stop** | **1.18x** | **2.46** | 40.2% | 33% |
+| NY + all three | 0.76x | 0.40 | 27.6% | 28% |
+| patterns vote, 2 agreeing, US30 5m | 0.80x | 2.64 | **47.9%** | 36% |
+| patterns vote, 3 agreeing | 0.73x | 1.59 | 46.6% | 37% |
+| patterns vote, 4 agreeing | 0.91x | 0.23 | 41.2% | 11% |
+
+Two things stand out. **His double top lifts the fib from 0.40x to 1.05x** -- the
+pairing he describes is the one that matters. And **the fair value gap stop gives the
+best result measured this session at 1.18x on 2.46 trades a day**, which is his
+frequency with money above break-even. Letting the patterns vote gives the highest
+win rate seen anywhere in this project at 47.9%.

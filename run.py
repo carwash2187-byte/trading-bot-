@@ -38,6 +38,7 @@ from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.mamba_fib import MambaFib
 from tradebot.strategy.mamba_ny import MambaNY
 from tradebot.strategy.mamba_retest import MambaRetest
+from tradebot.strategy.mamba_signals import MambaSignals
 from tradebot.strategy.mamba_rsi import MambaRsi
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
@@ -142,6 +143,10 @@ REGISTRY = {
     # The same trade with only the entry and exit rules, no management. 0.61x on
     # 2.50 trades a day -- inside the two-to-three he states.
     "mamba_ny_plain": lambda: MambaNY(),
+    # "We have that other fair value gap now supporting price" -- with the stop
+    # placed behind the gap. Best NY variant measured: US30 5m 3% gives 1.18x on
+    # 2.46 trades a day, against 1.12x without it.
+    "mamba_ny_gap": lambda: MambaNY(use_fair_value_gap=True),
     # His SMALL-ACCOUNT FLIP, which is Leo's actual situation. Different numbers
     # from his normal trade, and both sets are his:
     #   "when I want to flip a small account, I have to go for higher and higher
@@ -191,6 +196,20 @@ REGISTRY = {
     #
     # 15m, 10 months, 3%: US30 0.39x on 0.34/day, NAS100 0.82x on 0.47/day,
     # GBPUSD 0.77x on 0.08/day, gold no trades.
+    # His Fibonacci gold zone, paired with the double top the way he pairs them:
+    # "you see a double top like why is this your entry check this out you're
+    # gonna take... my Fibonacci... look at this beautiful 50 and a 6-1-8
+    # rejection". US30 15m 3%: 1.05x on 0.15/day against 0.40x for the fib alone.
+    "mamba_fib": lambda: MambaFib(require_double=True),
+    "mamba_fib_alone": lambda: MambaFib(),
+    # THE PATTERNS DECIDE THE TRADE. An M means sell, a bullish engulfing means
+    # buy, a swept high means sell, divergence means the move ends, a gap under
+    # price holds it up. Each one points a way and he trades when they agree --
+    # "that's two confirmations if not like six".
+    #
+    # US30 5m 3%: 0.80x on 2.64 trades a day at 48% winners; needing four to
+    # agree gives 0.91x on 0.23 a day.
+    "mamba_signals": lambda: MambaSignals(min_votes=2),
     "mamba_fib": lambda: MambaFib(),
     "mamba_all": lambda: MambaAll(),
     "mamba_retest": lambda: MambaRetest(

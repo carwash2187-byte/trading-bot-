@@ -59,6 +59,7 @@ from datetime import datetime, timedelta, timezone
 from ..brokers.base import Candle, OrderSide
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
+from .mamba_patterns import engulfing, fair_value_gap, liquidity_sweep
 
 
 @dataclass(frozen=True)
@@ -121,6 +122,9 @@ class MambaNY(Strategy):
         max_losses_per_day: int = 2,
         trendline_bars: int = 0,
         volume_mult: float = 0.0,
+        use_engulfing: bool = False,
+        use_liquidity_sweep: bool = False,
+        use_fair_value_gap: bool = False,
     ) -> None:
         self.session = session
         self.window_minutes = window_minutes
@@ -152,6 +156,18 @@ class MambaNY(Strategy):
         # volume". Entry bar volume must be this multiple of the recent average.
         # Zero disables.
         self.volume_mult = volume_mult
+        # "we saw this candle here closed not only a ginormous bullish engulfing
+        # candle but it closed above the tops of those rejections" -- the
+        # engulfing candle IS the trigger at the level, not a filter on it.
+        self.use_engulfing = use_engulfing
+        # "our entry came from this 4-hour liquidity sweep" -- a trigger of its
+        # own, so it is checked like the trendline break rather than as an extra
+        # condition on a zone.
+        self.use_liquidity_sweep = use_liquidity_sweep
+        # "We have that other fair value gap now supporting price." A gap below
+        # price supports a buy; a gap above resists a sell, so the stop can sit
+        # behind it.
+        self.use_fair_value_gap = use_fair_value_gap
 
     # -- reading his chart -----------------------------------------------
 
@@ -425,6 +441,24 @@ class MambaNY(Strategy):
 
         bar = candles[-1]
 
+        # "our entry came from this 4-hour liquidity sweep" -- price pushes past
+        # an old extreme, fails, and comes back. Its own trigger.
+        if self.use_liquidity_sweep:
+            swept = liquidity_sweep(candles)
+            if swept != 0 and swept == direction:
+                window = candles[-40:]
+                extreme = (min(c.low for c in window) if direction > 0
+                           else max(c.high for c in window))
+                pad = extreme * self.zone_pct
+                stop = extreme - pad if direction > 0 else extreme + pad
+                if (stop < bar.close) if direction > 0 else (stop > bar.close):
+                    risk = abs(bar.close - stop)
+                    target = (bar.close + risk * self.reward if direction > 0
+                              else bar.close - risk * self.reward)
+                    return [Enter(
+                        side=OrderSide.BUY if direction > 0 else OrderSide.SELL,
+                        stop_loss=stop, take_profit=target, comment=self.name)]
+
         # "we're getting in as soon as this trend line OR the support zone
         # breaks" -- the trendline break is a trigger on its own, so it is
         # checked before the zones rather than as an extra condition on them.
@@ -453,7 +487,17 @@ class MambaNY(Strategy):
             if direction > 0 and z.is_resistance:
                 if bar.close <= z.price:
                     continue
+                # "closed not only a ginormous bullish engulfing candle but it
+                # closed above the tops of those rejections"
+                if self.use_engulfing and engulfing(candles, beyond=z.price) != 1:
+                    continue
                 stop = z.structure - (z.structure * self.zone_pct)
+                # "that other fair value gap now supporting price" -- if a gap
+                # sits between the entry and the stop, the stop goes behind it.
+                if self.use_fair_value_gap:
+                    gap = fair_value_gap(candles)
+                    if gap is not None and gap[0] < bar.close and gap[0] > stop:
+                        stop = gap[0] - gap[0] * self.zone_pct
                 # Only sane if the structure is genuinely below the entry.
                 if stop >= bar.close:
                     continue
@@ -473,7 +517,13 @@ class MambaNY(Strategy):
             if direction < 0 and not z.is_resistance:
                 if bar.close >= z.price:
                     continue
+                if self.use_engulfing and engulfing(candles, beyond=z.price) != -1:
+                    continue
                 stop = z.structure + (z.structure * self.zone_pct)
+                if self.use_fair_value_gap:
+                    gap = fair_value_gap(candles)
+                    if gap is not None and gap[1] > bar.close and gap[1] < stop:
+                        stop = gap[1] + gap[1] * self.zone_pct
                 if stop <= bar.close:
                     continue
                 risk = stop - bar.close

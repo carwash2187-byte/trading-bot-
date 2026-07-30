@@ -64,6 +64,7 @@ from datetime import timezone
 
 from ..brokers.base import Candle, OrderSide
 from ..data.indicators import ema
+from .mamba_patterns import double_top_bottom, macd_divergence
 from .base import Action, Enter, Strategy, StrategyContext
 
 
@@ -116,6 +117,8 @@ class MambaFib(Strategy):
         stop_beyond_pct: float = 0.0008,
         max_trades_per_day: int = 3,
         max_losses_per_day: int = 2,
+        require_double: bool = False,
+        require_macd_divergence: bool = False,
     ) -> None:
         self.push_bars = push_bars
         self.min_push_pct = min_push_pct
@@ -128,6 +131,16 @@ class MambaFib(Strategy):
         self.stop_beyond_pct = stop_beyond_pct
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
+        # He pairs the two explicitly, in one sentence: "you see a double top
+        # like why is this your entry check this out you're gonna take... my
+        # Fibonacci I'm gonna draw from this low to this high... look at this
+        # beautiful 50 and a 6-1-8 rejection". So the M is what makes the gold
+        # zone worth trading.
+        self.require_double = require_double
+        # "lower lows higher high on our macd all that means is that price is
+        # bound to reverse" -- a reversal warning, so it must point the same way
+        # as the trade.
+        self.require_macd_divergence = require_macd_divergence
 
     # -- drawing it the way he draws it ----------------------------------
 
@@ -211,6 +224,21 @@ class MambaFib(Strategy):
             return []
         if not self._ma_agrees(candles, push.up):
             return []
+
+        # "you see a double top like why is this your entry... take my Fibonacci"
+        if self.require_double:
+            pattern = double_top_bottom(candles)
+            if pattern is None:
+                return []
+            # An M tops out a push up; a W bottoms a push down.
+            if pattern.is_top != push.up:
+                return []
+
+        # "lower lows higher high on our macd... price is bound to reverse"
+        if self.require_macd_divergence:
+            div = macd_divergence(candles)
+            if div == 0 or (div > 0) != push.up:
+                return []
 
         bar = candles[-1]
 
