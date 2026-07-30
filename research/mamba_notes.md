@@ -4168,3 +4168,71 @@ The level is still used for the stop when the flag is on, because his named vide
 **no stop at all** and one has to come from somewhere he actually said. With the flag off the
 stop is the trigger candle's own extreme — "that last candle where we broke, the high of that
 candle" — which is his rule from another video and is what the rest of the project already uses.
+
+---
+
+# CYCLE 14 — 2026-07-30
+
+## "Strategy That Grows SMALL Accounts" (4B3WaySG5zg) — his session window, and a correction of mine
+
+### HIS WINDOW IS NINETY MINUTES, AND HE SAYS SO
+
+> "this is rule number one: you only take these trades at New York session, **6:30 a.m.
+> Pacific Standard time is the only time you take these trades**"
+> "I'm going to say that again... **you do not take one before that**, and you only look
+> **MAYBE AN HOUR, HOUR AND A HALF** into that session to take that trade"
+> "don't mess around, get on there **5:45 a.m.**"
+
+`window_minutes` was **210** — mine. It let the bot keep trading for three and a half hours
+past an open he says shuts in ninety minutes. Now 90, in all five files.
+
+Measured against his own entries in that video: **06:50, 06:45 and 07:05 Pacific**, i.e. 15
+to 35 minutes past 6:30. Comfortably inside ninety, nowhere near 210.
+Fires 30 of 1,334 against 69 on my window.
+
+**Contradiction inside the same video:** his own title card reads "**RULE 1 — 6:00 a.m.**"
+while his voice says 6:30, five separate times. Recorded.
+
+### AND A CORRECTION OF MINE: THE BREAKEVEN TRIGGER
+
+Last cycle I replaced `breakeven_at=2.0` with half-the-distance-to-target, from his "15 to 20
+pip take profit and you're at eight or nine pips" example. **This video states the ratio
+outright** — and so did another:
+
+> "we got to a **1 to two**, stops can go to break even"
+> "once I'm at about a, let's say, **1 to two, then my stops will then go to break even**"
+
+**The two readings agree on his own trades.** He targets 1:4, and on a 1:4 trade 2R *is* half
+the way. His example was the same rule seen from the other end, and I turned that coincidence
+into a change. Two videos state the ratio; one example implies the fraction. **The ratio
+stands, and my original value was right.**
+
+### FIXED CASH RISK — A FIFTH VIDEO
+
+Three tickets on screen, all reading the same stop amount while the point distance and the
+quantity move: **30.8 / 30.8 / 25.4 points** and **8 / 8 / 9 contracts**. Targets 150.9 /
+149.8 / 100.9. Ratios **4.90 / 4.86 / 3.97**, matching his stated "about a 1 to four, 1 to
+five risk reward each time".
+
+**And his stops sit at 25-31 points on US30** — the same width as the flat 25-point stop his
+signal room posts. Two independent sources, same number.
+
+### HIS PRICES SNAP TO SAVED LEVELS — CONFIRMED AGAIN
+
+On the 31 Jan short, entry ~38500.5, stop ~38531.3 and target ~38350.7 **all land on
+horizontal levels already saved on his chart** (38500.4, 38531.2, 38350.6). Same finding as
+the $250k Nasdaq trade, where all five prices sat within three and a half points of
+pre-existing lines. **He selects prices off a map; he does not compute them.**
+
+### A UNIT WARNING WORTH KEEPING
+
+He uses "pips" for two different things **inside one video**: "160 pips" when the ruler reads
+157 *ticks*, and "150 pips" when the target reads 149.8 *points*. **"Pips" is worthless as a
+unit in his videos.** Everything in this project is measured in points off the axis.
+
+### AND HE RE-ENTERS AFTER LOSSES
+
+> "will we lose a trade? of course you're going to lose trades, but **those re-entries are
+> fire, just fire**"
+
+Still no mechanical trigger for it anywhere. Recorded as NOT FOUND YET.

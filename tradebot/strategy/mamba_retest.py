@@ -117,7 +117,15 @@ class MambaRetest(Strategy):
         daily_tf_bars: int = 0,
         trail_candles: bool = True,
         sessions: tuple[str, ...] = ("newyork",),
-        window_minutes: int = 210,
+        # HIS WINDOW, HIS NUMBER: "6:30 a.m. Pacific Standard time is the only
+        # time you take these trades... you do not take one before that, and you
+        # only look **MAYBE AN HOUR, HOUR AND A HALF** into that session to take
+        # that trade." 90 minutes. My 210 let the bot trade for three and a half
+        # hours after an open he says closes in ninety minutes.
+        #
+        # Measured against his own entries in that video: 06:50, 06:45 and 07:05
+        # Pacific -- 15 to 35 minutes past 6:30, comfortably inside ninety.
+        window_minutes: int = 90,
         breakeven_at: float = 0.0,
         scale_at: float = 0.0,
         max_hold_minutes: int = 0,

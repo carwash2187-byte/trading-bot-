@@ -111,7 +111,15 @@ class MambaNY(Strategy):
     def __init__(
         self,
         session: str = "newyork",
-        window_minutes: int = 210,
+        # HIS WINDOW, HIS NUMBER: "6:30 a.m. Pacific Standard time is the only
+        # time you take these trades... you do not take one before that, and you
+        # only look **MAYBE AN HOUR, HOUR AND A HALF** into that session to take
+        # that trade." 90 minutes. My 210 let the bot trade for three and a half
+        # hours after an open he says closes in ninety minutes.
+        #
+        # Measured against his own entries in that video: 06:50, 06:45 and 07:05
+        # Pacific -- 15 to 35 minutes past 6:30, comfortably inside ninety.
+        window_minutes: int = 90,
         zone_lookback: int = 72,
         zone_pct: float = 0.0004,
         min_touches: int = 3,
@@ -378,23 +386,20 @@ class MambaNY(Strategy):
                 price = context.bid if pos.is_long else context.ask
                 ahead = ((price - pos.entry_price) if pos.is_long
                          else (pos.entry_price - price))
-                # HIS TRIGGER IS HALF THE WAY TO TARGET, NOT A MULTIPLE OF RISK.
+                # HIS TRIGGER IS 1:2, AND HE STATES IT AS A RATIO TWICE:
                 #
-                #   "let's say you have a 15 TO 20 PIP TAKE PROFIT and you're at
-                #    like EIGHT OR NINE PIPS PROFIT -- I really do recommend you
-                #    put your stop loss to entry"
+                #   "we got to a 1 to two, STOPS CAN GO TO BREAK EVEN"
+                #   "once I'm at about a LET'S SAY 1 TO TWO, then my stops will
+                #    then go to break even... and boom, the rest is history"
                 #
-                # 8.5 of 17.5 is a half. That is a fraction of the DISTANCE TO
-                # TARGET, which is a different quantity from the R multiple this
-                # used: on a 1:3 trade, 2R is two thirds of the way, so my number
-                # made him hold a third longer than he says he does before
-                # protecting the trade. When there is no target to measure against,
-                # the R multiple still stands in.
-                if pos.take_profit is not None:
-                    span = abs(pos.take_profit - pos.entry_price)
-                    if span <= 0 or ahead < span * 0.5:
-                        continue
-                elif ahead < risk * self.breakeven_at:
+                # Last cycle I replaced this with half-the-distance-to-target,
+                # from his "15 to 20 pip take profit and you're at eight or nine
+                # pips" example. THE TWO AGREE ON HIS OWN TRADES: he targets 1:4,
+                # and on a 1:4 trade 2R IS half the way. The example was the same
+                # rule seen from the other end, and I turned a coincidence into a
+                # change. Two videos state the ratio outright, one example implies
+                # the fraction, so the ratio stands.
+                if ahead < risk * self.breakeven_at:
                     continue
                 done = (pos.stop_loss >= pos.entry_price if pos.is_long
                         else pos.stop_loss <= pos.entry_price)

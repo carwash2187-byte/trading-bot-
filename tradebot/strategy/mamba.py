@@ -339,15 +339,13 @@ class MambaBreakout(Strategy):
                          else (pos.entry_price - context.ask))
                 already_safe = ((pos.stop_loss >= pos.entry_price) if pos.is_long
                                 else (pos.stop_loss <= pos.entry_price))
-                # Half the way to target, which is his own arithmetic: "a 15 to
-                # 20 pip take profit and you're at like eight or nine pips profit
-                # -- put your stop loss to entry." 8.5 of 17.5 is a half, and a
-                # fraction of the target is not the same quantity as an R multiple.
-                if pos.take_profit is not None:
-                    span = abs(pos.take_profit - pos.entry_price)
-                    hit = span > 0 and ahead >= span * 0.5
-                else:
-                    hit = ahead >= risk * self.breakeven_at
+                # His trigger is 1:2, stated as a ratio twice: "we got to a 1 to
+                # two, stops can go to break even" and "once I'm at about a 1 to
+                # two, then my stops will then go to break even." The
+                # half-the-way-to-target reading from his 15-to-20-pip example is
+                # the SAME rule seen from the other end -- he targets 1:4, and on a
+                # 1:4 trade 2R is half the way. The ratio is what he says.
+                hit = ahead >= risk * self.breakeven_at
                 if hit and not already_safe:
                     moves.append(AdjustStop(ticket=pos.ticket,
                                             stop_loss=pos.entry_price))

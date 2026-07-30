@@ -108,6 +108,15 @@ class MambaRsi(Strategy):
 
     def __init__(
         self,
+        # ALL THREE READ OFF HIS MT4 PROPERTIES SCREENS, not chosen:
+        #     Relative Strength Index -> Period 14, Apply to Close,
+        #                                Levels 75 / 0 / 25 / 0
+        #     Bollinger Bands         -> Period 34, Shift 0, Deviations 2.000,
+        #                                Apply to FIRST INDICATOR'S DATA
+        # The parameter audit flagged these as unsourced; they are now sourced to
+        # the pixels of his own settings screens rather than to a default anyone
+        # would have guessed. 14 and 2.0 happen to be the common defaults, which is
+        # exactly why they needed confirming rather than assuming.
         rsi_period: int = 14,
         rsi_upper: float = 75.0,
         rsi_lower: float = 25.0,
