@@ -119,6 +119,8 @@ class MambaNY(Strategy):
         add_at: float = 0.0,
         max_adds: int = 1,
         max_losses_per_day: int = 2,
+        trendline_bars: int = 0,
+        volume_mult: float = 0.0,
     ) -> None:
         self.session = session
         self.window_minutes = window_minutes
@@ -141,6 +143,15 @@ class MambaNY(Strategy):
         # "If the second one doesn't work out, we are done for the day and we
         # come back tomorrow and we do it again." Two losers ends his day.
         self.max_losses_per_day = max_losses_per_day
+        # "I pretty much drew up my resistance, I drew up my support, and I drew
+        # my trend line." / "we're getting in as soon as this trend line or the
+        # support zone breaks." He draws one every session and names its break as
+        # a trigger in its own right. Bars used to fit it. Zero disables.
+        self.trendline_bars = trendline_bars
+        # "we're waiting for volume to come in" / "you're going to see a lot of
+        # volume". Entry bar volume must be this multiple of the recent average.
+        # Zero disables.
+        self.volume_mult = volume_mult
 
     # -- reading his chart -----------------------------------------------
 
@@ -209,6 +220,57 @@ class MambaNY(Strategy):
             out.append(Zone(price=level, touches=touches,
                             is_resistance=hi_swing, structure=structure))
         return out
+
+    def _trendline_break(self, candles: list[Candle], direction: int) -> bool:
+        """Has price just broken the trendline he would have drawn?
+
+        He draws it across the swing extremes of the recent leg -- descending
+        across the highs when price is falling, ascending across the lows when
+        rising -- and buys the break above a descending line or sells the break
+        below an ascending one. A straight line through the first and last
+        extreme of the window is what that amounts to.
+        """
+        if self.trendline_bars <= 0:
+            return False
+        if len(candles) < self.trendline_bars + 1:
+            return False
+        window = candles[-self.trendline_bars:]
+        bar = candles[-1]
+
+        if direction > 0:
+            # Descending line across the highs; buying its break.
+            hi = [(i, c.high) for i, c in enumerate(window)]
+            first = min(hi[: len(hi) // 2], key=lambda x: -x[1])
+            last = min(hi[len(hi) // 2:], key=lambda x: -x[1])
+            if last[0] == first[0] or last[1] >= first[1]:
+                return False        # not descending
+            slope = (last[1] - first[1]) / (last[0] - first[0])
+            at_now = first[1] + slope * (len(window) - 1 - first[0])
+            prev = window[-2].close if len(window) > 1 else bar.open
+            return prev <= at_now < bar.close
+
+        # Ascending line across the lows; selling its break.
+        lo = [(i, c.low) for i, c in enumerate(window)]
+        first = min(lo[: len(lo) // 2], key=lambda x: x[1])
+        last = min(lo[len(lo) // 2:], key=lambda x: x[1])
+        if last[0] == first[0] or last[1] <= first[1]:
+            return False            # not ascending
+        slope = (last[1] - first[1]) / (last[0] - first[0])
+        at_now = first[1] + slope * (len(window) - 1 - first[0])
+        prev = window[-2].close if len(window) > 1 else bar.open
+        return prev >= at_now > bar.close
+
+    def _volume_ok(self, candles: list[Candle]) -> bool:
+        """"we're waiting for volume to come in"."""
+        if self.volume_mult <= 0:
+            return True
+        window = candles[-20:]
+        if len(window) < 5:
+            return True
+        avg = sum(c.volume for c in window[:-1]) / max(1, len(window) - 1)
+        if avg <= 0:
+            return True
+        return candles[-1].volume >= avg * self.volume_mult
 
     def _opposing_structure(
         self, candles: list[Candle], entry: float, long: bool
@@ -357,7 +419,34 @@ class MambaNY(Strategy):
         if direction == 0:
             return []
 
+        # "The biggest key here, we're waiting for volume to come in"
+        if not self._volume_ok(candles):
+            return []
+
         bar = candles[-1]
+
+        # "we're getting in as soon as this trend line OR the support zone
+        # breaks" -- the trendline break is a trigger on its own, so it is
+        # checked before the zones rather than as an extra condition on them.
+        if self._trendline_break(candles, direction):
+            structure = (min(c.low for c in candles[-self.trendline_bars:])
+                         if direction > 0
+                         else max(c.high for c in candles[-self.trendline_bars:]))
+            pad = structure * self.zone_pct
+            if direction > 0:
+                stop = structure - pad
+                if stop < bar.close:
+                    risk = bar.close - stop
+                    return [Enter(side=OrderSide.BUY, stop_loss=stop,
+                                  take_profit=bar.close + risk * self.reward,
+                                  comment=self.name)]
+            else:
+                stop = structure + pad
+                if stop > bar.close:
+                    risk = stop - bar.close
+                    return [Enter(side=OrderSide.SELL, stop_loss=stop,
+                                  take_profit=bar.close - risk * self.reward,
+                                  comment=self.name)]
         for z in self._zones(candles):
             # Buying needs a resistance to break. "if we're going to look for
             # buys, we need to see a resistance or a trend line break."

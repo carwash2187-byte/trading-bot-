@@ -139,6 +139,22 @@ REGISTRY = {
     # The same trade with only the entry and exit rules, no management. 0.61x on
     # 2.50 trades a day -- inside the two-to-three he states.
     "mamba_ny_plain": lambda: MambaNY(),
+    # His SMALL-ACCOUNT FLIP, which is Leo's actual situation. Different numbers
+    # from his normal trade, and both sets are his:
+    #   "when I want to flip a small account, I have to go for higher and higher
+    #    risk rewards... We have a fat one to seven, one to 10 risk to reward."
+    #   "we're risking $5, which is 25% of the account"
+    #   "I don't mind going and risking 15% on the next trade."
+    #   "It's very important that you use a 5-minute or 1-minute chart simply
+    #    because we are super scalping."
+    #   "I drew up my resistance, I drew up my support, and I drew my trend line...
+    #    we're getting in as soon as this trend line or the support zone breaks."
+    #   "The biggest key here, we're waiting for volume to come in."
+    # Risk lives on the command line; he names 10-25% for this mode.
+    # US30 5m, 3.5 months: 0.72x on 1.11 trades a day. NAS100: 0.64x on 0.47.
+    "mamba_flip": lambda: MambaNY(
+        reward=7.0, trendline_bars=24, volume_mult=1.3,
+    ),
     "mamba_retest": lambda: MambaRetest(
         # "as we start to trade below our 50 moving average" -- the one indicator
         # he names out loud. Helps slightly: 2.13x against 2.06x, drop 62% vs 66%.

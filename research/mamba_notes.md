@@ -1103,3 +1103,110 @@ And on revenge trading, from vcLKxGb5bUM:
 | **25% (his)** | 0.35x | 0.34x |
 
 His two-loss rule improves every risk level it touches. Built and on by default.
+
+---
+
+## CYCLE 1 of 2 (second 20-min run) — "The BEST Small Account Strategy NOBODY Tells You" (4JDL4LkFay0)
+
+Read off the pixels as well as the audio. This is his complete small-account flip
+method and it is the most directly relevant video in the catalogue to a $150 live
+account.
+
+### WHAT IS ACTUALLY ON HIS SCREEN (measured from the frame)
+
+* Chart is **US30**, on the **5m** (the 1m/5m/15m/30m/1h/4h/D bar is visible, 5m active).
+* Levels are drawn as **thick purple horizontal BANDS**, not lines. Three stacked at
+  once: ~49,411-49,430, ~49,340-49,355, ~49,290-49,300. Band thickness is roughly
+  15-20 points on a 49,400 price -- **0.03-0.04% of price**, which matches the
+  `zone_pct=0.0004` already in the code. Pixel-confirmed rather than guessed.
+* A **white descending trendline** drawn from the swing high across the highs.
+* His watchlist, titled "Scalping BIG…", reads: **XAU (gold), LTC, FIL, BTC, ETH,
+  XRP, NAS100, US30**. That is his stated "nasdaq us 30 gbp usd and all of my
+  cryptos" plus gold, confirmed on screen.
+* Clock on the chart: entry area around **05:45-06:30**, matching "I love to trade
+  at 6:30 a.m."
+
+### HE DRAWS THREE THINGS, AND TRADES THE BREAK OF ANY OF THEM
+
+> "As you can see, I pretty much **drew up my resistance, I drew up my support, and
+> I drew my trend line**."
+> "we have support, we have our trend line. **If we can break this trend line**, have
+> pretty decently aggressive move to the upside, **break past the support**, I think
+> it's a really good buying opportunity."
+> "we're getting in **as soon as this trend line or the support zone breaks**"
+
+**The trendline is not built anywhere.** Building it.
+
+### VOLUME IS A CONDITION
+
+> "the reason I love to trade at 6:30 a.m., you're going to see a lot of **volume**"
+> "The biggest key here, **we're waiting for volume to come in**, and we're getting in
+> as soon as this trend line or the support zone breaks."
+
+Not built. Building it.
+
+### TIMEFRAME, STATED OUTRIGHT
+
+> "It's very important that you use a **5-minute or 1-minute chart** simply because we
+> are **super scalping**."
+
+### STOPS
+
+> "here's the key with the strategy, **super, super tight stop losses**."
+
+### REWARD FOR A SMALL ACCOUNT — 1:7 to 1:10, NOT 1:3
+
+> "when I want to **flip a small account, I have to go for higher and higher risk
+> rewards** and it may seem crazy, it may seem awful, but trust me, it's not as hard
+> as you think."
+> "We have a **fat one to seven, one to 10** risk to reward."
+
+**The 1:8 I originally built was right for a small account.** I replaced it with 1:3
+after the $100 forex video and the futures video. Both numbers are his -- 1:3 is his
+normal trade, **1:7 to 1:10 is specifically what he uses to flip a small account**,
+which is Leo's situation.
+
+### RISK ON A SMALL ACCOUNT — 25%, and expect to lose it
+
+> "we're **risking $5, which is 25% of the account**, but if we win, we've now turned
+> our $20 account into a $55 account, putting us in a much better position."
+> "**Deposit as little as $20** and start flipping your account."
+> "the reason we use such a small account like a $20 account because **if we do lose
+> it, that's okay, we deposit again**."
+> "You lose three, four, five at $20, you might lose 100 bucks, but by the time you
+> actually can flip it to 1,000, 2,000... none of that will matter."
+> "I don't mind going and **risking 15%** on the next trade." / "**risking 10%**"
+
+$5 risk on $20 to a $55 account is a 1:7 win at 25% risk. Consistent throughout.
+
+### AND WHAT HE DOES ONCE IT IS BIG
+
+> "that means you **leave this account, you do 5% per week**, you can go trade other
+> accounts, get more risky on these, get prop firms, do whatever you want."
+
+So the plan is two-phase: flip a small account at high risk and high reward, then
+drop that account to 5% a week and flip a new small one.
+
+> "when you're flipping small accounts, you want to make sure your **first few trades
+> are Ws**"
+
+### Build queue
+1. Trendline break entry -- he draws one every time and names it as a trigger.
+2. Volume condition -- "we're waiting for volume to come in".
+3. Reward 1:7-1:10 for the small-account mode.
+
+### Cycle 1 numbers — US30 + NAS100 5m, 3.5 months, 5% unless stated
+
+| build | growth | trades/day | win% | drop |
+|-------|--------|-----------|------|------|
+| US30 zones 1:3 | 0.88x | 2.46 | 41.3% | 47% |
+| US30 zones 1:7 (his flip R:R) | 0.72x | 2.40 | 38.9% | 48% |
+| US30 + trendline break | 0.70x | 2.40 | 38.3% | 44% |
+| US30 + trendline + volume | 0.72x | 1.11 | 34.6% | 40% |
+| US30 his flip at 25% risk | 0.42x | 0.92 | 35.8% | 64% |
+| NAS100 zones 1:3 | 0.53x | 2.32 | 40.2% | 65% |
+| NAS100 + trendline + volume | 0.64x | 0.47 | 26.5% | 39% |
+| NAS100 his flip at 25% risk | 0.67x | 0.47 | 26.5% | 52% |
+
+Registered as `mamba_flip`. His volume condition cuts the trade count roughly in
+half and lowers the drawdown on both markets.
