@@ -43,6 +43,7 @@ from __future__ import annotations
 
 from datetime import timedelta, timezone
 
+from ..data.ohlc import timeframe_minutes
 from ..brokers.base import Candle, OrderSide
 from ..data.indicators import sma
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
@@ -231,8 +232,23 @@ class MambaSignals(Strategy):
         #
         # Counted in bars of this strategy's own timeframe. On 5m: 48 bars is 4
         # hours, 288 is a day. Zero disables either.
-        self.h4_bars = h4_bars
-        self.daily_bars = daily_bars
+        # FOURTEENTH SILENT RULE, and it switched off his single hardest refusal.
+        # Both of these defaulted to ZERO, and the gate below is written as
+        # "if higher_tf_gates and (h4_bars > 0 or daily_bars > 0)" -- so on every
+        # build except mamba_complete, the higher timeframes were never consulted
+        # AT ALL. Not wired as votes. Not wired.
+        #
+        # What that switched off, in his own words, said twice in one video:
+        #     "we CANNOT take these five-minute trades if our h4 or our daily is
+        #      not in confluence telling us we're going down. we have to see that
+        #      FIRST before we come down and take our cell trades"
+        #
+        # The counts are not numbers I picked -- they are what the words mean. Four
+        # hours is 240 minutes and a day is 1440, so on any timeframe the bar count
+        # is that divided by the bar length. Passing an explicit value still wins.
+        tf = max(1, timeframe_minutes(self.timeframe))
+        self.h4_bars = h4_bars if h4_bars > 0 else 240 // tf
+        self.daily_bars = daily_bars if daily_bars > 0 else 1440 // tf
         # THE WEEKLY IS DELETED, not disabled.
         #
         # "remember guys, H4 support resistance daily and weekly." / "Looking at

@@ -3394,3 +3394,89 @@ broker's, not mine.** Refusing the trade instead would be me overruling him over
 limit he never has to think about.
 
 Proof it fires: a stop asked for 3.0 points away went out at 10.0, the floor exactly.
+
+## "$62,000 in ONE trade" (dCCVN-0cqH0) — and the FOURTEENTH silent rule, his hardest refusal
+
+### HIS ONE HARD REFUSAL, SAID TWICE — AND IT WAS SWITCHED OFF EVERYWHERE
+
+> "**we CANNOT take these five-minute trades if our h4 or our daily is not in confluence**
+> telling us we're going down. **we have to see that FIRST** before we come down and take
+> our cell trades"
+> "of course we cannot take these five-minute trades if our h4 or our daily is not in
+> confluence"
+
+`h4_bars` and `daily_bars` both defaulted to **zero**, and the gate reads
+`if higher_tf_gates and (h4_bars > 0 or daily_bars > 0)`. So on every build except
+`mamba_complete`, the higher timeframes were **never consulted at all**. The prompt says
+they were "wired as votes when he uses them as context" — it was worse than that. They
+were not wired.
+
+Fixed, and the counts are **not numbers I chose**: four hours is 240 minutes and a day is
+1440, so the bar count is that divided by the bar length. On his 5-minute chart that is 48
+and 288. Arithmetic, not a parameter.
+
+Proof: entries go **297 → 13** with his refusal switched on, and the gate has an opinion on
+**49%** of bars, so it is discriminating rather than degenerate.
+
+### HIS TIMEFRAME ORDER, MEASURED FRAME BY FRAME
+
+Daily (2:35) → H4 (3:00) → 5m (3:25 to the end). Exactly the order he states.
+Daily and H4 do **direction and veto only**; 5m is the only timeframe he enters on.
+
+### HIS ENTRY HERE IS BREAK → RETEST, ON THE CLOSE — WHICH CONTRADICTS TWO OTHER VIDEOS
+
+> "boom **closed below** that little bit of a trend line... which is just a simple breakout"
+> "i saw price broke below the trend line right here and there's a nice wick so what if
+> this is the real trend line... **we just wait for a re-test, we just want to see it
+> retest that breakout spot**"
+> "we came back, we **retested our moving averages and we retested that breakout spot**,
+> that's why i took a short position here"
+
+Against "**I do not wait for the candle to close**" (U8nlmxICJwQ) and "**the problem with
+this is I'm waiting for that retest... it just takes too long**" (his signal-room video,
+where he says he ABANDONED break-and-retest). Three videos, three different triggers. All
+three recorded; none deleted.
+
+He also gives the escape hatch: "**if price starts to run on us then unfortunately we
+missed that trade, so sometimes you do just want to get in and have a tight stop loss**."
+
+### HIS TRAILING METHOD, STATED EXPLICITLY — CANDLE BY CANDLE
+
+> "**just trail your stop-loss, chase this trade with your stop-loss here, next candle
+> here, next candle here, next candle here**"
+
+Not an R multiple. Not a distance. The stop moves to each successive candle. That deletes
+`trail_after` as a concept, not just as a value.
+
+### THE STOP CONFIRMS WHAT I BUILT LAST CYCLE
+
+> "have your stops **just about one candle above**, very tight"
+> "nice little tight stop loss **above that recent high**"
+
+Measured: 5.7 points above the pre-entry swing high — about one 5-minute candle. The
+trigger-candle stop built in cycle 7 is his rule, independently confirmed.
+
+### NO SESSION FILTER — AND A NEW YORK GATE WOULD HAVE MISSED HIS BIGGEST TRADE
+
+Measured entry: **23 Nov 01:12 UTC = 20:12 New York**, four hours after the cash close.
+Exit 02:37 UTC. **A bot gated to New York hours never takes this trade.** He states no
+session rule anywhere in this video.
+
+### WHAT THE PIXELS SAY ABOUT THE NUMBERS HE QUOTES
+
+Measured R:R boxes **4.30**, **1.94**, **4.80** against his labels 4.32, 1.92 — honest to
+within 1.5%. But: he says "700 pips" four times and his own closed P&L implies **630**;
+his fill was **5.46 points worse** than the signal he published to his room; and the trade
+he drew at 4.32R he closed at **2.70R** because "**i was happy with the sixty two thousand
+dollars i made**". His own overlay afterwards: "**SHOULD'VE HELD ALL THE WAY**".
+
+His sizing on that trade was **13-21% of the account** by his own numbers, while the
+TradingView tool in the same video is set to a fixed risk 33× smaller. Recorded, not
+resolved — it joins 1-3%, 1.5% and 25% as his fourth different risk figure.
+
+### AND A CONTRACT-SIZE WARNING FOR TOMORROW
+
+His NAS100 shows **$100 per point per lot**. A follower's screenshot in the same video,
+same symbol, same platform, same 10 lots, shows **$1 per point per lot** — 100× smaller,
+and the same ratio found earlier between his US30 and Leo's. **The bot must never assume
+his contract size.** It reads the broker's own, which it now does.
