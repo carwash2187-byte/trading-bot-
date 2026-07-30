@@ -3941,3 +3941,33 @@ still fires afterwards.
 That is the fifth time this project has found that giving him his own rule produces a
 sensible number by itself: his stop widths, his level-map ratios, his trade frequency, his
 1:3 targets, and now his swoop.
+
+## `retest_bars` DELETED — he gives no time limit, and the rule terminates itself
+
+> "price broke below these lows, **CAME BACK**, and as you can see **RETESTED** it"
+
+That is the whole rule. There is no clock in it. The retest is live whenever price is back
+**at** the broken level — which the entry check already requires — so a level price is
+standing on has been retested however many bars ago it broke. My 24 threw away setups he
+would have taken and had no source at all.
+
+Fires 5 of 1,334 at a median 1:2.48. Low, and that is consistent with his own verdict on
+this setup: "the problem with this is I'm waiting for that retest, and when you wait for
+that retest and it doesn't come you're missing out... **it just takes too long**."
+
+## AN AUDIT THAT SHOULD HAVE EXISTED FROM THE START
+
+The `stop_after_win` switch failed to land on `mamba_retest` because that file has no
+`max_losses_per_day` parameter for the edit to anchor to — so the strategy referenced an
+attribute that was never stored and **crashed on every evaluation**. Same shape as the
+`flatten_at_window_end` crash found in cycle 6.
+
+Twice is a pattern, so it is now checked mechanically: **for every strategy, does every
+`self.X` it uses actually exist after construction?**
+
+That immediately found a third one. `mamba_channel._channel()` still referenced `edge_pct`,
+`lookback_bars` and `min_width_pct` — three parameters deleted back in cycle 4. The function
+had been orphaned by that refactor, called from nowhere, and would have thrown instantly if
+anything had called it. Deleted.
+
+**All nine strategies now pass: every attribute used is stored.**

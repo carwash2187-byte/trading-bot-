@@ -112,27 +112,6 @@ class MambaChannel(Strategy):
         # exactly the trade his rule exists to refuse. Zero disables it.
         self.higher_tf_bars = higher_tf_bars
 
-    def _channel(self, candles: list[Candle]) -> Channel | None:
-        window = candles[-self.lookback_bars:]
-        if len(window) < 20:
-            return None
-
-        high = max(c.high for c in window)
-        low = min(c.low for c in window)
-        width = high - low
-        if width <= 0 or width / high < self.min_width_pct:
-            return None
-
-        # A touch is a bar reaching into the outer band of the channel. This is
-        # what he counts on the chart: the wicks that got there and stopped.
-        band = width * self.edge_pct
-        return Channel(
-            low=low,
-            high=high,
-            low_touches=sum(1 for c in window if c.low <= low + band),
-            high_touches=sum(1 for c in window if c.high >= high - band),
-        )
-
     def _trades_today(self, context: StrategyContext) -> int:
         """How many trades this strategy has opened today.
 

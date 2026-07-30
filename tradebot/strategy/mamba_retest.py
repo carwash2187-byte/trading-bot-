@@ -79,7 +79,14 @@ class MambaRetest(Strategy):
             height.
         min_touches: Touches needed before he trusts a level. He counts wicks
             aloud on the chart before drawing anything.
-        retest_bars: How long after a break the retest still counts. A level
+        (retest_bars deleted -- he gives no time limit. "price broke below these
+        lows, CAME BACK, and as you can see RETESTED it" is the whole rule, and it
+        is self-terminating: the retest is live whenever price is back AT the
+        broken level, which the entry check already requires. A level price is
+        standing on has been retested however many bars ago it broke. My 24 threw
+        away setups he would have taken and had no source at all.)
+
+        (removed: how long after a break the retest still counts. A level
             revisited weeks later is not the same trade.
         stop_zone_frac: Where in the zone the stop sits, as a fraction of zone
             height beyond the far edge. His words allow either the middle or just
@@ -99,10 +106,10 @@ class MambaRetest(Strategy):
         level_lookback: int = 200,
         zone_pct: float = 0.0004,
         min_touches: int = 2,
-        retest_bars: int = 24,
         stop_zone_frac: float = 0.5,
         fallback_reward: float = 3.0,
         max_trades_per_day: int = 2,
+        stop_after_win: bool = True,
         ma_period: int = 50,
         daily_tf_bars: int = 0,
         trail_candles: bool = True,
@@ -116,7 +123,7 @@ class MambaRetest(Strategy):
         self.level_lookback = level_lookback
         self.zone_pct = zone_pct
         self.min_touches = min_touches
-        self.retest_bars = retest_bars
+        self.stop_after_win = stop_after_win
         self.stop_zone_frac = stop_zone_frac
         self.fallback_reward = fallback_reward
         self.max_trades_per_day = max_trades_per_day
@@ -221,7 +228,8 @@ class MambaRetest(Strategy):
 
         # Walk candidate swing levels. A swing low that later gets closed
         # through is a support that became resistance -- his sell setup.
-        for i in range(10, len(window) - self.retest_bars - 1):
+        # -6 because the swing test reaches five bars either side of i.
+        for i in range(10, len(window) - 6):
             bar = window[i]
 
             is_swing_low = all(
@@ -253,10 +261,6 @@ class MambaRetest(Strategy):
                     break
             if broke_at is None:
                 continue
-            # Still inside the retest window? A level broken long ago is stale.
-            if len(after) - broke_at > self.retest_bars:
-                continue
-
             out.append(Level(price=level, touches=touches, broken_down=is_swing_low))
 
         return out
