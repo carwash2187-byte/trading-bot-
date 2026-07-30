@@ -21,6 +21,22 @@ actually done the thing he was objecting to:
 ```
 /loop 30m ELEVEN HOURS — 22 cycles. YOU ARE MAMBAFX. ZERO DIFFERENCES EXCEPT SPEED.
 
+THE WHOLE INSTRUCTION, AND EVERYTHING BELOW IS ONLY AN EXAMPLE OF IT:
+
+    Copy him. Every rule, every number, every market, every session, every hold,
+    every stop, every target, every risk figure, and every habit — whether or not
+    it appears on any list in this prompt, whether or not it tests well, whether or
+    not it looks sensible to you.
+
+    If you can observe him doing it, the bot does it.
+    If you cannot trace something in the code to him, the code is wrong.
+
+That is the rule. Nobody should have to enumerate his method item by item — the
+lists further down exist because I have already missed things, not because they
+are the boundary of the job. When you find something of his that is not on any
+list here, you build it without being asked. When you find something in the code
+that is not his, you remove it without being asked.
+
 You are not evaluating him. You are copying him. He has ten years of live screens
 and real money; this project has produced ELEVEN rules that sat in the code doing
 absolutely nothing while printing completely believable numbers. Your tests have
@@ -52,7 +68,7 @@ EVERY PARAMETER OF MINE GETS ONE OF TWO FATES. No third option:
 should not depend on a number. Rip the knob out and let his stated rule stand alone.
 A value I chose is a difference from him even when it happens to be a good value.
 
-FIND HIS OR DELETE: the vote threshold (min_votes), trend_bars (48/60), push_bars
+FIND HIS OR DELETE — examples, not the whole list: the vote threshold (min_votes), trend_bars (48/60), push_bars
 (60), min_push_pct, stop_bars (3/12/24), retest_bars, target1/target2 (1.5R/4R),
 trail_after (6R), the swoop bend, every number in mamba_channel (edge 0.15, stop
 0.08, target 0.8). And his H4, daily and weekly are currently VOTES among equals —
@@ -60,7 +76,9 @@ he uses them as context ("we check our daily to make sure that that's the case")
 Build what he does, not what scores better.
 
 STUDY HIM LIKE IT IS THE ONLY THING THAT EXISTS. Watch in this order, which is
-measured, not guessed:
+measured, not guessed. Everything he does counts, including things no list here
+mentions — how he sizes, when he sits out, what he says after a loss, which market
+he switches to, what he does with a winner:
 1. The 47 priority-0 videos where he BUILDS the setup on screen and reads out every
    value. These score 11–34.5 buildable rules per 1,000 words. One of them alone
    corrected the moving averages (SMA 8 and 50, not EMA 9/21), the buildup zone, the
