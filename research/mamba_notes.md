@@ -2362,3 +2362,95 @@ copied from video.
 Sessions and clock times. Level definition and touch count. Indicator periods or settings.
 Candle-close confirmation. Risk percent or lot size. Breakeven point. Partial-exit rules.
 Hold time. Broker, spread or leverage.
+
+## Cycle 1 — video 9bPlk7zSJAI, "$1400 in 2 hours SCALPING CRYPTO" (12:57)
+
+Watched by subagent, which read his actual broker statement off the screen. The richest
+measurement so far.
+
+### BITCOIN IS HIS MASTER SWITCH — new, and now built
+
+> "everything's based around bitcoin right so right here we saw a big fall in bitcoin look
+> at dodge we saw a very similar fall look at litecoin a similar fall and look at xrp a
+> similar fall so just remember **anytime bitcoin falls or gets pumped most other cryptos**
+> especially like the bigger ones based around it **are going to pump up as well**"
+
+He checks Bitcoin first and treats the alts as followers. Nothing in this project could
+express that, because the portfolio runs each market in isolation and a strategy trading
+XRP had no way to see BTC. Built as a class-level register: the instance handling BTCUSD
+publishes its direction, the alt instances may only trade the same way, and an alt will
+not trade at all without a recent read on Bitcoin.
+
+### HIS CRYPTO WATCHLIST, read off his screen
+
+Named "Crypto", exactly four symbols: **BTCUSD, DOGEUSD, LTCUSD, XRPUSD**.
+
+The bot had BTC, ETH, LTC, XRP. **He holds DOGE, not ETH.** Fetched 10 months of DOGEUSD
+15m (28,752 bars).
+
+> "i'm actually going to be full time trading just **nasdaq us 30 gbp usd and all of my
+> cryptos** and that's going to be it for now... because they all move similar and **the
+> less you trade the more clear your mind is**"
+
+### POSITION SIZE — measured off the statement, not spoken
+
+Seven tickets, every one **0.5 lots**. Fixed, not risk-based. Deposit 5,000, profit
+1,466.95, commission -24.50, balance 6,442.45 — **+28.85% of the account**.
+
+### HE SCALES INTO ONE MOVE — measured
+
+All seven entries inside a 322-point band, all seven exits inside a 32-point band, **the
+whole basket closed at market within 47 seconds**. That is one decision in seven tickets,
+not seven setups. Confirms the adding-to-a-winner mechanic with real fills.
+
+And the exit was **a market sell, not a resting take-profit** — ticket visible on screen.
+
+### STOP PLACEMENT — measured more precisely than he says it
+
+> "i have my **stops pretty much just below** because if price breaks back down here most
+> likely it's going to continue down"
+> "**stops below the previous candle** is a good way to look at it as well"
+
+Measured from the zoomed geometry: the entry sits at the open of the bullish breakout
+candle, and the stop sits **below the swing low of the pullback, three to five candles
+back** — not one tick under the signal candle. Stop width measured across five samples:
+**254-574 points, 0.46%-0.99% of price, mean 0.61%.**
+
+### HIS MEASURED RISK-TO-REWARD ON CRYPTO
+
+Five drawn setups measured: **1.55, 2.35, 2.61, 3.53 and 1.93 — mean 2.39, median 2.35.**
+So roughly **1:2 to 1:2.5** on crypto, not the 1:3 he quotes for indices or the 1:7 for a
+small-account flip. He states no ratio at all in this video, so there is nothing to
+contradict — but the number is his, off his own boxes.
+
+### A TRAP THE SUBAGENT CAUGHT
+
+Every stop box on his chart reads "Amount: 750", which back-solves to a TradingView
+drawing tool configured for a $1,000 account risking $250. **That is a drawing-tool
+setting, not his risk model.** His actual risk was fixed 0.5 lots — a 254-point stop is
+$12.70, or 0.25% of his $5,000. Anyone reading those boxes as 25% risk would build
+something wildly wrong.
+
+### HE QUITS ON PROFIT — a daily rule not yet built
+
+> "i'll wait for breakouts to get **quick profits that i can kind of just relax for the
+> day after i get those profits**"
+
+No loss limit or trade cap appears in this video; the day ends when he is up.
+
+### SPREAD MATTERS HERE, measured
+
+XRPUSD spread **19-47 points, median 33**, against stops of 254-574. That is **6-13% of
+his stop** consumed by spread, plus $3.50 commission per 0.5-lot round turn. On a strategy
+this tight the cost is not a rounding error.
+
+### AND A WARNING FOR HOW TO READ HIM
+
+The chart demonstration is TradingView **bar replay on March-April 2021 data**, while the
+profitable trade on his phone is dated **21 September 2021**. The drawn examples are
+250-1,350-point targets at about 1:2; the real trade held **4,190 points, 4.73%** — twelve
+times the mean drawn stop. Whatever made the money was a runner held on a trailing stop,
+not the 1:2 scalp he draws.
+
+He says so himself: "i know i didn't break down too much of exactly how i trade word for
+word tool for tool".

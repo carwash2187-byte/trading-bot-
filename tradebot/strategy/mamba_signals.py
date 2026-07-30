@@ -83,6 +83,25 @@ class MambaSignals(Strategy):
 
     name = "mamba_signals"
     timeframe = "5m"
+
+    # HIS BITCOIN MASTER SWITCH, shared across every instance.
+    #
+    #   "everything's based around bitcoin right so right here we saw a big fall in
+    #    bitcoin look at dodge we saw a very similar fall look at litecoin a similar
+    #    fall and look at xrp a similar fall so just remember ANYTIME BITCOIN FALLS
+    #    OR GETS PUMPED MOST OTHER CRYPTOS especially like the bigger ones based
+    #    around it ARE GOING TO PUMP UP AS WELL"
+    #
+    # He checks Bitcoin first and treats the alts as followers. Nothing in this
+    # project could express that, because the portfolio runs each market in
+    # isolation and a strategy trading XRP has never been able to see BTC.
+    #
+    # Class-level on purpose: the instance handling BTCUSD writes its direction
+    # here, and the instances handling the alts read it. That works identically in
+    # the backtest and live, because both create one instance per symbol sharing
+    # this class.
+    _btc_bias: int = 0
+    _btc_seen_at: object = None
     # Must exceed the longest window any rule asks for, or that rule silently
     # never runs. The weekly view wants 480 bars of 15m and this was 400, so
     # `weekly_bars=480` returned zero on every single bar -- the eleventh rule in
@@ -94,6 +113,7 @@ class MambaSignals(Strategy):
     def __init__(
         self,
         min_votes: int = 2,
+        btc_gates_alts: bool = True,
         session: str = "newyork",
         sessions: tuple[str, ...] = (),
         window_minutes: int = 210,
@@ -126,6 +146,9 @@ class MambaSignals(Strategy):
         fixed_lots: float | None = None,
     ) -> None:
         self.min_votes = min_votes
+        # "anytime bitcoin falls or gets pumped most other cryptos... are going to
+        # pump up as well." An alt only trades in the direction Bitcoin is going.
+        self.btc_gates_alts = btc_gates_alts
         self.session = session
         # "16 targets hit, one stop loss last week, 6 in one for London session
         # and then for Asia session, 10 in one." He trades Asia and London as
@@ -603,6 +626,29 @@ class MambaSignals(Strategy):
             direction = -1
         else:
             return []
+
+        # His Bitcoin master switch. BTC publishes where it is going; the alts are
+        # only allowed to follow. "anytime bitcoin falls or gets pumped most other
+        # cryptos... are going to pump up as well."
+        if self.btc_gates_alts:
+            symbol = context.symbol.upper()
+            is_btc = symbol.startswith("BTC")
+            alt = symbol.endswith("USD") and symbol[:3] in (
+                "ETH", "LTC", "XRP", "DOG", "SOL", "AVA", "LIN", "FIL",
+            )
+            if is_btc:
+                type(self)._btc_bias = direction
+                type(self)._btc_seen_at = context.now
+            elif alt:
+                fresh = (
+                    type(self)._btc_seen_at is not None
+                    and abs((context.now - type(self)._btc_seen_at).total_seconds())
+                    <= 3600
+                )
+                # No recent read on Bitcoin means no opinion to follow, so no trade.
+                # He never trades an alt without knowing what BTC is doing.
+                if not fresh or type(self)._btc_bias != direction:
+                    return []
 
         # The higher timeframes get the final say, because he checks them first.
         if self.higher_tf_gates and (self.h4_bars > 0 or self.daily_bars > 0):
