@@ -4475,3 +4475,92 @@ built.
 * **The moving-average gap is STILL open.** He says "we had a **moving average crossover** that
   I speak about in a lot of my videos" and never opens a settings dialog. Three lines resolvable
   on the H4, periods unreadable. Four videos have now failed to close it.
+
+## "Making 5k In 1 Week On a SMALL ACCOUNT" (enkOyd9P96Q) — his real account, read field by field
+
+The best order-panel data in the catalogue: a full MT5 mobile account with 13 closed trades,
+live positions, an order ticket, and the settings screen.
+
+### HIS SIZING IS FIXED LOTS — AND IT IS NOT 0.01
+
+Complete history, 13 trades: **ten of them exactly 2.00 lots**, gold sometimes 2.50, and the
+single 1.00 was his first and smallest-balance trade. **The size never moved while the account
+went from $2,117 to $7,549.** Not a percentage, not a cash amount, not scaled to balance.
+
+**"0.01 always the minimum" is absent from this video and contradicted by it.** Both are his;
+the 0.01 was advice for a beginner's account and 2.00 lots is what he does on his own.
+
+### BROKER AND CONTRACT FACTS, ALL MEASURED
+
+**OspreyFX**, account 300136, MetaTrader 5 mobile. **Leverage exactly 1:200** — derived from the
+margin figure, not stated. Gold **100 oz per lot**, BTC **1 coin per lot**, FX 100,000 units.
+**Commission about $7 per lot round turn** ($204.78 across 13 trades). Gold spread **30 points**.
+Chart timezone UTC; broker server UTC+3; he is Pacific.
+
+### HE COUNTS TWICE, AND BOTH COUNTS ARE THREE
+
+> "we have resistance, resistance, support -- okay so support, resistance, resistance, **THIRD
+> RESISTANCE** -- we kind of can tell here that price most likely will drop"
+> "i have multiple, you know I'm saying, **ONE TWO THREE, THREE TIME FRAMES**, two of them being
+> **major** time frames telling me we're going down"
+
+Three touches, confirming the `min_touches = 3` set in cycle 12 from a different video. And a
+**new** count: three timeframes agreeing, two of them major. His refusal on it is absolute:
+
+> "**you never just look at one time frame and just take a trade**"
+> "you're not gonna just take trades on the 15, the hourly, nothing like that -- **you have to
+> have all these time frames saying the same thing at the same time**"
+
+His stated order in this video: **H4 → H1 → 5m → 15m → Daily.**
+
+### ⚠️ HE SCALED INTO A LOSING POSITION. THIS IS NOT GOING IN THE BOT WITHOUT LEO'S DECISION.
+
+The gold trade, from his own fill records:
+
+    17:29:32   sell 2.00 at 1755.89
+    17:31:58   sell 2.00 at 1756.95     <- worse price
+    17:46:56   sell 2.00 at 1758.39     <- worse again
+
+**Three sells, each at a worse price than the last, tripling to 6.00 lots as the market moved
+against him.** He never mentions doing it. Not once, in the whole video.
+
+What it came to, on the balance visible at the time:
+
+| | |
+|---|---|
+| risk on one leg | **9.6%** of the account |
+| risk on all three at his stop | **27.6%** of the account |
+| notional held | **166 times the account** |
+| his worst realised loss that week | **10.3%** in one trade |
+
+**This is the single most dangerous thing found in 34 videos**, and it is unambiguously what he
+did. It is also the mechanism that produced the week the video is named after — the win came
+from the averaged-down position.
+
+It is **NOT built**, and it is not built because this is Leo's call and not mine. The prompt
+says to say plainly when a rule cannot be expressed on a live account: on an account the size of
+Leo's, three legs at 27.6% risk is one bad idea away from nothing left, and the margin cap would
+refuse most of the size anyway. Recorded in full, with the arithmetic, so the decision is his
+with the numbers in front of him.
+
+### HIS OWN ACCOUNT NEVER REACHED HIS OWN TAKE PROFIT
+
+Ticket TP was **1753.00**. He closed all three legs at **1755.00-1755.03** — 8.9, 19.4 and 33.6
+pips against a 30-pip target. And he tells the audience "take profits did get smashed and we all
+caught that."
+
+He also warns against exactly what he then does, fifteen seconds apart:
+
+> "**be patient with your trades**, because if you start closing too early... you're letting
+> your stop-loss get hit but you're not letting your take profit get hit, it's an issue"
+> "but as I'm probably going to **close early on this trade** anyways"
+
+### AND EVERY REASON HE CLOSED, ALL DISCRETIONARY
+
+> "**i don't like the way it's forming**, it doesn't look good to me, i want to go and close
+> these out"
+> "just be happy with what i have here, **i'm just going to be grateful for what i have**"
+> "we can just catch like a **cool 30 pips** or so, i'll probably get out"
+> "end up closing **while we were at lunch**"
+
+No mechanical close rule anywhere. Measured hold: **3h 20m to 3h 37m**, all intraday.
