@@ -137,7 +137,6 @@ class MambaSignals(Strategy):
         reward: float = 3.0,
         max_hold_minutes: int = 35,
         use_ma_swoop: bool = True,
-        swoop_bend: float = 1.0,
         ma_fast: int = 8,
         ma_slow: int = 50,
         h4_bars: int = 0,
@@ -203,8 +202,6 @@ class MambaSignals(Strategy):
         #  turn up, most the time this momentum is going to pull all the way to the
         #  upside... Because they're CURVING."
         self.use_ma_swoop = use_ma_swoop
-        # How hard the averages must be bending to count as his swoop.
-        self.swoop_bend = swoop_bend
         # His two moving averages, read out as he builds them on a blank chart:
         #
         #   "we need to set up two things. Okay, that's just TWO SIMPLE MOVING
@@ -441,8 +438,7 @@ class MambaSignals(Strategy):
 
         # "this is very important to pay attention to" -- the averages bending.
         if self.use_ma_swoop:
-            swoop = ma_curve(candles, period=self.ma_fast,
-                             min_bend=self.swoop_bend)
+            swoop = ma_curve(candles, period=self.ma_fast)
             if swoop:
                 out["swoop"] = swoop
 

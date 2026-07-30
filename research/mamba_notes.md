@@ -3915,3 +3915,29 @@ reading.
   every other video has him trading exactly those two.
 * Measured drawn box: **1.45:1** while he says 1:2 in the same breath. His drawn boxes have
   now disagreed with his spoken ratios in three separate videos.
+
+---
+
+# CYCLE 11 — 2026-07-30
+
+## `swoop_bend` DELETED — his swoop is a sign flip, and he says so
+
+> "Look at our moving averages. **THEY'RE COMING DOWN** and they're swooping...
+> **THEY'RE STARTING TO TURN UP.** Once they start to turn up, most the time this momentum
+> is going to pull all the way to the upside, because they're **CURVING**."
+
+Coming down, then turning up. Falling, then rising. There is no third state in his
+description and no threshold anywhere in it.
+
+**And the reason I invented `min_bend` is exactly the override this project exists to stop.**
+His literal rule cut setups from 430 to 30, I decided that was too few, and I added a knob
+to loosen him. Then I had to pick its value: at 0.25 it fired on **80%** of bars, at 1.0 on
+roughly **0%**. A number chosen because I disliked his answer is not his rule.
+
+**His own definition fires on 25.6% of bars** — 768 up, 768 down, 4,464 straight. Neither of
+my values was anywhere near it, and they were wrong in opposite directions. The full build
+still fires afterwards.
+
+That is the fifth time this project has found that giving him his own rule produces a
+sensible number by itself: his stop widths, his level-map ratios, his trade frequency, his
+1:3 targets, and now his swoop.

@@ -355,7 +355,6 @@ def ma_curve(
     period: int = 8,
     slope_bars: int = 3,
     simple: bool = True,
-    min_bend: float = 1.0,
 ) -> int:
     """His "swoop" — the moving averages curving, which he treats as momentum.
 
@@ -389,28 +388,25 @@ def ma_curve(
     older = vals[slope_bars] - vals[0]
     newer = vals[-1] - vals[slope_bars]
 
-    # A swoop is the slope TURNING, which includes both a sign flip and a clear
-    # bend in the same direction. Requiring a strict sign flip was too literal:
-    # on GBPJPY 5m it cut his setups from 430 to 30 and left the strategy taking
-    # one trade in 19,800 bars, because "coming down and swooping" describes a
-    # broad arc rather than a three-bar reversal. What he points at is the second
-    # derivative -- the line bending upward, whether or not it has finished
-    # falling yet.
-    bend = newer - older
-    if bend == 0:
-        return 0
-    # Scale the bend against the line's own movement so this means the same thing
-    # on gold as on GBPJPY.
-    span = max(abs(older), abs(newer))
-    if span <= 0:
-        return 0
-    # How pronounced the bend has to be, as a fraction of the line's own movement.
-    # At 0.25 this fired on 80% of bars, which is a moving average always wobbling
-    # slightly rather than the arc he points at -- and an 80% vote is a free vote,
-    # exactly the problem that removing the side-of-the-50 vote was meant to fix.
-    if abs(bend) < span * min_bend:
-        return 0        # running straight, not curving
-    return 1 if bend > 0 else -1
+    # HIS SWOOP IS A SIGN FLIP, BECAUSE THAT IS WHAT HE SAYS IT IS:
+    #
+    #   "Look at our moving averages. THEY'RE COMING DOWN and they're swooping...
+    #    THEY'RE STARTING TO TURN UP. Once they start to turn up, most the time
+    #    this momentum is going to pull all the way to the upside, because they're
+    #    CURVING."
+    #
+    # Coming down, then turning up. Falling, then rising. There is no third state
+    # in his description and no threshold to set.
+    #
+    # min_bend was mine, and the reason I introduced it is exactly the override
+    # this project exists to stop: his literal rule cut setups from 430 to 30, I
+    # decided that was too few, and I invented a knob to loosen him. A number
+    # chosen because I disliked his answer is not his rule. Deleted.
+    if older < 0 and newer > 0:
+        return 1
+    if older > 0 and newer < 0:
+        return -1
+    return 0
 
 
 def big_candle(
