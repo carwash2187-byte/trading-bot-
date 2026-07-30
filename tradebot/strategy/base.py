@@ -12,6 +12,7 @@ applied uniformly no matter what logic sits on top.
 from __future__ import annotations
 
 import abc
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 
@@ -29,6 +30,8 @@ from ..news.calendar import NewsWindow
 from ..risk.journal import TradeJournal
 from ..risk.limits import RiskManager
 from ..risk.sizing import size_position
+
+log = logging.getLogger("tradebot.strategy")
 
 
 @dataclass
@@ -88,6 +91,9 @@ class Enter(Action):
     take_profit: float | None = None
     risk_pct: float | None = None       # defaults to the configured limit
     comment: str = ""
+    # Overrides the instrument's own rate when set to anything but 1.0. Normally
+    # left alone: the conversion is a property of the contract, so it lives on
+    # the Instrument and strategies should not have to know about it.
     quote_to_account_rate: float = 1.0
     # A fixed lot size, instead of one derived from a risk percentage.
     #
@@ -130,7 +136,18 @@ class Enter(Action):
         # divided by a tiny stop distance is a huge position -- and the right
         # response is to trade the affordable size, not to ask the broker for
         # an impossible one and treat its refusal as an emergency.
-        notional_per_lot = entry_price * context.instrument.contract_size
+        # The notional has to be in the ACCOUNT's currency before it is compared
+        # against the account's free margin. Skipping that conversion is the same
+        # bug as skipping it in the sizer, and it bites harder: on GBPJPY one lot
+        # is 21.6 MILLION yen, which measured against dollars of margin caps the
+        # position at 0.0003 lots and refuses every trade on the pair. It cost
+        # this project 14 valid setups and looked exactly like having no signal.
+        rate = (
+            self.quote_to_account_rate
+            if self.quote_to_account_rate != 1.0
+            else context.instrument.quote_to_account_rate
+        )
+        notional_per_lot = entry_price * context.instrument.contract_size * rate
         affordable = 0.0
         if notional_per_lot > 0:
             affordable = (
@@ -150,10 +167,15 @@ class Enter(Action):
                 risk_pct=self.risk_pct or risk.limits.risk_per_trade,
                 entry_price=entry_price,
                 stop_price=self.stop_loss,
-                quote_to_account_rate=self.quote_to_account_rate,
+                quote_to_account_rate=rate,
                 max_lots=affordable,
             )
             if not sized.tradable:
+                # Loudly. A silent refusal looks identical to having no signal,
+                # which is how a broken currency conversion hid on every
+                # yen-quoted pair for the life of this project.
+                log.warning("size refused for %s: %s", self.comment or "?",
+                            sized.reason or "no reason given")
                 return False
             lots = sized.lots
 

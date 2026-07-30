@@ -65,7 +65,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..brokers.base import Candle
-from ..data.indicators import ema
+from ..data.indicators import ema, sma
 
 
 @dataclass(frozen=True)
@@ -348,3 +348,100 @@ def buildup_zone(
     if all(best.low <= b.close <= best.high for b in recent):
         return None
     return best
+
+
+def ma_curve(
+    candles: list[Candle],
+    period: int = 8,
+    slope_bars: int = 3,
+    simple: bool = True,
+) -> int:
+    """His "swoop" — the moving averages curving, which he treats as momentum.
+
+        "what are our moving averages doing here, guys? And this is very important
+        to pay attention to. Look at our moving averages. They're coming down and
+        they're swooping... they're starting to turn up. Once they start to turn
+        up, most the time this momentum is going to pull all the way to the
+        upside, okay? Because they're CURVING. When they start to curve like that
+        ... they start to pull or push down on candles."
+
+        "if this 50 moving average can come below our 8 moving average, cross
+        below here, and then start to SWOOP to the upside... we're going to be
+        looking for buys"
+
+    A crossover says the two lines have swapped. The swoop says the line has
+    stopped falling and started rising — a change in the *rate*, not the level.
+    He calls it out as "very important to pay attention to" and it was not in the
+    code at all.
+
+    Returns +1 when the average is curving up (falling less, then rising), -1 when
+    curving down, 0 when it is running straight.
+    """
+    if len(candles) < period + slope_bars * 2 + 1:
+        return 0
+    closes = [c.close for c in candles]
+    line = sma(closes, period) if simple else ema(closes, period)
+    vals = [v for v in line[-(slope_bars * 2 + 1):] if v is not None]
+    if len(vals) < slope_bars * 2 + 1:
+        return 0
+
+    older = vals[slope_bars] - vals[0]
+    newer = vals[-1] - vals[slope_bars]
+
+    # A swoop is the slope TURNING, which includes both a sign flip and a clear
+    # bend in the same direction. Requiring a strict sign flip was too literal:
+    # on GBPJPY 5m it cut his setups from 430 to 30 and left the strategy taking
+    # one trade in 19,800 bars, because "coming down and swooping" describes a
+    # broad arc rather than a three-bar reversal. What he points at is the second
+    # derivative -- the line bending upward, whether or not it has finished
+    # falling yet.
+    bend = newer - older
+    if bend == 0:
+        return 0
+    # Scale the bend against the line's own movement so this means the same thing
+    # on gold as on GBPJPY.
+    span = max(abs(older), abs(newer))
+    if span <= 0:
+        return 0
+    if abs(bend) < span * 0.25:
+        return 0        # running straight, not curving
+    return 1 if bend > 0 else -1
+
+
+def big_candle(
+    candles: list[Candle], size_mult: float = 1.5, average_bars: int = 20
+) -> int:
+    """His trigger candle, judged on SIZE rather than on swallowing the last bar.
+
+        "We just need to get some bullish candles just like that. Okay, there we
+        have our trade. Why do we take this trade here and not here? Because we're
+        still kind of coming down here. We haven't shown a bullish move. We haven't
+        seen bullish candles going to the upside yet, but now we have. This is a
+        very big engulfing candle."
+
+        "why do I still believe this is a bullish trade because LOOK AT THE SIZE OF
+        THIS CANDLE this is a very large engulfing bullish candle"
+
+        "overall this is pretty much engulfing every candle from the last IT'S BEEN
+        A COOL MINUTE SINCE IT'S BEEN THAT BIG"
+
+    The distinction matters. ``engulfing`` here requires the bar to cover the
+    previous bar's entire range, which is the textbook definition and stricter than
+    what he describes. Measured on GBPJPY 5m, 31 of his setups armed with a buildup
+    present and the textbook engulfing agreed with NONE of them -- the strategy
+    could not fire at all. What he actually points at is a candle that is simply
+    big for the moment and pointing the right way, which is what this returns.
+
+    +1 for a big bullish candle, -1 for a big bearish one, 0 for ordinary bars.
+    """
+    if len(candles) < average_bars + 2:
+        return 0
+    bar = candles[-1]
+    body = abs(bar.close - bar.open)
+    if body <= 0:
+        return 0
+    recent = candles[-average_bars - 1:-1]
+    avg = sum(abs(c.close - c.open) for c in recent) / len(recent)
+    if avg <= 0 or body < avg * size_mult:
+        return 0
+    return 1 if bar.close > bar.open else -1

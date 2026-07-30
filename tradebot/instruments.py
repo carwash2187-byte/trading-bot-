@@ -46,6 +46,18 @@ class Instrument:
     description: str = ""
     # Symbols whose prices tend to move together. Used by the correlation cap.
     correlation_group: str | None = None
+    # How much one unit of the QUOTE currency is worth in the account currency.
+    #
+    # For a USD account trading EURUSD this is 1.0: profit already arrives in
+    # dollars. For GBPJPY it is roughly 1/155, because profit arrives in yen.
+    #
+    # Leaving it at 1.0 on a yen-quoted pair does not produce a wrong size -- it
+    # produces NO TRADE AT ALL. The sizer values every pip about 150x too highly,
+    # asks for 0.00008 lots, and that rounds below the minimum, so every single
+    # signal is refused for the life of the account. Measured on GBPJPY, which is
+    # the one pair MambaFX says he will trade "for the rest of my life": 14 valid
+    # setups found, 0 trades taken, and the refusals were swallowed silently.
+    quote_to_account_rate: float = 1.0
 
     def __post_init__(self) -> None:
         if self.contract_size <= 0:
@@ -102,18 +114,26 @@ class Instrument:
         exit_: float,
         lots: float,
         is_long: bool,
-        quote_to_account_rate: float = 1.0,
+        quote_to_account_rate: float | None = None,
     ) -> float:
         """Profit/loss converted into the account's currency.
 
-        ``quote_to_account_rate`` is how many account-currency units one unit
-        of quote currency buys. For a USD account trading XAUUSD (quote USD)
-        that is 1.0; for a USD account trading EURGBP (quote GBP) it is the
-        GBPUSD rate.
+        ``quote_to_account_rate`` is how many account-currency units one unit of
+        quote currency buys. For a USD account trading XAUUSD (quote USD) that is
+        1.0; for a USD account trading GBPJPY it is about 1/155.
+
+        Defaults to the instrument's own rate rather than to 1.0, because every
+        caller that forgot to pass it was silently booking yen as dollars. The
+        paper broker did exactly that: a GBPJPY trade risking $4.46 was settled as
+        a $730 move against a $150 balance, which drove the account negative and
+        printed a 267% drawdown. Defaulting to 1.0 here made "I forgot the
+        conversion" indistinguishable from "there is no conversion to do".
         """
-        if quote_to_account_rate <= 0:
+        rate = (self.quote_to_account_rate if quote_to_account_rate is None
+                else quote_to_account_rate)
+        if rate <= 0:
             raise InstrumentError("quote_to_account_rate must be > 0")
-        return self.pnl_in_quote(entry, exit_, lots, is_long) * quote_to_account_rate
+        return self.pnl_in_quote(entry, exit_, lots, is_long) * rate
 
     def value_per_price_unit(self, lots: float, quote_to_account_rate: float = 1.0) -> float:
         """Account-currency value of a 1.00 price move at this size."""

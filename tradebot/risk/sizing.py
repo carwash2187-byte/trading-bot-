@@ -33,6 +33,11 @@ class SizedTrade:
     actual_risk: float          # what we will lose after lot rounding
     stop_distance: float
     tradable: bool
+    # Why the size was refused, when it was. A bare False is not enough: a
+    # refusal that carries no reason is indistinguishable from a strategy with no
+    # signal, and that is exactly how every JPY-quoted pair came to silently
+    # never trade in this project.
+    reason: str = ""
 
     @property
     def rejected(self) -> bool:
@@ -91,6 +96,22 @@ def size_position(
 
     lots = instrument.round_lots(raw_lots)
     if lots <= 0:
+        why = (
+            f"{instrument.symbol}: wanted {raw_lots:.6f} lots, below the "
+            f"{instrument.min_lot} minimum"
+        )
+        # The overwhelmingly common cause is a missing currency conversion. A
+        # yen-quoted pair whose quote_to_account_rate is left at 1.0 values every
+        # pip about 150x too highly, so the sizer asks for a fraction of the
+        # minimum lot and the trade is refused -- on every single signal, forever.
+        if quote_to_account_rate == 1.0 and instrument.quote_currency not in (
+            "USD", instrument.base_currency
+        ):
+            why += (
+                f" -- quote currency is {instrument.quote_currency} but "
+                f"quote_to_account_rate is 1.0, which is almost certainly a "
+                f"missing conversion"
+            )
         return SizedTrade(
             lots=0.0,
             units=0.0,
@@ -98,6 +119,7 @@ def size_position(
             actual_risk=0.0,
             stop_distance=stop_distance,
             tradable=False,
+            reason=why,
         )
 
     units = instrument.units(lots)

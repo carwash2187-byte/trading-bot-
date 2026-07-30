@@ -2055,3 +2055,88 @@ price is always one side of the 50, so the MA always contributes a vote, which m
 threshold of two is really "the MA plus any one other thing". That is not the
 "confluence" he describes, and the vote threshold was already flagged as mine rather
 than his. Next cycle's job.
+
+---
+
+# HIS SUPER SCALPER — and the currency bug that hid in four places
+
+Built `mamba_scalper.py` from the video where he sets up the whole thing on a blank
+chart. Getting it to take a single trade uncovered a chain of five defects, four of
+them the same root cause, and all four would have broken real trading on the one
+pair he says he will trade "for the rest of my life".
+
+## The strategy, entirely his
+
+> "we need to set up two things. Okay, that's just **two simple moving averages**...
+> You're going to make it a **50 simple** moving average... Then you're going to take
+> another moving average and you're going to go ahead and make this a **eight**... You
+> now have a **eight and a 50** moving average on your screen. **That's all we're going
+> to be using.**"
+> "**simple ones are a lot better** by the way, but I use the moving averages and I use
+> **momentum**."
+> "Anytime we see our **50 moving average cross over above**... It crossed above our 8
+> moving average. **We're looking for sells.**"
+> "if this 50 moving average can come below our 8 moving average, **cross below here,
+> and then start to swoop to the upside**... we're going to be looking for **buys**."
+> "what are our moving averages doing here, guys? And **this is very important to pay
+> attention to**... They're coming down and they're **swooping**... Once they start to
+> turn up, most the time this **momentum is going to pull all the way to the upside**...
+> Because they're **curving**."
+> "We just need to get some **bullish candles** just like that... This is a very **big
+> engulfing candle**. So, we're going to go and take our buy position right here."
+> "we're going to put our **stops below that previous support line**. Okay, **17 pips**.
+> And we're going to target a **1:1 ratio**."
+> "Remember, this is **only GJ**... **GJ is my [thing]** and uh it's pretty much what
+> I'm going to be trading for the rest of my life."
+
+## FIVE DEFECTS, found one at a time by asking why it took zero trades
+
+**1. I collapsed his sequence into an instant.** Requiring the crossover, the swoop,
+the buildup and the big candle all on the same bar gave 0 trades in 6,600 samples --
+the funnel ran 3.03% for the cross, 0.68% with the swoop, 0.06% with the buildup,
+0.00% with the candle. He does not do that: "that's all we're going to wait for,
+right? **still would like to see it break above a bit before we take a buy entry**...
+right here we start to break above." The cross ARMS the setup; the candle fires it
+later. Fixed with an arming window.
+
+**2. I checked the swoop at the wrong moment.** He says "cross below here, **and then**
+start to swoop", so the swoop comes AFTER the cross. Checking it at the cross bar
+cannot ever be true: at an upward cross the fast average is already rising, so "was
+falling, now rising" is false by construction. 107 armed setups, 0 trades.
+
+**3. My engulfing was stricter than his.** The textbook definition requires the bar to
+swallow the previous bar's whole range. His emphasis is size -- "**look at the size of
+this candle**", "it's been a cool minute since it's been that big". The textbook version
+agreed with **none** of his 31 armed setups. Added `big_candle`, judged on size alone.
+
+**4. THE CURRENCY BUG, IN FOUR PLACES.** GBPJPY settles in yen, and the codebase assumed
+the quote currency is always the account currency:
+
+   * **The sizer.** Told a yen is a dollar it valued every pip ~164x too highly, asked
+     for 0.00008 lots against a 0.01 minimum, and refused every signal.
+   * **The margin cap.** `notional_per_lot = price x contract_size` gave **21.6 million
+     yen** for one lot, measured against dollars of free margin, capping the position at
+     0.0003 lots.
+   * **The P&L settlement.** `pnl_in_account` defaulted the rate to 1.0 and the paper
+     broker never passed one, so a trade risking $4.46 was booked as a **$730** move
+     against a $150 balance -- driving the account negative and printing a **267%
+     drawdown** and **-6.04x** growth.
+   * **And every refusal was silent.** `size_position` returned a bare `False` and the
+     engine swallowed it, so 14 valid setups produced no trades and looked exactly like
+     a strategy with no signal.
+
+   Fixed: `quote_to_account_rate` now lives on the `Instrument`, the margin cap converts
+   the notional, `pnl_in_account` defaults to the instrument's own rate rather than 1.0,
+   and refused sizes carry a reason and are logged.
+
+**5. My stop is still three times his width, and it silently disables his target.**
+With all four currency bugs fixed the strategy trades: 16 trades, 31.2% winners,
+average loss 0.33% of the account, worst drawdown 2%, growth 1.00x. But 1:1, 1:3 and
+1:6 all return **identical** results, and the reason is that **every single trade closes
+on the 35-minute clock** -- none reaches the target, none reaches the stop. A 0.25%
+stop needs a 0.25% move inside 35 minutes and GBPJPY moves about 0.1%, so the clock
+always wins first. His 17 pips is **0.087%**, which is reachable. The take-profit is
+therefore the tenth rule in this project that was present and inert.
+
+Next: place the stop AT his width rather than rejecting setups whose structure sits
+wider, so his 1:1 has something to reach.
