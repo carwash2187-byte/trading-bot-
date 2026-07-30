@@ -57,6 +57,7 @@ from __future__ import annotations
 
 from datetime import timedelta, timezone
 
+from ..data.ohlc import timeframe_minutes
 from ..brokers.base import Candle, OrderSide
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
@@ -75,7 +76,11 @@ class MambaLevels(Strategy):
             enters before the break -- "I don't like to trade the breakouts
             necessarily but the pre-breakouts, I like to get in there before it
             breaks out" -- so this is an approach zone, not a break.
-        trend_bars: Bars for the higher-timeframe direction he checks first.
+        (trend_bars deleted -- his direction timeframe is the H4 and always was:
+        "we're gonna start on the h4, ALWAYS h4, you can use the daily as well, i
+        like the h4." Four hours is 240 minutes, so the bar count is 240 divided
+        by the bar length. Arithmetic, not a parameter. The old 96 and 48 were
+        mine and neither of them was four hours.)
         session / window_minutes: His trading window. Empty session trades around
             the clock, which is what he does on gold and crypto.
         max_trades_per_day: 3. "my rule is I can only take three trades max in one
@@ -96,7 +101,7 @@ class MambaLevels(Strategy):
         map_tolerance_pct: float = 0.0004,
         map_min_touches: int = 3,
         at_level_pct: float = 0.0006,
-        trend_bars: int = 96,
+        trend_bars: int = 0,
         session: str = "newyork",
         window_minutes: int = 210,
         max_trades_per_day: int = 2,
@@ -107,7 +112,8 @@ class MambaLevels(Strategy):
         self.map_tolerance_pct = map_tolerance_pct
         self.map_min_touches = map_min_touches
         self.at_level_pct = at_level_pct
-        self.trend_bars = trend_bars
+        self.trend_bars = (trend_bars if trend_bars > 0
+                           else 240 // max(1, timeframe_minutes(self.timeframe)))
         self.session = session
         self.window_minutes = window_minutes
         self.max_trades_per_day = max_trades_per_day

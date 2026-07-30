@@ -39,3 +39,16 @@ data/history/
 
 # Daily account record — real balances, not for sharing
 reports/
+
+# Video frames and downloads from the research agents. They write into the repo
+# root sometimes, and a blind "git add -A" swept 41 stills into a PUBLIC repo.
+# Ignore the media outright rather than rely on remembering.
+frames_*/
+caps/
+*.jpg
+*.jpeg
+*.png
+*.mp4
+*.webm
+*.mkv
+*.vtt

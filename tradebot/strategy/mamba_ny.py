@@ -56,6 +56,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 
+from ..data.ohlc import timeframe_minutes
 from ..brokers.base import Candle, OrderSide
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
@@ -86,7 +87,11 @@ class MambaNY(Strategy):
         zone_pct: Half-height of a level, as a fraction of price. He draws boxes,
             and says outright they need not be exact.
         min_touches: 2. "a couple touches... it's not perfect."
-        trend_bars: Bars used to read "which way is the market moving currently".
+        (trend_bars deleted -- his direction timeframe is the H4 and always was:
+        "we're gonna start on the h4, ALWAYS h4, you can use the daily as well, i
+        like the h4." Four hours is 240 minutes, so the bar count is 240 divided
+        by the bar length. Arithmetic, not a parameter. The old 96 and 48 were
+        mine and neither of them was four hours.)
         reward: 3.0. "a nice little one to three."
         max_hold_minutes: 35. "30 minutes, 35 minutes at the most."
         max_trades_per_day: 3.
@@ -110,7 +115,7 @@ class MambaNY(Strategy):
         zone_lookback: int = 72,
         zone_pct: float = 0.0004,
         min_touches: int = 2,
-        trend_bars: int = 48,
+        trend_bars: int = 0,
         reward: float = 3.0,
         max_hold_minutes: int = 35,
         max_trades_per_day: int = 2,
@@ -132,7 +137,8 @@ class MambaNY(Strategy):
         self.zone_lookback = zone_lookback
         self.zone_pct = zone_pct
         self.min_touches = min_touches
-        self.trend_bars = trend_bars
+        self.trend_bars = (trend_bars if trend_bars > 0
+                           else 240 // max(1, timeframe_minutes(self.timeframe)))
         self.reward = reward
         self.max_hold_minutes = max_hold_minutes
         self.max_trades_per_day = max_trades_per_day

@@ -3590,3 +3590,47 @@ Leo's call and not this file's.
 * **"stick to one session... stick to one or two pairs"** — a refusal, so a rule.
 * **"catch my thousand pips and I'm out"** — flagged as unusable. A 1,000-pip target on a
   5-minute breakout inside an hour would mean the bot never takes profit. NOT built.
+
+## `trend_bars` DELETED — his direction timeframe is the H4, and "four hour" is arithmetic
+
+> "we're gonna start on the h4, **ALWAYS h4**, you can use the daily as well, i like the h4"
+
+Four hours is 240 minutes, so the bar count is 240 divided by the bar length. My values were
+**96** in `mamba_levels` (eight hours) and **48** in `mamba_ny` — neither of them four hours
+in the first case, and the second only right by accident. Both derive now.
+
+Fires after: level map 66.8% of bars, NY break 6.1%. The level map's number is how often his
+SETUP EXISTS, not how often he trades — his two-trade day cap does that, which is his actual
+structure: watch all day, take two.
+
+## "MILLIONS As a TEENAGER" (ha632hPy-40) — no chart in a single frame
+
+112 frames read at 1440p. No platform, no chart, no trade, no indicator, no order panel.
+Career advice and cars. **Nothing in it changes a line of the bot**, and recording that is
+worth as much as a rule, because it means nothing here can override what his trade videos
+established.
+
+The one durable thing: he contradicts himself on demo vs live **inside fifty seconds** —
+"trade on demo, it's the key, **don't use real money**" then "**make sure it is live** for a
+while" then "so just trade on a live account". And "**lose as much as you can**", which is
+flatly against the two-loss rule built from his other videos.
+
+Also: the prop firm he personally sells caps a **daily loss at 5%** — a trader using his own
+13-21% or 25% risk quotes blows that account on one loser. He never reconciles it.
+
+Download note for future agents: YouTube blocks the default client on this channel now.
+`--extractor-args "youtube:player_client=android_vr"` works and exposes up to 2160p.
+
+## STILL OPEN — `min_votes` COUNTS THE WRONG THING
+
+He does count, once, and it is three:
+
+> "So, if price is trending to the downside and we see support here, there's only one more
+> thing we need. **We got two confirmations. Our third confirmation is a break of that
+> support.**"
+
+But his three are **trend, level, and the break of it** — one from each stage of his
+sequence. `min_votes=3` counts three *pattern detectors* agreeing (double top, engulfing,
+fair value gap, sweep...), which is a different taxonomy entirely. So the number matches his
+by coincidence and the thing being counted does not. Next cycle's job: make the three
+confirmations his three, not N generic votes.
