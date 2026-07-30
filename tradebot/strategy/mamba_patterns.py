@@ -355,6 +355,7 @@ def ma_curve(
     period: int = 8,
     slope_bars: int = 3,
     simple: bool = True,
+    min_bend: float = 1.0,
 ) -> int:
     """His "swoop" — the moving averages curving, which he treats as momentum.
 
@@ -403,7 +404,11 @@ def ma_curve(
     span = max(abs(older), abs(newer))
     if span <= 0:
         return 0
-    if abs(bend) < span * 0.25:
+    # How pronounced the bend has to be, as a fraction of the line's own movement.
+    # At 0.25 this fired on 80% of bars, which is a moving average always wobbling
+    # slightly rather than the arc he points at -- and an 80% vote is a free vote,
+    # exactly the problem that removing the side-of-the-50 vote was meant to fix.
+    if abs(bend) < span * min_bend:
         return 0        # running straight, not curving
     return 1 if bend > 0 else -1
 

@@ -49,6 +49,7 @@ from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 from .mamba import SESSION_OPENS_UTC
 from .mamba_patterns import (
     buildup_zone,
+    ma_curve,
     double_top_bottom,
     engulfing,
     fair_value_gap,
@@ -101,7 +102,9 @@ class MambaSignals(Strategy):
         max_hold_minutes: int = 35,
         stop_bars: int = 24,
         zone_pct: float = 0.0004,
-        use_ma: bool = True,
+        use_ma: bool = False,
+        use_ma_swoop: bool = True,
+        swoop_bend: float = 1.0,
         ma_fast: int = 8,
         ma_slow: int = 50,
         h4_bars: int = 0,
@@ -146,7 +149,26 @@ class MambaSignals(Strategy):
         self.max_hold_minutes = max_hold_minutes
         self.stop_bars = stop_bars
         self.zone_pct = zone_pct
+        # Whether price merely being on one side of the 50 gets a vote.
+        #
+        # OFF, and that is a correction rather than a preference. Price is always
+        # on one side of a moving average, so this voted on 100.0% of bars -- which
+        # made a threshold of two mean "the moving average plus any single other
+        # thing". That is not the confluence he describes, it is a free vote.
+        #
+        # And he never asks the question this answers. He does not say "price is
+        # above the 50, so buy". He names two EVENTS: "see if we can get a moving
+        # average crossover" and "they're coming down and they're swooping...
+        # once they start to turn up". Both of those are things that happen, not
+        # states that persist, and both are below.
         self.use_ma = use_ma
+        # "what are our moving averages doing here, guys? And this is very
+        #  important to pay attention to... they're SWOOPING... Once they start to
+        #  turn up, most the time this momentum is going to pull all the way to the
+        #  upside... Because they're CURVING."
+        self.use_ma_swoop = use_ma_swoop
+        # How hard the averages must be bending to count as his swoop.
+        self.swoop_bend = swoop_bend
         # His two moving averages, read out as he builds them on a blank chart:
         #
         #   "we need to set up two things. Okay, that's just TWO SIMPLE MOVING
@@ -356,6 +378,13 @@ class MambaSignals(Strategy):
                 d = self._tf_direction(candles, bars)
                 if d:
                     out[key] = d
+
+        # "this is very important to pay attention to" -- the averages bending.
+        if self.use_ma_swoop:
+            swoop = ma_curve(candles, period=self.ma_fast,
+                             min_bend=self.swoop_bend)
+            if swoop:
+                out["swoop"] = swoop
 
         # "our moving averages are above everything... gonna pull our trade to
         # the downside"
