@@ -1695,3 +1695,50 @@ warns when the server had fewer bars than asked for, and raises if there is genu
 no history at any width. UK100 now returns 19,618 bars where it returned 0. Three
 regression tests cover the narrowing, the short-history case, and the genuinely-empty
 case.
+
+---
+
+## CYCLE 6 — two mechanics found by scanning all 144 transcripts against the notes
+
+### HE DOES NOT WAIT FOR THE CANDLE TO CLOSE
+
+> "**As soon as it breaks, we're not waiting for candle to close**, we're not waiting
+> for no [bleep] other confirmation."
+> "i **don't take trades based on closed candles i take trades based on moving
+> candles**"
+
+Every strategy in this project except `MambaBreakout` tests `bar.close` against the
+level, which means waiting for the bar to finish -- the opposite of what he says.
+Added `wait_for_close` to `MambaSignals`. When off, the pattern only has to have been
+reached during the bar; the fill still happens at the bar's close, which for a
+breakout is a WORSE price than the level, so it cannot flatter the result.
+
+### HE TRADES THREE SESSIONS, NOT ONE
+
+> "16 targets hit, one stop loss last week, uh **6 in one for London session** and then
+> for **Asia session, 10 in one**."
+> "yesterday during **Asia session**, I took that trade that I showed you guys"
+> "All righty, boys, you know that yesterday **during Asia session** I tried taking two
+> trades."
+
+Asia and London as well as New York, and he counts them separately. Built as a
+`sessions` tuple replacing the single session.
+
+| sessions traded | growth | trades/day | win% | drop |
+|-----------------|--------|-----------|------|------|
+| New York only | 1.21x | 2.98 | 47.1% | 27% |
+| London + New York | 0.62x | 2.98 | 41.3% | 42% |
+| Asia + London + New York | 0.52x | 2.98 | 42.0% | 48% |
+| all three, 4 a day | 0.44x | 3.97 | 40.8% | 57% |
+| all three, 6 a day | 0.22x | 5.95 | 42.1% | 79% |
+
+### Also recorded, not built
+
+He says in one video "Zero indicators, just pure price action, trends, market
+structure" while using RSI, Bollinger bands and moving averages in others. Both are
+his, from different videos, so both stay available rather than one overriding the other.
+
+And on brokers, repeatedly: "there's **no spread** like it's pretty much zero", "when I
+enter that trade, I am **instantly in profit, if not at break even, because there's no
+spread at all**". Every backtest in this project charges spread, so the numbers here are
+pessimistic against the conditions he describes trading in.

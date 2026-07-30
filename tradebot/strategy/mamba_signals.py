@@ -87,7 +87,9 @@ class MambaSignals(Strategy):
         self,
         min_votes: int = 2,
         session: str = "newyork",
+        sessions: tuple[str, ...] = (),
         window_minutes: int = 210,
+        wait_for_close: bool = True,
         reward: float = 3.0,
         max_hold_minutes: int = 35,
         stop_bars: int = 24,
@@ -105,7 +107,23 @@ class MambaSignals(Strategy):
     ) -> None:
         self.min_votes = min_votes
         self.session = session
+        # "16 targets hit, one stop loss last week, 6 in one for London session
+        # and then for Asia session, 10 in one." He trades Asia and London as
+        # well as New York, and counts them separately. When this is set it
+        # replaces the single `session`.
+        self.sessions = sessions
         self.window_minutes = window_minutes
+        # "As soon as it breaks, we're not waiting for candle to close, we're not
+        # waiting for no other confirmation."
+        # "i don't take trades based on closed candles i take trades based on
+        # moving candles."
+        #
+        # So his trigger is the level being touched, not a bar closing beyond it.
+        # With this False the pattern only has to have been reached during the
+        # bar. The fill still happens at the bar's close, which for a breakout is
+        # a WORSE price than the level itself -- so this cannot flatter the
+        # result, it can only cost.
+        self.wait_for_close = wait_for_close
         self.reward = reward
         self.max_hold_minutes = max_hold_minutes
         self.stop_bars = stop_bars
@@ -144,6 +162,9 @@ class MambaSignals(Strategy):
     # -- asking each pattern which way it points -------------------------
 
     def votes(self, candles: list[Candle]) -> dict[str, int]:
+        # The engulfing test is the one vote that depends on a completed bar, so
+        # when he is not waiting for the close it is read from the bar so far.
+
         """What every pattern says. +1 buy, -1 sell, 0 no opinion."""
         out: dict[str, int] = {}
 
@@ -228,15 +249,19 @@ class MambaSignals(Strategy):
         return h4 or daily
 
     def _in_session(self, now) -> bool:
-        if not self.session:
-            return True
-        open_at = SESSION_OPENS_UTC.get(self.session)
-        if open_at is None:
+        names = self.sessions or ((self.session,) if self.session else ())
+        if not names:
             return True
         utc = now.astimezone(timezone.utc)
-        start = utc.replace(hour=open_at.hour, minute=open_at.minute,
-                            second=0, microsecond=0)
-        return start <= utc <= start + timedelta(minutes=self.window_minutes)
+        for name in names:
+            open_at = SESSION_OPENS_UTC.get(name)
+            if open_at is None:
+                continue
+            start = utc.replace(hour=open_at.hour, minute=open_at.minute,
+                                second=0, microsecond=0)
+            if start <= utc <= start + timedelta(minutes=self.window_minutes):
+                return True
+        return False
 
     # -- the rules -------------------------------------------------------
 

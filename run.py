@@ -254,6 +254,17 @@ REGISTRY = {
     # On his 1-minute chart -- "It's very important that you use a 5-minute or
     # 1-minute chart simply because we are super scalping." 45 days of 1m bars at
     # 2%: BTC 1.04x on 2.75 a day, LTC 0.92x, ETH 0.97x, US30 0.78x.
+    # All three of his sessions -- "6 in one for London session and then for Asia
+    # session, 10 in one". Ten months, 2%: London+NY 0.62x, all three 0.52x,
+    # against 1.21x for New York alone.
+    "mamba_signals_all_sessions": lambda: MambaSignals(
+        min_votes=2, sessions=("tokyo", "london", "newyork")
+    ),
+    # His intrabar trigger -- "As soon as it breaks, we're not waiting for candle
+    # to close, we're not waiting for no other confirmation."
+    "mamba_signals_intrabar": lambda: MambaSignals(
+        min_votes=2, wait_for_close=False
+    ),
     "mamba_signals_1m": lambda: MambaSignals(
         min_votes=2, max_hold_minutes=35, stop_bars=20
     ),
