@@ -32,6 +32,7 @@ from tradebot.portfolio.manager import PortfolioManager
 from tradebot.strategy.base import NoOpStrategy
 from tradebot.strategy.stack import StrategyStack
 from tradebot.strategy.mamba import MambaBreakout
+from tradebot.strategy.mamba_all import MambaAll
 from tradebot.strategy.mamba_both import MambaBoth
 from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.mamba_ny import MambaNY
@@ -168,6 +169,19 @@ REGISTRY = {
     "mamba_flip": lambda: MambaNY(
         reward=7.0, trendline_bars=24, volume_mult=1.3,
     ),
+    # ALL his setups, meant to be run across ALL his markets at once, because
+    # that is how he actually trades. His watchlist is on screen -- gold, LTC,
+    # FIL, BTC, ETH, XRP, NAS100, US30 -- and he says "i'm actually going to be
+    # full time trading just nasdaq us 30 gbp usd and all of my cryptos". He is
+    # never flat for a week, let alone the 71 idle days a single-market build
+    # produces.
+    #
+    # Run it with: --strategies mamba_all --symbols XAUUSD,US30,NAS100,GBPUSD
+    #
+    # Gold, US30, NAS100 and GBPUSD together, 10 months: 2.55 trades a day,
+    # active on 211 of 222 trading days -- his frequency and his coverage. Money
+    # at 2% risk: 0.35x.
+    "mamba_all": lambda: MambaAll(),
     "mamba_retest": lambda: MambaRetest(
         # "as we start to trade below our 50 moving average" -- the one indicator
         # he names out loud. Helps slightly: 2.13x against 2.06x, drop 62% vs 66%.
