@@ -50,8 +50,26 @@ class RiskLimits:
     """Configuration for the risk layer. All fractions, not percents."""
 
     risk_per_trade: float = 0.01        # 1% of equity per trade
-    daily_loss_limit: float = 0.03      # halt for the day at -3%
-    max_drawdown_limit: float = 0.06    # halt entirely at -6% from peak
+    # Deliberately loose. MambaFX ends his own day on two losses -- "If the second
+    # one doesn't work out, we are done for the day and we come back tomorrow" --
+    # and that rule lives in the strategies as max_losses_per_day. At his stated
+    # 10-25% risk, two losses is 20-50%, so a tighter percentage brake here would
+    # trip before his rule could and would quietly replace it with mine.
+    #
+    # These were 3% and 6%, inherited from a prop firm's rulebook. This is Leo's
+    # own account with nothing to breach, so they exist now only as a last-resort
+    # backstop against something going genuinely wrong.
+    # OFF by default. MambaFX ends his own day on two losses -- "If the second one
+    # doesn't work out, we are done for the day and we come back tomorrow and we do
+    # it again" -- and that rule lives in the strategies as max_losses_per_day.
+    #
+    # These were 3% and 6%, inherited from a prop firm's rulebook that has nothing
+    # to do with Leo's own account. At his stated 10-25% risk a 3% daily limit trips
+    # on the FIRST loss, so my brake fired before his rule could speak and quietly
+    # replaced his method with mine. Set to a number to re-enable; None means his
+    # rule is the only thing that stops the day.
+    daily_loss_limit: float | None = None
+    max_drawdown_limit: float | None = None
     max_correlated_positions: int = 2
     max_total_positions: int = 5
     # Halt at this fraction of each limit rather than at the limit itself.
@@ -76,11 +94,17 @@ class RiskLimits:
     floor_balance: float = 0.0
 
     def __post_init__(self) -> None:
-        for name in ("risk_per_trade", "daily_loss_limit", "max_drawdown_limit"):
+        if not 0 < self.risk_per_trade < 1:
+            raise ValueError("risk_per_trade must be a fraction between 0 and 1")
+        for name in ("daily_loss_limit", "max_drawdown_limit"):
             value = getattr(self, name)
+            if value is None:
+                continue        # off: the strategy's own rule ends the day
             if not 0 < value < 1:
                 raise ValueError(f"{name} must be a fraction between 0 and 1")
-        if self.daily_loss_limit > self.max_drawdown_limit:
+        if (self.daily_loss_limit is not None
+                and self.max_drawdown_limit is not None
+                and self.daily_loss_limit > self.max_drawdown_limit):
             raise ValueError(
                 "daily_loss_limit above max_drawdown_limit: the daily breaker "
                 "could never trip before the account-level one"
@@ -235,7 +259,7 @@ class RiskManager:
         # and a floor that only blocks new entries still lets the trade that is
         # already open ride through the line. The rule that actually protects
         # the account is: never be in a position whose full loss would cross it.
-        if self.limits.floor_balance > 0:
+        if self.limits.floor_balance > 0 and self.limits.max_drawdown_limit is not None:
             floor = self.limits.floor_balance * (
                 1
                 - self.limits.max_drawdown_limit * self.limits.safety_margin
@@ -268,9 +292,12 @@ class RiskManager:
         # entry is refused if this trade losing outright would carry the
         # account past the stop. Without it the breakers only react AFTER the
         # damage, and against a fatal, unappealable limit "after" is too late.
-        drawdown = self.drawdown_pct(equity) + self.limits.risk_per_trade
-        drawdown_stop = self.limits.max_drawdown_limit * self.limits.safety_margin
-        if drawdown >= drawdown_stop:
+        if self.limits.max_drawdown_limit is not None:
+            drawdown = self.drawdown_pct(equity) + self.limits.risk_per_trade
+            drawdown_stop = self.limits.max_drawdown_limit * self.limits.safety_margin
+        else:
+            drawdown = drawdown_stop = None
+        if drawdown is not None and drawdown >= drawdown_stop:
             self._halt(MAX_DRAWDOWN)
             return RiskDecision(
                 False,
@@ -279,9 +306,12 @@ class RiskManager:
                 f"(the account itself ends at {self.limits.max_drawdown_limit:.2%})",
             )
 
-        daily = self.daily_pnl_pct(equity) - self.limits.risk_per_trade
-        daily_stop = self.limits.daily_loss_limit * self.limits.safety_margin
-        if daily <= -daily_stop:
+        if self.limits.daily_loss_limit is not None:
+            daily = self.daily_pnl_pct(equity) - self.limits.risk_per_trade
+            daily_stop = self.limits.daily_loss_limit * self.limits.safety_margin
+        else:
+            daily = daily_stop = None
+        if daily is not None and daily <= -daily_stop:
             self._halt(DAILY_LOSS)
             return RiskDecision(
                 False,

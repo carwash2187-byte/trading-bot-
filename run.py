@@ -480,8 +480,20 @@ def main(argv: list[str] | None = None) -> int:
     # This defaulted to 1% and I ran 2% in every test, which was me substituting
     # my judgement for his. 10% is the bottom of the range he names.
     parser.add_argument("--risk-per-trade", type=float, default=0.10)
-    parser.add_argument("--daily-loss-limit", type=float, default=0.03)
-    parser.add_argument("--max-drawdown-limit", type=float, default=0.06)
+    # HIS rule ends the day, not a percentage of mine: "If the second one doesn't
+    # work out, we are done for the day and we come back tomorrow and we do it
+    # again." That is max_losses_per_day=2 inside the strategies.
+    #
+    # These two were 3% and 6%, which came from a prop firm's rulebook and have no
+    # business here -- this is Leo's own money with no rules to breach. Worse, at
+    # his 10-25% risk a 3% daily limit trips on the FIRST loss, so my brake would
+    # fire before his rule ever got to speak. Two losses at 25% is 50%, so they
+    # are set above that: his rule always reaches first, and these remain only as
+    # a backstop against something going genuinely wrong.
+    # None means OFF -- his "two losses and we're done for the day" is the only
+    # thing that ends a day. Pass a number to re-enable a percentage brake.
+    parser.add_argument("--daily-loss-limit", type=float, default=None)
+    parser.add_argument("--max-drawdown-limit", type=float, default=None)
     parser.add_argument("--news-url", default="",
                         help="economic calendar JSON endpoint")
     parser.add_argument("--data-dir", default="run")

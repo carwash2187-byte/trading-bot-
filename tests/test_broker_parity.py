@@ -527,7 +527,13 @@ def test_the_stateless_floor_works_with_no_state_at_all():
 def test_the_floor_stays_out_of_the_way_when_unset():
     from tradebot.risk.limits import RiskLimits, RiskManager, RiskState
 
-    manager = RiskManager(RiskLimits(), RiskState())
+    # Pins its own drawdown limit rather than reading the default. The default is
+    # now None -- the percentage breakers are off, because MambaFX ends his own day
+    # on two losses and a 3% brake fired before his rule could. This test is about
+    # the FLOOR versus the stateful breaker, not about what the default should be.
+    limits = RiskLimits(daily_loss_limit=0.03, max_drawdown_limit=0.06)
+
+    manager = RiskManager(limits, RiskState())
     manager.state.peak_equity = 10_000.0
     assert manager.check_entry(
         equity=5.0, symbol="XAUUSD",
@@ -535,7 +541,7 @@ def test_the_floor_stays_out_of_the_way_when_unset():
     ).allowed is False       # the stateful breaker still catches it
     # ...but with genuinely no state and no floor, a tiny equity sails through,
     # which is precisely why the floor exists.
-    fresh = RiskManager(RiskLimits(), RiskState())
+    fresh = RiskManager(limits, RiskState())
     assert fresh.check_entry(
         equity=5.0, symbol="XAUUSD",
         correlation_group="METALS", open_positions=[],

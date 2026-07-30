@@ -26,8 +26,21 @@ def make_position(symbol: str, ticket: str = "1") -> Position:
     )
 
 
+# These tests verify the BREAKER MECHANISM -- that a daily loss trips, stays
+# tripped, resets on a new day, and projects a full loss before allowing an entry.
+# They are not a statement about what the limits should be.
+#
+# So they pin their own thresholds rather than reading the defaults. The defaults
+# used to be 3% and 6%, inherited from a prop firm's rulebook, and these tests
+# quietly depended on them; when the production defaults were loosened so that
+# MambaFX's own "two losses and we're done for the day" rule governs instead, eight
+# tests failed while the logic they cover was untouched. A test that breaks when a
+# policy default changes is testing the default, not the mechanism.
+TIGHT = RiskLimits(daily_loss_limit=0.03, max_drawdown_limit=0.06)
+
+
 def fresh(limits: RiskLimits | None = None, equity: float = 10_000.0) -> RiskManager:
-    rm = RiskManager(limits or RiskLimits())
+    rm = RiskManager(limits or TIGHT)
     rm.update_equity(equity, NOW)
     return rm
 
