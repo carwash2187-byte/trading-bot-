@@ -36,6 +36,7 @@ from tradebot.strategy.mamba_both import MambaBoth
 from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.mamba_ny import MambaNY
 from tradebot.strategy.mamba_retest import MambaRetest
+from tradebot.strategy.mamba_rsi import MambaRsi
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
 from tradebot.strategy.trend import BreakoutRider, KamaTrend
@@ -152,6 +153,18 @@ REGISTRY = {
     #   "The biggest key here, we're waiting for volume to come in."
     # Risk lives on the command line; he names 10-25% for this mode.
     # US30 5m, 3.5 months: 0.72x on 1.11 trades a day. NAS100: 0.64x on 0.47.
+    # His three-confirmation setup, the most precisely specified thing he
+    # teaches -- he builds it on screen from a blank chart and reads out every
+    # setting: "the upper band needs to be 75 and the lower band needs to be 25
+    # okay inputs are going to stay 14", "we're going to change the inputs to 34"
+    # for the Bollinger bands. Then direction, then a drawn level, then the band
+    # break. Stop "Above This Little Resistance where these Wicks have gone",
+    # take profit one, stop to breakeven, take profit two.
+    #
+    # 15m, 10 months, 5%: US30 0.92x, XAUUSD 1.10x, GBPUSD 1.03x on 0.01-0.02
+    # trades a day. With the RSI band relaxed: US30 0.58x on 2.04 a day.
+    "mamba_rsi": lambda: MambaRsi(),
+    "mamba_rsi_loose": lambda: MambaRsi(require_rsi=False),
     "mamba_flip": lambda: MambaNY(
         reward=7.0, trendline_bars=24, volume_mult=1.3,
     ),

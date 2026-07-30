@@ -1210,3 +1210,93 @@ drop that account to 5% a week and flip a new small one.
 
 Registered as `mamba_flip`. His volume condition cuts the trade count roughly in
 half and lowers the drawdown on both markets.
+
+---
+
+## CYCLE 2 of 2 (second 20-min run) — his three-confirmation setup, built exactly (UQQnN6cry8A)
+
+He builds this one on screen from a blank chart and reads out every single setting,
+which makes it the most precisely specified strategy in the catalogue.
+
+### THE SETTINGS, verbatim
+
+> "we're going to click RSI or type in RSI... we're going to go to settings... **this
+> is where it's important the upper band needs to be 75 and the lower band needs to
+> be 25** okay **inputs are going to stay 14**"
+
+> "anytime the **RSI breaks below the 25 Zone we're looking for buys** and anytime it
+> **breaks above the 75 Zone we're looking for sells** okay... **not always accurate
+> do not use it by itself**"
+
+> "we're going to type in Bowling your bands okay these settings right here... we're
+> going to **change the inputs to 34**"
+
+Not 70/30. Not Bollinger 20. **75/25 and 34.**
+
+### THE THREE CONFIRMATIONS, in his order
+
+> 1. "**first thing** that we want to do... is to kind of **dictate which way the
+>    market is moving**... we're not looking for the actual trend line in a way like
+>    this... we just want to see which way is the market moving... this market on
+>    gbpnzd is going down this is a downtrend what does that mean **we are only
+>    looking for sells and nothing else**"
+
+> 2. "our **second thing** we're going to look for is **support or resistance**...
+>    we're looking for sells we're on a down position we're looking for resistance...
+>    we're going to take our **box** right here and just kind of draw this out"
+
+> 3. "**third confirmation** check out our Bower bands they have been **broken out of**
+>    indicating a very very **weak weak weak Trend that's going to come to an end**"
+
+And the tell he watches at the level:
+> "we can see these **Wicks right here are starting to get bigger and bigger** and
+> they're starting to kind of reject as we're coming to this resistance"
+
+### STOP
+
+> "me personally I want my **stop loss Above This Little Resistance** okay **where
+> these Wicks have gone** so I'll have my stop loss above that"
+
+### TARGETS — and the sequence that makes his breakeven move safe
+
+> "I'll probably have my **take profit maybe one** would be like right here just in
+> case it stops right here at this little resistance... my **takeprofit two** will
+> then be down in this area"
+
+> "**take profit one right there did get smashed** okay we would have our **stops at
+> break even** and then boom **takeprofit two would have got smashed out**"
+
+The order is: bank the first target, THEN move the stop to entry, then let the rest
+run. Earlier in this project I tested a breakeven move and it cost money -- but I
+was moving the stop BEFORE anything was banked. His sequence banks first. Built to
+his order.
+
+### Not built, on purpose
+
+He shows a buy/sell robot indicator on screen and says "**I usually don't vouch for
+stuff like this**". Left out.
+
+### Numbers, 15m, 10 months, 5% risk
+
+| market | his exact settings | RSI band relaxed |
+|--------|-------------------|------------------|
+| US30 | 0.92x on 0.01/day | 0.58x on 2.04/day |
+| XAUUSD | 1.10x on 0.02/day | 0.59x on 0.29/day |
+| GBPUSD | 1.03x on 0.01/day | 0.61x on 1.78/day |
+
+Registered `mamba_rsi` at his exact settings and `mamba_rsi_loose` with the band
+relaxed. RSI 75 on a 15-minute chart is reached rarely, which is why his exact
+version takes 2-4 trades in ten months.
+
+### Also found scanning all 88 transcripts for mechanics not yet in the code
+
+**Fibonacci is mentioned in 36 separate places** -- by far his most-used tool that
+is still unbuilt. Next cycle's first job.
+
+> "we also were in that little bit of a **fibonacci zone** while kind of making this
+> little bit of a support here as well i knew that we were going to go bullish"
+> "we even might have another **Fibonacci test** from here to here... just just being
+> confluence"
+
+Others named but rarer: fair value gaps and liquidity (9), double tops (7),
+engulfing candles (2), MACD divergence (1).
