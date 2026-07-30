@@ -1895,3 +1895,38 @@ is about $1,200 of notional -- so one bad candle is a third of a $150 account. H
 2.04%, average loss 0.70%, and full stops on only 6% of trades. That is a bot whose
 losses barely register. It gets there by sizing down rather than by tightening the
 stop, which is the same destination by the arithmetic his own numbers imply.
+
+---
+
+## HIM. Every strategy he has, in one bot, nothing of mine overriding him
+
+Leo: "u dont change anything, your mamba fx yourself... use every single strategy he
+has" and "also do his risk as well, no difference, everything the same, only speed".
+
+Fair. Two things I had been doing were me overruling him:
+
+1. **His direction rule was switched OFF.** He is explicit: "first off i need to
+   determine are we going up are we going down... and that's going to be from the daily
+   and the four hour", and "we're gonna start on the h4 always h4". I turned it off
+   because it took 1.21x to 0.76x. That is ten months of replayed history overruling
+   ten years of his live screens. **Back on, and checked first, as he states it.**
+2. **His risk was replaced with mine.** He says "3 to 5 percent max" carefully, and
+   "risking 10%", "risking 15%", "risk 25% of your account, which is kind of what
+   you're going to have to do" to flip a small account. I ran 2%. **Now run at his.**
+
+`mamba_complete.py` arms every setup he teaches, tried in the order of how decisively
+he describes taking it:
+
+1. **New York session break** — with his trendline and his volume rule both on
+2. **Fibonacci gold zone** — paired with the double top, as he pairs them
+3. **Break and retest** — with his 50 moving average and his trail
+4. **Three-confirmation setup** — RSI 75/25, Bollinger 34, his exact settings
+5. **Channel fade** — with his two-timeframe rule
+6. **Pattern confluence** — with his H4-and-daily gate ON and FIRST
+
+Plus his management throughout: breakeven at 1:2, half off, doubling up on a winner,
+out in 35 minutes, three trades a day, two losses ends the day, and leaving when the
+reason dies.
+
+Nothing in the file is tuned to improve a number. Where he gives a value it is his
+value; where he gives none it comes from what he draws on screen.

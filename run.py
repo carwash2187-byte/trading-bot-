@@ -34,6 +34,7 @@ from tradebot.strategy.stack import StrategyStack
 from tradebot.strategy.mamba import MambaBreakout
 from tradebot.strategy.mamba_all import MambaAll
 from tradebot.strategy.mamba_both import MambaBoth
+from tradebot.strategy.mamba_complete import MambaComplete
 from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.mamba_fib import MambaFib
 from tradebot.strategy.mamba_ny import MambaNY
@@ -289,6 +290,32 @@ REGISTRY = {
         min_votes=2, max_hold_minutes=35, stop_bars=20
     ),
     "mamba_fib": lambda: MambaFib(),
+    # =====================================================================
+    # HIM. Every strategy he has, in one bot, with nothing of mine overriding
+    # him -- including the two rules I had switched off because they tested
+    # worse, which was ten months of replayed history overruling ten years of
+    # his live screens.
+    #
+    #   1. New York session break, with his trendline and his volume rule
+    #   2. Fibonacci gold zone, paired with the double top as he pairs them
+    #   3. Break and retest, with his 50 moving average and his trail
+    #   4. The three-confirmation setup, RSI 75/25 and Bollinger 34
+    #   5. The channel fade, with his two-timeframe rule
+    #   6. Pattern confluence, with his H4-and-daily direction gate ON and FIRST
+    #
+    # Plus his management throughout: breakeven at 1:2, half off, doubling up on
+    # a winner, out in 35 minutes, three trades a day, two losses and the day is
+    # over, and leaving when the reason dies.
+    #
+    # Run at HIS risk, which he states as 3-5% careful and 10-25% to flip a small
+    # account -- set with --risk-per-trade, not hardcoded here.
+    #
+    #   --strategies mamba_complete \
+    #   --symbols XAUUSD,US30,NAS100,GBPUSD,BTCUSD,ETHUSD,LTCUSD,XRPUSD \
+    #   --risk-per-trade 0.10
+    # =====================================================================
+    "mamba_complete": lambda: MambaComplete(),
+    "mamba_complete_5m": lambda: MambaComplete(timeframe="5m"),
     "mamba_all": lambda: MambaAll(),
     "mamba_retest": lambda: MambaRetest(
         # "as we start to trade below our 50 moving average" -- the one indicator
