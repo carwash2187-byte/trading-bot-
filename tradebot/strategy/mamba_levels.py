@@ -115,6 +115,7 @@ class MambaLevels(Strategy):
         window_minutes: int = 90,
         max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
+        scale_into_losers: bool = True,
         stop_after_win: bool = True,
         rungs: int = 3,
     ) -> None:
@@ -127,6 +128,7 @@ class MambaLevels(Strategy):
         self.window_minutes = window_minutes
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
+        self.scale_into_losers = scale_into_losers
         self.stop_after_win = stop_after_win
         self.rungs = rungs
 
@@ -202,6 +204,42 @@ class MambaLevels(Strategy):
             tolerance_pct=self.map_tolerance_pct,
             min_touches=self.map_min_touches,
         )
+
+        # HIS SCALE-IN. Leo asked for this explicitly, with the arithmetic in front
+        # of him, after it was flagged as the most dangerous behaviour in 34 videos.
+        #
+        # It is read off his own fill records rather than described -- he never
+        # mentions doing it, in any video:
+        #
+        #     17:29:32   sell 2.00 at 1755.89
+        #     17:31:58   sell 2.00 at 1756.95     <- worse price
+        #     17:46:56   sell 2.00 at 1758.39     <- worse again
+        #
+        # Three legs, EQUAL SIZE each time (not doubling -- it is not a martingale
+        # in the classic sense), all sharing one stop at 1760.00, added as the
+        # market moved against him. His spacings, measured against the 3.05 stop
+        # distance of the first leg: the second leg went on at 0.35 of that risk
+        # adverse, the third at 0.82. Those two fractions are his, not mine.
+        #
+        # What it came to on the balance visible at the time: 9.6% of the account on
+        # one leg, 27.6% across all three, and notional 166 times the account. The
+        # margin cap in Enter.execute will refuse legs the account cannot carry, and
+        # that refusal is the broker's arithmetic rather than a rule of mine.
+        if self.scale_into_losers:
+            mine = [p for p in context.open_positions if p.comment == self.name]
+            if mine and len(mine) < 3:
+                first = min(mine, key=lambda p: p.opened_at)
+                if first.stop_loss is not None:
+                    risk0 = abs(first.entry_price - first.stop_loss)
+                    price = context.bid if first.is_long else context.ask
+                    against = ((first.entry_price - price) if first.is_long
+                               else (price - first.entry_price))
+                    rungs = (0.35, 0.82)          # his measured spacings
+                    need = rungs[len(mine) - 1] if len(mine) <= len(rungs) else None
+                    if need is not None and risk0 > 0 and against >= risk0 * need:
+                        return [Enter(side=first.side, stop_loss=first.stop_loss,
+                                      take_profit=first.take_profit,
+                                      lots=first.lots, comment=self.name)]
 
         # Manage what is open first: walk the stop up the map behind price as each
         # rung is passed, and take a slice at each one. "don't just take all your

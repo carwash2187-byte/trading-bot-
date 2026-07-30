@@ -4564,3 +4564,22 @@ He also warns against exactly what he then does, fifteen seconds apart:
 > "end up closing **while we were at lunch**"
 
 No mechanical close rule anywhere. Measured hold: **3h 20m to 3h 37m**, all intraday.
+
+## HIS SCALE-IN, BUILT — Leo's decision, made with the arithmetic in front of him
+
+Asked explicitly, with the risk numbers shown, and answered: build it. So it is built exactly
+as his fill records show, not as anything softened.
+
+    17:29:32   sell 2.00 at 1755.89
+    17:31:58   sell 2.00 at 1756.95     <- 0.35 of the first leg's risk, against him
+    17:46:56   sell 2.00 at 1758.39     <- 0.82 of it, against him
+
+**Three legs maximum. Equal size each time** — this is not a doubling martingale. **One shared
+stop**, so the total risk grows while the exit price does not move. The two spacings, 0.35R and
+0.82R adverse, are measured off his own fills; neither is a number of mine.
+
+Proven to fire: second leg on 460 checks, third on 393.
+
+The margin cap in `Enter.execute` will refuse legs the account cannot carry — that refusal is
+the broker's arithmetic, not a rule of mine, and it is the only thing standing between this and
+the full 27.6%.
