@@ -532,6 +532,28 @@ def main(argv: list[str] | None = None) -> int:
     #
     # This defaulted to 1% and I ran 2% in every test, which was me substituting
     # my judgement for his. 10% is the bottom of the range he names.
+    # HE BANS THIS NUMBER, IN HIS OWN WORDS, AND LEO SHOULD SEE IT RATHER THAN
+    # HAVE ME QUIETLY ACT ON IT.
+    #
+    # Full-screen card in "Trading Forex During The 2023 Recession", plus the
+    # line spoken three times:
+    #     "RISK 1 - 3 % PER TRADE"
+    #     "risk one to three percent per trade, stick to that plan, NEVER CHANGE
+    #      THAT PHILOSOPHY"
+    #     "risking 10 percent is not very smart, because you've already lost 10
+    #      percent of your account and you want that percent back. it's not smart,
+    #      YOU SHOULD NEVER DO IT."
+    #
+    # Against that: "you want to risk 25% of your account" in the 3-weeks video,
+    # 13-21% measured on his own $62k Nasdaq trade, and 1.5% measured on his
+    # funded account. Five different answers, all his.
+    #
+    # The default stays at Leo's 10% because Leo set it deliberately and told me
+    # not to override him -- and overriding him is exactly the mistake this whole
+    # project exists to stop me repeating. But the ban is his own voice, it is
+    # newer information than the instruction was based on, and it is recorded here
+    # next to the number so nobody has to go digging for it. Changing it is one
+    # flag: --risk-per-trade 0.03.
     parser.add_argument("--risk-per-trade", type=float, default=0.10)
     # HIS rule ends the day, not a percentage of mine: "If the second one doesn't
     # work out, we are done for the day and we come back tomorrow and we do it

@@ -3634,3 +3634,62 @@ sequence. `min_votes=3` counts three *pattern detectors* agreeing (double top, e
 fair value gap, sweep...), which is a different taxonomy entirely. So the number matches his
 by coincidence and the thing being counted does not. Next cycle's job: make the three
 confirmations his three, not N generic votes.
+
+## "Trading Forex During The 2023 Recession" (cWIfkzA0GfM) — HE BANS 10% RISK IN HIS OWN WORDS
+
+No chart footage. One number, and it is the most direct risk statement he has ever made.
+
+**Full-screen card at 04:12, reading exactly:**
+
+        RISK
+        1 - 3 %
+        PER TRADE
+
+**And spoken three times:**
+
+> "**risk one to three percent per trade**, stick to that plan, **NEVER CHANGE THAT
+> PHILOSOPHY**, and always always always stick to your trading plan as well"
+> "**stick to one to three percent and never change that philosophy**"
+> "come in, **risk one to three percent per trade**, okay"
+
+**And the explicit ban:**
+
+> "**risking 10 percent is not very smart**, because you've already lost 10 percent of your
+> account and you want that percent back. it's not smart, **YOU SHOULD NEVER DO IT**, and
+> especially not during a recession"
+
+### THE FIVE RISK ANSWERS HE HAS GIVEN, ALL HIS
+
+| Source | Risk | Evidence |
+|---|---|---|
+| Signal-room footer | **1-3%** | written on every posted signal |
+| **This video** | **1-3%, and 10% banned** | full-screen card + said 3× + explicit ban |
+| Funded account | **1.5%** | measured, $750 on $50,000 |
+| $62k Nasdaq trade | **13-21%** | measured from his own stop and lot size |
+| "$5,000 in 3 WEEKS" | **25%** | said twice on camera |
+
+The default stays at **10%** because Leo set it deliberately and told me not to override him,
+and overriding him is the exact mistake this project exists to stop me repeating. But this is
+newer information than that instruction was based on, it is his own voice rather than my
+judgement, and it is now written next to the setting in `run.py` so it cannot get buried.
+One flag changes it: `--risk-per-trade 0.03`.
+
+### HE ALSO BANS SIZING UP AFTER LOSSES
+
+> "**there's no sense of risking more because you took a few losses**, and there's no sense
+> in changing your trading plan just because you took a few losses. a couple losses doesn't
+> mean that your trading plan is broken"
+
+The bot already sizes off live equity, which shrinks after a loss rather than growing, so it
+cannot martingale. Confirmed rather than built.
+
+### AND A MARKET REFUSAL THAT CONTRADICTS HIS OWN WATCHLIST
+
+> "NASDAQ I love, I will always trade NASDAQ... but **I'm not going to be trading GBP/JPY**"
+> "the more people who trade a certain pair, **the more manipulated that market is going to
+> be**... if we're in crisis, **don't trade pairs that are directly related to the US**"
+
+Against "just master **GBP/JPY**, wake up during London session, trade it" in another video,
+and GBPJPY being the pair whose currency bug cost this project 14 setups. Both recorded.
+
+His whitelist here: **NASDAQ, US30, GOLD** — on screen as a card.
