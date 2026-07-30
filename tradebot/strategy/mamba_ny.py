@@ -121,7 +121,7 @@ class MambaNY(Strategy):
         max_adds: int = 1,
         max_losses_per_day: int = 2,
         trendline_bars: int = 0,
-        volume_mult: float = 0.0,
+        volume_leads_session: bool = False,
         use_engulfing: bool = False,
         use_liquidity_sweep: bool = False,
         use_fair_value_gap: bool = False,
@@ -152,10 +152,15 @@ class MambaNY(Strategy):
         # support zone breaks." He draws one every session and names its break as
         # a trigger in its own right. Bars used to fit it. Zero disables.
         self.trendline_bars = trendline_bars
-        # "we're waiting for volume to come in" / "you're going to see a lot of
-        # volume". Entry bar volume must be this multiple of the recent average.
-        # Zero disables.
-        self.volume_mult = volume_mult
+        # "we're waiting for volume to come in" / "we do them early in the
+        # morning, right at session open when there's a LOT of volume."
+        #
+        # He never says how much volume, so there is no multiple to set. What he
+        # actually did is measurable: on the NAS100 trade in "$5,000 in 3 WEEKS"
+        # the entry candle carries THE TALLEST VOLUME BAR OF THE WHOLE SESSION.
+        # That is his rule -- not a threshold I picked, a superlative read off
+        # his own screen. The old volume_mult=1.3 was mine and is deleted.
+        self.volume_leads_session = volume_leads_session
         # "we saw this candle here closed not only a ginormous bullish engulfing
         # candle but it closed above the tops of those rejections" -- the
         # engulfing candle IS the trigger at the level, not a filter on it.
@@ -276,17 +281,22 @@ class MambaNY(Strategy):
         prev = window[-2].close if len(window) > 1 else bar.open
         return prev >= at_now > bar.close
 
-    def _volume_ok(self, candles: list[Candle]) -> bool:
-        """"we're waiting for volume to come in"."""
-        if self.volume_mult <= 0:
+    def _volume_ok(self, candles: list[Candle], now: datetime) -> bool:
+        """The entry bar leads the session on volume, as his entry candle did."""
+        if not self.volume_leads_session:
             return True
-        window = candles[-20:]
-        if len(window) < 5:
+        window = self._session_window(now)
+        if window is None:
             return True
-        avg = sum(c.volume for c in window[:-1]) / max(1, len(window) - 1)
-        if avg <= 0:
+        start, _end = window
+        session_bars = [c for c in candles
+                        if c.timestamp.astimezone(timezone.utc) >= start]
+        if len(session_bars) < 2:
             return True
-        return candles[-1].volume >= avg * self.volume_mult
+        bar = candles[-1]
+        if bar.volume <= 0:
+            return True          # no volume feed is not a reason to refuse him
+        return bar.volume >= max(c.volume for c in session_bars)
 
     def _opposing_structure(
         self, candles: list[Candle], entry: float, long: bool
@@ -436,7 +446,7 @@ class MambaNY(Strategy):
             return []
 
         # "The biggest key here, we're waiting for volume to come in"
-        if not self._volume_ok(candles):
+        if not self._volume_ok(candles, context.now):
             return []
 
         bar = candles[-1]

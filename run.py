@@ -176,7 +176,7 @@ REGISTRY = {
     "mamba_rsi": lambda: MambaRsi(),
     "mamba_rsi_loose": lambda: MambaRsi(require_rsi=False),
     "mamba_flip": lambda: MambaNY(
-        reward=7.0, trendline_bars=24, volume_mult=1.3,
+        reward=7.0, trendline_bars=24, volume_leads_session=True,
     ),
     # ALL his setups, meant to be run across ALL his markets at once, because
     # that is how he actually trades. His watchlist is on screen -- gold, LTC,

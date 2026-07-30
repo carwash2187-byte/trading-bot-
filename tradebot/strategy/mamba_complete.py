@@ -77,7 +77,7 @@ class MambaComplete(Strategy):
             trend_bars=max(16, 48 // scale),
             max_hold_minutes=35 * scale,
             trendline_bars=max(8, 24 // scale),
-            volume_mult=1.3,
+            volume_leads_session=True,
             breakeven_at=2.0,          # "we got to a 1 to two stops can go to break even"
             scale_at=2.0,              # "I'm gonna take half my profits here"
             add_at=1.0,                # "we're doubling up on that position"

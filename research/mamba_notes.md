@@ -3206,3 +3206,76 @@ the outermost level that still has a level beyond it, since that beyond-level is
 Twelve now, and this one is worth more than the others precisely because it was mine and
 fresh: **the failure mode is not a legacy problem, it is what happens by default every time
 a rule is written and not checked.**
+
+## "How to Make $5,000 in 3 WEEKS" (M5qKSVhjtQg) — his risk model, confirmed twice
+
+### THE 25% IS REAL, SAID TWICE, ON CAMERA
+
+> "you want to risk **25% of your account**, which is kind of what you're going to have
+> to do if you want to make $5,000 in 3 weeks"
+> "You're risking 250 bucks, which is **25% of your $1,000 account**, but you're going
+> for a $1250 win every single time you trade"
+
+Leo was right and I was wrong when I called 33% a misreading. The number is his, he says
+it twice, he attaches it to a named account size, and he says you *have* to do it.
+
+**But the same video contradicts it three ways**, and all three are worth recording:
+
+1. His own whiteboard never writes "25%". It writes only the ratio and two cash figures.
+2. His worked example nets **+50% for the week** against his own stated requirement of
+   **+167% a week**. He shows both side by side and never reconciles them — the example
+   is 3.3× short of the goal it is illustrating.
+3. **Both broker screenshots in this video show NO STOP LOSS AND NO TAKE PROFIT.** Stop
+   loss "—", take profit "—", closed manually. So neither the 25% nor the 1:5 was
+   actually enforced on the trades he shows. You cannot have a 1:5 without a stop.
+
+Recorded, not resolved. His signal room says 1-3%; this video says 25%. Both are him.
+
+### 1:5, AND THE PIXELS AGREE WITH HIS MOUTH
+
+> "you risk **a one to 5** for every single trade"
+> "You're not going to go in and go for one to ones... **You have to go for one to fives**"
+
+Measured off the animated box, two frames: **4.98:1** and **4.94:1**. Spoken 1:5. The
+graphic is drawn to scale — the first time a spoken ratio and a measured one have agreed
+in this project, against 1:7.1/1:8.1 measured while he said "one to seven, one to 10".
+
+### HIS VOLUME RULE, FINALLY MEASURABLE — AND MY MULTIPLE DELETED
+
+> "We trade breakouts. We do them **early in the morning, right at session open when
+> there's a lot of volume**"
+
+He never says how much volume, so there was never a multiple to set — `volume_mult=1.3`
+was mine. What he actually did is measurable: on the NAS100 trade, **the entry candle
+carries the tallest volume bar of the whole session.** Not a threshold, a superlative,
+read straight off his screen. Built as that.
+
+Measured after: fires 22 times against 141 unfiltered — a real filter that changes the
+outcome, so it is built rather than decorative.
+
+### THE ONE COMPLETE TRADE, OFF THE PIXELS
+
+BUY 3.00 lots NAS100 · entry 21,173.80 at 06:30 · exit 21,208.80 at **06:38:02** ·
++35.0 points · **8 minutes 2 seconds** · no stop, no target, closed by hand.
++8.1% of the account, against the +125% per win his own model requires. **Off by 15×.**
+
+### AND HIS OWN WORDS FOR WHAT LEO HAS BEEN TELLING ME ALL ALONG
+
+> "I give you **one strategy. One strategy only.** Stick to it. **Don't change it. Don't
+> add your own rules. Don't try something different. Don't add indicators.**"
+> "You got to come in here **robotically**"
+
+He forbids exactly what I kept doing to him. Leo's instruction and Mamba's instruction
+are the same sentence.
+
+### AFTER A LOSS — AND LOSSES DO NOT END HIS DAY HERE
+
+> "Took a loss. That's okay. Tomorrow, come back, do it again... **But don't go looking
+> for setups that don't exist because you lost. That's revenge trading.**"
+> Written on his board, starred: "**Revenge trading = Account DEATH**"
+> "**Fomo is a Setup, not a Signal!**"
+
+His calendar shows three straight losses and then he takes the fourth trade. So in this
+video **losses do not stop him** — which contradicts the "after two losses you should
+stop" rule built from another video. Both recorded; the two-loss rule stays because it is
+the more conservative of his own two statements and the only one he states as a rule.
