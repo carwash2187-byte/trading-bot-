@@ -719,3 +719,218 @@ a video with the daily chart actually on screen before this can be built faithfu
 month (~1.4/day). Closer to him than the six-market version's 1.99, and six markets
 included EURUSD, USDJPY and XAUUSD -- pairs he says he has quit. Dropping them is
 more faithful even though it lowers the trade count.
+
+---
+
+## CYCLE 3 of 15 — 22 transcripts mined at once
+
+Background harvester now running continuously so material is always waiting.
+
+### NEW YORK SESSION ONLY — and the exact clock time
+
+> "The first thing being is **you only trade during New York session**."
+> "you trade during New York session open, which is around **6:20, 6:30 a.m.**"
+> "With New York session, **6:30 every morning is always the time to trade** and it
+> does a lot psychologically and then just in general like I said you're going to
+> find good setups because of **volume** every single morning."
+
+6:30 a.m. is his local clock, and 6:30 Pacific is 9:30 Eastern is **13:30 UTC** --
+which is exactly the `newyork` open already in SESSION_OPENS_UTC. That setting is
+confirmed rather than guessed now.
+
+And an exception, for gold specifically:
+> "New York session's okay, but **Tokyo session for me is better for gold**."
+
+`MambaRetest` had no session filter at all. That is a miss, not a choice.
+
+### PARTIALS — the most explicit he has been
+
+> "so now we're currently probably about 30 pips profit **might even put my stop
+> losses to break-even here** just to uh just just to be safe and I'm gonna secure
+> profit still **I'm gonna take half my profits here**"
+
+> "this is kind of spots where we're either going to **stops to break even here take
+> half our profit here** and take the rest of our profit or all of our profit here
+> that's a way to look at it or like i did take all my profit here because it's 700
+> pips and i'm happy with it"
+
+So both mechanics, together: **stop to breakeven AND half off** at an intermediate
+point, then let the rest run. I tested both earlier in the project and both cost
+money -- breakeven took $1,030/mo to $765, scaling out took 5.15x to 3.96x. Under
+RULE ZERO they go in anyway, because he says he does them.
+
+### STOP PLACEMENT — structural, not candle-based
+
+> "**Obviously, stops are right above the highs.**"
+> "My stop loss is going to go **below the low** with five micros of this previous...
+> Let's do the low right here **to the left**."
+> "**Stop loss is going to go above the highs** and that's it for me."
+
+The stop sits beyond the swing high or low to the LEFT of entry -- past the
+structure, not a fraction of the entry candle. `MambaBreakout` uses half the
+breakout candle, which is my invention. His is structural.
+
+### H4 IS ALWAYS THE STARTING POINT — said three more times
+
+> "we're gonna **start on the h4** and we're simply going to look for support or
+> resistance"
+> "so let's go to our **h4** and let's look for another setup that i took on **nas 100**"
+> "if we go down to our **h4** and we look for more confluence"
+
+### DONE FOR THE DAY
+
+> "**Close the position and we're done for the day.**"
+
+### Fibonacci as extra confluence, and an optional tool
+
+> "we even might have another **Fibonacci** test from here to here we may have
+> another one right there just just being confluence"
+
+> "I'm not saying that you need it **you can be very successful without it in fact
+> I've been very successful without it my entire career** but now this is just
+> giving me more Confluence and making it a lot easier to trade"
+
+That last one is him explicitly marking a tool as optional. Whatever it is (video
+oHV2PlHj-aM) does not go in the core -- he says his whole career ran without it.
+
+### Build queue from this cycle
+1. New York session filter on MambaRetest (13:30 UTC), Tokyo for gold. MISSING.
+2. Breakeven move + half off at an intermediate target. He says both.
+3. Structural stop: beyond the swing high/low to the left, not a candle fraction.
+
+---
+
+## CYCLE 4 of 15 — "How I Make 20% Gains Daily Trading Futures" (-VdyJZlCG1M)
+
+The single most useful video so far. It settles the session question, gives the
+exact trading window, and **reverses what I told Leo about hold time**.
+
+### The session rule applies to indices, by his own statement
+
+> "The first thing being is **you only trade during New York session**. Okay? you
+> trade during New York session open, which is around **6:20, 6:30 a.m.** **Just
+> like I say with indices, it does the same thing during the same time.** You're
+> going to get the same movements. And literally, there's actually **almost no
+> difference at all** when it comes to trading futures and the times"
+
+So this is not a futures-only rule. It covers US30 and NAS100. It stays.
+
+### THE EXACT WINDOW — 6:30 a.m. to 10:00 a.m.
+
+> "It's already almost **10:00 a.m. I don't like to trade much past 10:00 a.m.**,
+> so that's the main reason that I'm kind of done here. **I don't want to sit here
+> and freaking trade all day and trade into the evening.** It doesn't make a lot of
+> sense."
+
+6:30 to 10:00 Pacific is **13:30 to 17:00 UTC** -- a **210 minute** window. My
+tested widths of 240, 390, 480 and 600 minutes were all guesses, and all too wide.
+210 is his number.
+
+### HOLD TIME — I OWE LEO A CORRECTION
+
+> "You know, you get in, you get out, you move on. **You don't hold trades for a
+> long time. You get in, you get out, and you move on.** It's as simple as that."
+
+> "Mind you, we've been trading for currently **30 minutes, 35 minutes at the
+> most**. Not very long."
+
+Leo asked "what if u held a trade for 20-30 minutes" and I answered that capping
+the hold was bad, quoting him saying "I don't care what anybody says about holding
+trades for a few hours or 8 hours or whatever". **Leo was right and my answer was
+built on the wrong quote.** On this method he holds about half an hour and says so
+twice. The earlier quote came from a different context; this one is him narrating a
+live trade with a clock running.
+
+Why my test disagreed: I capped the hold on the **1:8** breakout build, where a
+target eight times the stop genuinely needs hours to arrive. His target is **1:3**,
+which arrives in about thirty minutes. The cap only looked harmful because it was
+bolted onto a target he never uses.
+
+### His reward, stated three more times
+
+> "we can go for a nice little **one to three**"
+> "We could have probably got a **1 to five** there"
+> "Got about a **1 to three**. Could have gotten a little more. Maybe even got close
+> to a 1 to 5, but again, **I closed a little early**"
+
+### He closes early and is fine with leaving money behind
+
+> "this thing ended up breaking past the resistance and flying. I could have made
+> more money. **I actually left some money on the table there, but I'm okay with
+> that.** 20% gains."
+
+### Levels do not have to be clean
+
+> "I like the support zone because you got a couple touches in here, touches up
+> here, touches down here. **It's not perfect. Resistance and support lines do not
+> need to be perfect.**"
+
+Two touches is enough. My min_touches of 3 on MambaBreakout is stricter than him.
+
+### The setup, in order
+
+> "there's only **two things** we're looking for. We're looking for a **break of a
+> support or a break of resistance**, but we also want to **pair that with which way
+> is the market moving currently**."
+
+> "we see price is bullish. We're breaking out of previous lows... That tells me
+> we're probably going to want to look for buys. Now, if we're going to look for
+> buys, we need to see a **resistance or a trend line break**."
+
+### Timeframes for entry: 5 minute for the level, 1 minute for the trigger
+
+> "we have support on the **5 minute chart**... Now, all we had to do go to the
+> **1 minute** if you want to. We can find a **break of a trend line** right here.
+> We push above the trend line and now we're buying."
+
+### He refuses trades into strong opposing structure
+
+> "It's a pretty good position though, but **we're at a pretty strong resistance
+> here. So, no, not the smartest trade.**"
+
+### And his daily number, on a real account
+
+> "$349, 350 bucks on a **2K account**" -- about **17.5% in 30-35 minutes**, which
+> he rounds to "20% gains" for the day and says "Tomorrow, I'll do it again."
+
+### Cycle 4 test results, and a data limit worth stating
+
+His 210-minute window on 15m bars, his 3 markets, 5% risk:
+
+| build | growth | trades/day | win% | median hold | drop |
+|-------|--------|-----------|------|-------------|------|
+| no session (cycle 2) | 1.95x | 0.96 | 28.4% | 90m | 56% |
+| his 210-min window | 0.74x | 0.26 | 20.7% | **30m** | 52% |
+| + hold cap 35 min | 0.93x | 0.29 | 31.7% | 30m | 34% |
+
+**The median hold came out at 30 minutes on its own**, without a cap, once his
+session window was applied -- matching "30 minutes, 35 minutes at the most"
+exactly. That is a strong sign the window is right even though the money is not.
+
+Why the money is not: **his session method does not run on 15-minute bars.** A
+210-minute window is only 14 bars of 15m, which is not enough to find a level and
+its break. He says the timeframe out loud -- "we have support on the 5 minute
+chart... go to the 1 minute". Data on hand: US30_5m and NAS100_5m cover 2026-04-17
+to 2026-07-29 (3.5 months, 20000 bars), US30_1m covers 6 weeks. Shorter than the
+10 months used everywhere else in this file, so results from it are weaker evidence.
+
+### And the setup he narrates is NOT the retest -- it is a break
+
+> "there's only **two things** we're looking for. We're looking for a **break of a
+> support or a break of resistance**, but we also want to **pair that with which way
+> is the market moving currently**."
+
+> "**If price can break past that wick again, I'm going to take a buy position.**
+> 100% going to take a buy position. Okay, we can go for a nice little one to three."
+
+So he has (at least) three distinct trades, and I have now seen all three:
+
+1. **Break and retest** -- the $100 forex account video. `mamba_retest.py`.
+2. **Channel edge fade** -- the live H4 breakdown. `mamba_channel.py`.
+3. **New York session break** -- this video. Level with a couple of touches, price
+   breaks it, current market direction agrees, 1:3 target, 5-minute chart,
+   6:30-10:00 a.m. only, held about half an hour. NOT YET BUILT as its own file --
+   `mamba.py` is the closest but uses 1:8, a candle-fraction stop, 3 touches and no
+   time limit, all of which are mine rather than his.
+
+Next: build #3 properly as `mamba_ny.py` on 5-minute bars.

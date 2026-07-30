@@ -50,10 +50,11 @@ recorded because it is the number from the man himself.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import timezone
+from datetime import time, timedelta, timezone
 
 from ..brokers.base import Candle, OrderSide
-from .base import Action, AdjustStop, Enter, Strategy, StrategyContext
+from .mamba import SESSION_OPENS_UTC
+from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 
 
 @dataclass(frozen=True)
@@ -105,6 +106,11 @@ class MambaRetest(Strategy):
         ma_period: int = 50,
         daily_tf_bars: int = 0,
         trail_after: float = 0.0,
+        sessions: tuple[str, ...] = ("newyork",),
+        window_minutes: int = 210,
+        breakeven_at: float = 0.0,
+        scale_at: float = 0.0,
+        max_hold_minutes: int = 0,
     ) -> None:
         self.higher_tf_bars = higher_tf_bars
         self.level_lookback = level_lookback
@@ -129,6 +135,27 @@ class MambaRetest(Strategy):
         # a trade is this far ahead, the stop follows it at that distance behind.
         # Zero disables.
         self.trail_after = trail_after
+        # "The first thing being is you only trade during New York session."
+        # "you trade during New York session open, which is around 6:20, 6:30 a.m."
+        # 6:30 Pacific is 9:30 Eastern is 13:30 UTC, which is the newyork open
+        # already in SESSION_OPENS_UTC. He makes one exception -- "New York
+        # session's okay, but Tokyo session for me is better for gold."
+        self.sessions = sessions
+        # "It's already almost 10:00 a.m. I don't like to trade much past 10:00
+        # a.m." 6:30 to 10:00 Pacific is 13:30 to 17:00 UTC -- 210 minutes. Every
+        # width I tested before this (240, 390, 480, 600) was my own guess.
+        self.window_minutes = window_minutes
+        # "might even put my stop losses to break-even here just to be safe"
+        # Measured in R.
+        self.breakeven_at = breakeven_at
+        # "I'm gonna secure profit still I'm gonna take half my profits here"
+        # Measured in R. Both of these cost money when I tested them earlier in
+        # the project; they are here because he says he does them.
+        self.scale_at = scale_at
+        # "You don't hold trades for a long time. You get in, you get out, and you
+        # move on." He narrates a live trade at "30 minutes, 35 minutes at the
+        # most". Zero disables.
+        self.max_hold_minutes = max_hold_minutes
 
     # -- reading the chart the way he reads it ---------------------------
 
@@ -154,6 +181,21 @@ class MambaRetest(Strategy):
         if pos < 0.34:
             return 1
         return 0
+
+    def _in_session(self, now) -> bool:
+        """Is this inside one of his sessions? No sessions configured = always."""
+        if not self.sessions:
+            return True
+        utc = now.astimezone(timezone.utc)
+        for name in self.sessions:
+            open_at = SESSION_OPENS_UTC.get(name)
+            if open_at is None:
+                continue
+            start = utc.replace(hour=open_at.hour, minute=open_at.minute,
+                                second=0, microsecond=0)
+            if start <= utc <= start + timedelta(minutes=self.window_minutes):
+                return True
+        return False
 
     def _ma_bias(self, candles: list[Candle]) -> int:
         """Which side of his 50 moving average price is on. 0 when disabled."""
@@ -261,6 +303,56 @@ class MambaRetest(Strategy):
         candles = context.candles
         if len(candles) < self.higher_tf_bars + 20:
             return []
+        # Managing an open trade happens before any entry gate. Everything in
+        # this block would silently never run if it sat below the session check,
+        # which is exactly how the hold cap broke earlier in this project.
+
+        # "You don't hold trades for a long time. You get in, you get out."
+        if self.max_hold_minutes > 0:
+            for pos in context.open_positions:
+                if pos.comment != self.name:
+                    continue
+                held = (context.now - pos.opened_at).total_seconds() / 60
+                if held >= self.max_hold_minutes:
+                    return [Exit(ticket=pos.ticket, reason="time-exit")]
+
+        # "might even put my stop losses to break-even here just to be safe"
+        if self.breakeven_at > 0:
+            for pos in context.open_positions:
+                if pos.comment != self.name or pos.stop_loss is None:
+                    continue
+                risk = abs(pos.entry_price - pos.stop_loss)
+                if risk <= 0:
+                    continue
+                price = context.bid if pos.is_long else context.ask
+                ahead = (price - pos.entry_price) if pos.is_long else (pos.entry_price - price)
+                if ahead < risk * self.breakeven_at:
+                    continue
+                at_be = (pos.stop_loss >= pos.entry_price if pos.is_long
+                         else pos.stop_loss <= pos.entry_price)
+                if not at_be:
+                    return [AdjustStop(ticket=pos.ticket, stop_loss=pos.entry_price,
+                                       take_profit=pos.take_profit)]
+
+        # "I'm gonna secure profit still I'm gonna take half my profits here"
+        if self.scale_at > 0:
+            for pos in context.open_positions:
+                if pos.comment != self.name or pos.stop_loss is None:
+                    continue
+                risk = abs(pos.entry_price - pos.stop_loss)
+                if risk <= 0:
+                    continue
+                price = context.bid if pos.is_long else context.ask
+                ahead = (price - pos.entry_price) if pos.is_long else (pos.entry_price - price)
+                if ahead < risk * self.scale_at:
+                    continue
+                # Half off, once. Whether it has already happened is inferred
+                # from the stop having been pushed past entry by the breakeven
+                # rule above, so no state has to survive a process restart.
+                half = round(pos.lots / 2, 2)
+                if half >= 0.01 and pos.lots > 0.01:
+                    return [Exit(ticket=pos.ticket, lots=half, reason="half-off")]
+
         # "i'm going to trail my stop-loss all the way up." Managing an open
         # trade comes before deciding whether to open another one, and before
         # any entry gate -- a gate that returns early would silently disable
@@ -287,6 +379,10 @@ class MambaRetest(Strategy):
         if self._trades_today(context) >= self.max_trades_per_day:
             return []
         if context.news is not None and context.news.active:
+            return []
+
+        # "you only trade during New York session"
+        if not self._in_session(context.now):
             return []
 
         bias = self._higher_tf_bias(candles)
