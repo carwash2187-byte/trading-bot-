@@ -4341,3 +4341,47 @@ That is now three stop rules of his, all sourced, all built:
 * **the biggest wick** — "it shouldn't wick above that again"
 
 None of them is a distance I chose.
+
+## "FULL FREE COURSE" (-2oONqLBAq4) — a NEGATIVE result, and a near-miss that would have poisoned the data
+
+**There is no course in it.** Six minutes: a house-and-car vlog, then an advert for his phone
+app. He never opens a chart, never draws a level, never places an order, never states a
+timeframe, a stop, a target, a lot size or a risk percentage.
+
+**The lesson for prioritising:** title density is not rule density. This was ranked priority 0
+on the strength of "FULL FREE COURSE" and it is the thinnest source watched so far — while
+"How to Make $5,000 in 3 WEEKS", which reads like pure clickbait, carried his risk model, his
+1:5 ratio and his whole day structure.
+
+### THE NEAR-MISS
+
+Inside the App Store screenshots there is a calculator mockup pre-filled with **"5%"**, and a
+signals screen full of invented rows. **Neither is his.** He says so himself about the signals:
+"**these are not real obviously... the developers just spaz down real random stuff**" — and the
+pixels back him: a US30 BUY with a take profit *below* its entry, rows literally labelled
+`TEST`, entries like `464646.0`.
+
+**That "5%" is lorem-ipsum art in a marketing image.** Had it been recorded as his risk rule it
+would have become a sixth conflicting risk figure with no source at all. Attribution matters as
+much as measurement.
+
+### THE ONE THING WORTH KEEPING — HIS OWN TEACHING ORDER
+
+His app's free syllabus, read off the carousel frame by frame:
+
+    VIDEO 1  Support & Resistance Basics
+    VIDEO 2  Trendline Basics
+    VIDEO 3  Channel Trading Basics
+    VIDEO 4  Fibonacci Basics
+    VIDEO 5  Moving Average Basics
+
+That is **his own hierarchy**: levels first, then trendlines, then channels, then fibonacci,
+and moving averages last. It matches the order this project ended up building them in, and it
+puts the moving averages — the three he has never once named on camera — at the bottom of his
+own list of what matters.
+
+### AND ONE MORE CONTRADICTION
+
+A video titled **SCALPING** in which his own signal service is described as averaging "**300
+pips take profit to 5,000 pips take profit per trade**". A 5,000-pip target is not a scalp.
+Recorded with the rest.
