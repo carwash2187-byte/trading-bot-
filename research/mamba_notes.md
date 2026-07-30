@@ -1040,3 +1040,66 @@ for gold" from the other video. Consistent.
 Registered `mamba_ny` with everything on, and `mamba_ny_plain` with entry and exit
 only. Trade frequency is 1.96-2.81 a day, inside his stated two-to-three, and this
 is the first build where that cap is genuinely enforced rather than silently absent.
+
+---
+
+## CYCLE 2 of 2 (20-minute run) — his risk numbers, and what he does after a loss
+
+### RISK — he says 10%, 15%, 25%, and names 30-60% for small accounts
+
+From "The BEST Small Account Strategy NOBODY Tells You" (4JDL4LkFay0):
+> "I don't mind going and **risking 15%** on the next trade."
+> "I don't mind going and **risking 10%** on the next trade."
+> "You may **blow your account** trying for the first few times, but that's okay."
+
+From "How to Make $5,000 in 3 WEEKS Trading FOREX" (M5qKSVhjtQg):
+> "let's say you have your $1,000, you want to **risk 25% of your account**, which is
+> **kind of what you're going to have to do** if you want to make $5,000 in 3 weeks."
+> "if you're **risking 250 out of 1 to 5**... You're risking 250 bucks, which is 25%
+> of your $1,000 account, but you're going for a $1250 win every single time"
+
+From "This Candlestick Pattern Changes EVERYTHING" (Xyb8rdUYOW8):
+> "when I see this pattern here, **I feel better about risking more** and I know a lot
+> of the **textbook traders are going to say, well, never risk more**."
+> "A lot of you guys want to get on there and **risk 30% on one trade**, and now that
+> you see this, you're going to **risk 60%**."
+
+**Leo asked about risking a third of a small account and I told him it was wrong.
+He was right and I was not.** The 3-5% figure came from the $100 forex video; on a
+small account he wants to flip fast he names 10%, 15%, 25% and talks about 30-60%.
+He is explicit that it is what you have to do to grow a small account quickly, and
+explicit that you may blow it.
+
+### AFTER A LOSS — answered
+
+From "How To INSTANTLY Become Profitable Day Trading" (U8nlmxICJwQ):
+> "If the second one doesn't work out, **we are done for the day and we come back
+> tomorrow** and we do it again."
+
+From "First to get Funded WINS $50,000 CASH" (KD4SjH5zspY):
+> "**Close the position and we're done for the day.**"
+
+**Two losses ends his day.** Built as `max_losses_per_day=2`, counting closed losing
+trades from the risk layer.
+
+And on revenge trading, from vcLKxGb5bUM:
+> "You're going to **revenge trade**, you're going to get angry, you're going to trade
+> as hard as you can, and that's not good for you either."
+
+### REWARD — 1:3 to 1:5, stated again
+
+> "**Risk 16 points** on this trade, but shoot for **52 points** up to even **80
+> points** on the win." (16 to 52 is 1:3.25; 16 to 80 is 1:5)
+> "risking 250 out of **1 to 5**"
+
+### Numbers, NAS100 5m, 3.5 months, reward 1:5
+
+| risk | no loss limit | 2 losses = done |
+|------|---------------|-----------------|
+| 3% | 0.56x | 0.57x |
+| 5% | 0.46x | 0.46x |
+| **10% (his)** | 0.19x | 0.21x |
+| **15% (his)** | 0.25x | 0.26x |
+| **25% (his)** | 0.35x | 0.34x |
+
+His two-loss rule improves every risk level it touches. Built and on by default.

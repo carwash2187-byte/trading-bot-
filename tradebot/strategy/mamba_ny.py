@@ -118,6 +118,7 @@ class MambaNY(Strategy):
         block_into_structure: float = 0.0,
         add_at: float = 0.0,
         max_adds: int = 1,
+        max_losses_per_day: int = 2,
     ) -> None:
         self.session = session
         self.window_minutes = window_minutes
@@ -137,6 +138,9 @@ class MambaNY(Strategy):
         # position is this far ahead, double it. Zero disables.
         self.add_at = add_at
         self.max_adds = max_adds
+        # "If the second one doesn't work out, we are done for the day and we
+        # come back tomorrow and we do it again." Two losers ends his day.
+        self.max_losses_per_day = max_losses_per_day
 
     # -- reading his chart -----------------------------------------------
 
@@ -331,6 +335,10 @@ class MambaNY(Strategy):
         if context.has_position:
             return []
         if self._trades_today(context) >= self.max_trades_per_day:
+            return []
+        # "we are done for the day and we come back tomorrow"
+        if (self.max_losses_per_day > 0
+                and context.risk.losses_today(self.name) >= self.max_losses_per_day):
             return []
         if context.news is not None and context.news.active:
             return []

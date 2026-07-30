@@ -102,6 +102,9 @@ class RiskState:
     # "max 3 trades a day" rule silently becomes "max 3 at once". Measured on
     # MambaNY that let 4.4 trades a day through a cap set to 3.
     trades_today: dict = field(default_factory=dict)
+    # Losing trades closed today, per strategy. "If the second one doesn't work
+    # out, we are done for the day and we come back tomorrow and we do it again."
+    losses_today: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict:
         return {
@@ -111,6 +114,7 @@ class RiskState:
             "halted": self.halted,
             "halt_reason": self.halt_reason,
             "trades_today": dict(self.trades_today),
+            "losses_today": dict(self.losses_today),
         }
 
     @classmethod
@@ -124,6 +128,10 @@ class RiskState:
             trades_today={
                 str(k): int(v)
                 for k, v in dict(raw.get("trades_today", {})).items()
+            },
+            losses_today={
+                str(k): int(v)
+                for k, v in dict(raw.get("losses_today", {})).items()
             },
         )
 
@@ -150,6 +158,7 @@ class RiskManager:
             self.state.current_day = today
             self.state.day_start_equity = equity
             self.state.trades_today = {}
+            self.state.losses_today = {}
             if self.state.halt_reason == DAILY_LOSS:
                 self.state.halted = False
                 self.state.halt_reason = NO_BREACH
@@ -167,6 +176,16 @@ class RiskManager:
     def trades_today(self, strategy: str) -> int:
         """How many trades ``strategy`` has opened today."""
         return int(self.state.trades_today.get(strategy, 0))
+
+    def record_loss(self, strategy: str) -> None:
+        """Count a losing trade closed today by ``strategy``."""
+        if not strategy:
+            return
+        self.state.losses_today[strategy] = self.losses_today(strategy) + 1
+
+    def losses_today(self, strategy: str) -> int:
+        """How many losing trades ``strategy`` has closed today."""
+        return int(self.state.losses_today.get(strategy, 0))
 
     # -- derived numbers -------------------------------------------------
 

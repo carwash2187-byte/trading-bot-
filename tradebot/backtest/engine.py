@@ -288,6 +288,7 @@ def run_backtest(
     warmup = warmup if warmup is not None else window
     equity_curve: list[tuple[datetime, float]] = []
 
+    _reported = 0
     for i, candle in enumerate(candles):
         # Settle first: this bar's range applies to positions already open.
         if broker._prices.get(symbol.upper()) is not None:
@@ -308,6 +309,13 @@ def run_backtest(
         # counter never reset, which turned "max 3 trades a day" into "max 3
         # trades ever" -- 3 trades across 3.5 months.
         risk.update_equity(broker.get_account().equity, candle.timestamp)
+        # Report any trade the broker just closed at a loss, so his "two losses
+        # and we're done for the day" rule has something to count.
+        while broker.closed_trades and _reported < len(broker.closed_trades):
+            done = broker.closed_trades[_reported]
+            _reported += 1
+            if done.get("pnl", 0.0) < 0:
+                risk.record_loss(str(done.get("comment") or strategy.name))
 
         context = StrategyContext(
             symbol=symbol,
