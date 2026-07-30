@@ -28,7 +28,16 @@ THE ONE THING THAT MATTERS: by the end, every number and every rule in
 tradebot/strategy/mamba*.py traces to a sentence he said or a box he drew. Anything
 that traces to me is deleted and replaced with his.
 
-STILL MINE — HUNT HIS AND REPLACE, THIS IS THE JOB:
+EVERY PARAMETER OF MINE GETS ONE OF TWO FATES. There is no third option and no
+keeping it because it tests better:
+  (a) his number is found in a video and replaces mine, or
+  (b) the parameter is DELETED so there is nothing left that can differ from him.
+If he never states a number, that is not permission to pick one — it is a sign the
+rule should not be conditional on a number at all. Rip it out and let his stated
+rule stand alone. A parameter I invented is a difference between the bot and him
+even when it happens to be a good value.
+
+STILL MINE — FIND HIS OR DELETE IT, THIS IS THE JOB:
 - the vote threshold (min_votes) — he says "confluence" and "two confirmations if
   not like six", never a count. Find how he actually decides enough is enough.
 - trend_bars (48, 60), push_bars (60), min_push_pct (0.4%), stop_bars (3/12/24),
@@ -88,6 +97,11 @@ SAME RISK. SAME MARKETS. SAME SESSIONS. SAME HOLD TIMES. SAME STOPS. SAME TARGET
 The only difference is speed: the bot watches every market and every level at once
 and never misses an entry through being away from the screen, tired, or busy. He
 says himself he cannot sit at the camera for hours. Nothing else differs.
+
+AT THE END, PROVE IT. Write into research/mamba_notes.md a list of every remaining
+parameter in tradebot/strategy/mamba*.py with his quote beside it. Anything without
+a quote beside it has failed this run and must be deleted rather than explained.
+"He never says" is not a defence — it is the reason to remove it.
 
 COMMIT after every video and every gap closed. Keep research/mamba_videos.tsv
 current so nothing is watched twice.
