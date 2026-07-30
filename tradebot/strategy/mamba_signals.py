@@ -50,6 +50,7 @@ from .mamba import SESSION_OPENS_UTC
 from .mamba_patterns import (
     buildup_zone,
     ma_curve,
+    obv_divergence,
     double_top_bottom,
     engulfing,
     fair_value_gap,
@@ -62,9 +63,18 @@ class MambaSignals(Strategy):
     """Every pattern votes on direction; trade when enough of them agree.
 
     Args:
-        min_votes: How many patterns must point the same way. Two is the
-            "confluence" he talks about constantly -- "that's two confirmations
-            if not like six".
+        min_votes: How many of his signals must point the same way. THREE, and
+            this is the one parameter that stopped being mine: he counts them out
+            loud while placing a trade.
+
+                "we hit the bottom of a channel so we know it's gonna push to the
+                 upside, we have bearish divergence showing TWO CONFIRMATIONS and
+                 now in THIRD CONFIRMATION a fibonacci golden zone retest -- oh my
+                 god this trade's beautiful"
+
+            And he refuses a single one outright: "this isn't enough, we can't use
+            just this as a confirmation." Elsewhere: "that's two confirmations if
+            not like six." So the floor is three, not the two I had guessed.
         session: "you only trade during New York session". Empty string trades
             around the clock, which is what he does on gold and crypto.
         window_minutes: 210. "I don't like to trade much past 10:00 a.m."
@@ -112,7 +122,7 @@ class MambaSignals(Strategy):
 
     def __init__(
         self,
-        min_votes: int = 2,
+        min_votes: int = 3,
         btc_gates_alts: bool = True,
         session: str = "newyork",
         sessions: tuple[str, ...] = (),
@@ -365,7 +375,15 @@ class MambaSignals(Strategy):
         if swept:
             out["sweep"] = swept
 
-        # "lower lows higher high on our macd... price is bound to reverse"
+        # "from here to here lower low, look at the obv higher low -- that is a
+        # huge sign of reversal." OBV is what is actually loaded on his chart,
+        # visible in the legend beside EMA 8 and MA 21.
+        odiv = obv_divergence(candles)
+        if odiv:
+            out["obv"] = odiv
+
+        # "lower lows higher high on our macd... price is bound to reverse" -- one
+        # passing mention in one video, against OBV being on his chart throughout.
         div = macd_divergence(candles)
         if div:
             out["macd"] = div

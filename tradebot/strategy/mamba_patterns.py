@@ -65,7 +65,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from ..brokers.base import Candle
-from ..data.indicators import ema, sma
+from ..data.indicators import ema, obv, sma
 
 
 @dataclass(frozen=True)
@@ -450,3 +450,46 @@ def big_candle(
     if avg <= 0 or body < avg * size_mult:
         return 0
     return 1 if bar.close > bar.open else -1
+
+
+
+def obv_divergence(candles: list[Candle], lookback: int = 40) -> int:
+    """His divergence, which is read off OBV rather than MACD.
+
+        "from here to here lower low, look at the obv higher low -- that is a huge
+        sign of reversal"
+
+        "from here to here lower highs... from here to here higher highs, that is a
+        sign of bearish continuation"
+
+    Price making a lower low while OBV makes a higher low is his buy; price making
+    a higher high while OBV makes a lower high is his sell. He calls the bullish
+    case "bearish divergence" in the video -- his label is wrong, his rule is not,
+    and the rule is what is built.
+
+    This project already had MACD divergence, built from a single passing mention.
+    OBV is what is actually loaded on his chart, visible in the legend alongside
+    EMA 8 and MA 21, and it is what he points at while explaining the trade.
+
+    Returns +1 for his buy divergence, -1 for his sell divergence, 0 for neither.
+    """
+    if len(candles) < lookback + 2:
+        return 0
+    window = candles[-lookback:]
+    line = obv(candles)[-lookback:]
+    if any(v is None for v in line):
+        return 0
+
+    half = lookback // 2
+    p_first, p_last = window[:half], window[half:]
+    o_first, o_last = line[:half], line[half:]
+
+    # Price lower low, OBV higher low -> his reversal to the upside.
+    if (min(c.low for c in p_last) < min(c.low for c in p_first)
+            and min(o_last) > min(o_first)):
+        return 1
+    # Price higher high, OBV lower high -> his continuation to the downside.
+    if (max(c.high for c in p_last) > max(c.high for c in p_first)
+            and max(o_last) < max(o_first)):
+        return -1
+    return 0

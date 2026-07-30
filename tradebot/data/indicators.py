@@ -443,3 +443,32 @@ def compute_all(candles: list[Candle], **params) -> dict[str, object]:
             candles, params.get("bb_period", 20), params.get("bb_stdevs", 2.0)
         ),
     }
+
+
+def obv(candles: list[Candle]) -> Series:
+    """On-balance volume — MambaFX's divergence indicator.
+
+    He reads divergence off OBV, not off MACD:
+
+        "from here to here lower low, look at the obv higher low — that is a huge
+        sign of reversal"
+        "from here to here lower highs... from here to here higher highs, that is a
+        sign of bearish continuation"
+
+    Running total of volume, added on an up close and subtracted on a down close.
+    Its level is meaningless; only its shape against price matters.
+    """
+    out: Series = []
+    total = 0.0
+    prev: float | None = None
+    for c in candles:
+        if prev is None:
+            out.append(0.0)
+        else:
+            if c.close > prev:
+                total += c.volume
+            elif c.close < prev:
+                total -= c.volume
+            out.append(total)
+        prev = c.close
+    return out

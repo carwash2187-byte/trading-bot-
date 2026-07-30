@@ -2530,3 +2530,102 @@ His chart carries **8 indicators, legend permanently collapsed**, and he gates t
 settings behind his paid mentorship — his community has a locked channel called
 `secret-settings`. Also missing: touch count for a valid level, the exact breakeven
 trigger, the partial trigger, any re-entry rule, any post-loss sizing rule.
+
+## Cycle 1 — video 4JKwM9CeLig, "How I Made 3k In 1 Hour" (9:23)
+
+Subagent read his Fibonacci levels, his indicator legend and his position boxes off the
+screen and reconciled every number arithmetically. The most precise video yet.
+
+### THE VOTE THRESHOLD IS NO LONGER MINE — HE COUNTS TO THREE
+
+> "we hit the bottom of a channel so we know it's gonna push to the upside, we have
+> bearish divergence showing **two confirmations** and now in **third confirmation** a
+> fibonacci golden zone retest -- oh my god this trade's beautiful"
+
+And he refuses a single one outright:
+
+> "this isn't enough **we can't use just this as a confirmation**"
+
+`min_votes` was 2, guessed by me, and flagged in every audit as the parameter with no
+source. **His number is three, counted aloud while placing the trade.** Changed. It now
+selects 11.6% of bars, against 2 selecting far more — a real filter rather than a
+formality.
+
+### HIS INDICATOR LEGEND, read off the screen
+
+**EMA 8 close** (white), **MA 21 close** (orange, simple not exponential), and **OBV** in a
+lower pane.
+
+That is a different pair from the blank-chart video, which read out **SMA 8 and SMA 50**.
+Both are his, from different videos. The 8 is constant; the slow line is 21 here and 50
+there.
+
+### OBV, NOT MACD — and OBV is now built
+
+> "from here to here **lower low** look at the **obv higher low** that is a huge sign of
+> reversal"
+> "from here to here lower highs... from here to here higher highs that is a sign of
+> bearish continuation"
+
+MACD divergence went into this project on a single passing mention. **OBV is what is
+actually loaded on his chart** and what he points at while explaining the trade. Added
+`obv()` to the indicators and `obv_divergence()` as a signal; it fires on 19.8% of bars.
+
+Note he calls the bullish case "bearish divergence". His label is wrong, his rule is not,
+and the rule is what got built.
+
+### HIS FIBONACCI LEVELS, exact
+
+| level | note |
+|-------|------|
+| -0.618, -0.236 | extensions on the template, **never referenced** |
+| 0 | the anchor high |
+| 0.236, 0.382 | plain |
+| **0.5** | **coloured gold** |
+| **0.618** | **coloured gold** |
+| 0.764 | **not 0.786** -- a non-default level |
+| 1 | the anchor low |
+
+The golden zone is 0.5-0.618 as already built. Two new facts: he uses **0.764 rather than
+the standard 0.786**, and he never touches 0.705 or 0.79.
+
+### AND A CORRECTION TO HOW I ANCHOR IT
+
+> "take my Fibonacci I'm gonna **draw from this low to this high**"
+
+Measured: he anchors on **wicks, not bodies**, and on the **bounce leg** -- the swing low
+that just held the channel up to the first rally peak off it. That leg was **49.9 pips**.
+
+`mamba_fib` finds the largest push in its window. He uses the small, most recent impulse.
+Different thing.
+
+### THE DOUBLE TOP IS A RED HERRING
+
+> "I know a lot of you guys are asking, you see a double top, like why is this your entry"
+
+He raises it only to dismiss the objection. The signal is channel touch plus divergence
+plus golden zone. His double top is not a pattern he trades -- it is the thing he explains
+away. That corrects the pairing I built earlier.
+
+### BREAKEVEN WAS NARRATED, NEVER EXECUTED
+
+> "once we hit you know 50 pips profit we're getting our stop losses to break-even anyways"
+
+Measured: the stop box reads 1.07933 in every later frame. **It never moves.** So the
+breakeven rule in the code is built from his words, not his chart -- worth knowing before
+treating it as observed behaviour.
+
+### HIS STOP AND HOLD, measured
+
+Stop 30.3 pips, sitting **9.2 pips below the swing low**. Short trade: 45.2 pips. Position
+boxes drawn to scale and the ratio labels honest -- 4.01 measured against 4.01 displayed.
+
+Hold times: **~3h20m and ~6h**, across two calendar days. The title says one hour; his own
+closing line says "two trades 300 pips in the span of one day". The 3k is $1,395 + $2,019
+across both.
+
+### AND A REGIME WARNING
+
+The chart is **18-19 March 2020** -- peak pandemic volatility, EURUSD 1H candles with
+110-pip ranges. A 30-pip stop and a 120-pip target are calibrated to that. They will not
+transfer to a normal EURUSD, and he never says so.
