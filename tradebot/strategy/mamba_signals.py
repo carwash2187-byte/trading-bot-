@@ -713,28 +713,35 @@ class MambaSignals(Strategy):
         else:
             return []
 
-        # His Bitcoin master switch. BTC publishes where it is going; the alts are
-        # only allowed to follow. "anytime bitcoin falls or gets pumped most other
-        # cryptos... are going to pump up as well."
-        if self.btc_gates_alts:
-            symbol = context.symbol.upper()
-            is_btc = symbol.startswith("BTC")
-            alt = symbol.endswith("USD") and symbol[:3] in (
-                "ETH", "LTC", "XRP", "DOG", "SOL", "AVA", "LIN", "FIL",
-            )
-            if is_btc:
-                type(self)._btc_bias = direction
-                type(self)._btc_seen_at = context.now
-            elif alt:
-                fresh = (
-                    type(self)._btc_seen_at is not None
-                    and abs((context.now - type(self)._btc_seen_at).total_seconds())
-                    <= 3600
-                )
-                # No recent read on Bitcoin means no opinion to follow, so no trade.
-                # He never trades an alt without knowing what BTC is doing.
-                if not fresh or type(self)._btc_bias != direction:
-                    return []
+        # HIS BITCOIN RULE IS ADVISORY, ONE-DIRECTIONAL, AND HE DOES NOT USE IT.
+        #
+        # What was built here refused to trade an alt unless Bitcoin had been read
+        # within the hour AND agreed with the direction. That is a hard filter, and
+        # it is not what he says. His only statement on it, in full:
+        #
+        #   "one thing to keep in mind is always keep up with bitcoin -- right, if
+        #    bitcoin is making higher highs and you think everyone's buying bitcoin
+        #    and it's going crazy coming off that demand zone, whatever the case may
+        #    be, WELL THEN YOU MIGHT WANT TO LOOK FOR BUYS on the alt coins as well,
+        #    because A LOT OF TIMES they're going to follow the same pattern"
+        #
+        # "one thing to keep in mind", "you MIGHT WANT TO", "A LOT OF TIMES". There
+        # is no "do not trade unless" anywhere in it. It only ever points one way --
+        # Bitcoin making higher highs suggests alt BUYS - and he says nothing at all
+        # about Bitcoin falling.
+        #
+        # And his own crypto workflow never checks it: across an eight-minute
+        # altcoin walkthrough he runs five or six SHIB entries without opening a
+        # Bitcoin chart once, and only loads BTCUSD after the strategy section is
+        # over, for a macro buy-and-hold opinion.
+        #
+        # So the filter blocked every single entry he actually demonstrates. It is
+        # deleted rather than softened, because a rule that only ever permits what
+        # is already permitted is dead code, and this project has found enough of
+        # that. The bias is still published for anything that wants it.
+        if self.btc_gates_alts and context.symbol.upper().startswith("BTC"):
+            type(self)._btc_bias = direction
+            type(self)._btc_seen_at = context.now
 
         # The higher timeframes get the final say, because he checks them first.
         if self.higher_tf_gates and (self.h4_bars > 0 or self.daily_bars > 0):

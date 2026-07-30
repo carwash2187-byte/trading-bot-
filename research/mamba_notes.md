@@ -4012,3 +4012,65 @@ the bot call a level anything price had brushed twice.
 **All four setups still fire after the changes:** NY break 54 of 1,000, fib gold zone 123,
 RSI 10, break-and-retest 1. The last is very low and that agrees with his own verdict on it —
 "when you wait for that retest and it doesn't come... it just takes too long."
+
+## "$1,000 PER DAY Trading ALTCOINS" (kN44EybgWik) — THE BITCOIN GATE WAS MINE, AND IT REFUSED EVERY TRADE
+
+### HIS FULL AND ONLY STATEMENT ABOUT BITCOIN AND ALTS
+
+> "one thing to keep in mind is always keep up with bitcoin -- right, if bitcoin is making
+> higher highs and you think everyone's buying bitcoin and it's going crazy coming off that
+> demand zone, whatever the case may be, **WELL THEN YOU MIGHT WANT TO LOOK FOR BUYS** on
+> the alt coins as well, because **A LOT OF TIMES** they're going to follow the same pattern"
+
+"one thing to keep in mind." "You **might want to**." "**A lot of times**." There is no "do
+not trade unless" anywhere in it. It points **one way only** — Bitcoin making higher highs
+suggests alt **buys** — and he says nothing whatsoever about Bitcoin falling.
+
+**What I had built:** an alt could not trade unless Bitcoin had been read within the hour
+AND agreed with the direction. A hard refusal, from an advisory sentence.
+
+**And his own workflow never checks it.** Across an eight-minute altcoin walkthrough he runs
+five or six SHIB entries without opening a Bitcoin chart once. He only loads BTCUSD *after*
+the strategy section is finished, and uses it for a macro buy-and-hold opinion.
+
+**Measured: an alt with Bitcoin never read fired 0 times under the old gate and 23 now.**
+Zero — always — because a bot pointed at one altcoin never reads Bitcoin at all. The rule
+blocked every entry he demonstrates, forever, and it looked exactly like having no signal.
+
+Deleted rather than softened: a rule that only ever permits what is already permitted is
+dead code, and this project has found enough of that. The bias is still published.
+
+### FIXED CASH RISK, CONFIRMED A FOURTH TIME
+
+The position tool reads **$750 stop amount on all eight readings** while the quantity
+recalculates from 110 million to 25 billion SHIB units. Same signature as his fib video, his
+NAS100 boxes, and the flat arithmetic in the 3-weeks video. **He sets the money, and the stop
+decides the size.**
+
+### AND A MODE I HAVE NOT BUILT: NO TAKE PROFIT AT ALL
+
+> "for me when i trade **i have a huge account**, so i'm able to actually **not go for that
+> next resistance** -- i'm able to just **trail my stop-loss and follow it all the way to the
+> upside**"
+> "it's very very very nice to trail your stop-loss and, sounds weird, **trade without a take
+> profit**"
+> "this white line is your stop-loss, you're just going to trail it... you're gonna chase
+> that trade, boom, right under that previous support, now **candle to candle**"
+
+That is the same candle-by-candle trail built in cycle 8, but with **no target at all** — and
+he is explicit that it is a big-account mode, not the one he teaches. Recorded, not built,
+because he names the account size as the precondition and Leo's is the opposite end.
+
+### OTHER MEASUREMENTS
+
+* Timeframes **H4 → 5m**, confirmed by which tab is lit. 15m and 1h are **never** selected —
+  a fifth distinct timeframe answer.
+* Stop widths drawn: **2.38%, 2.84%, 4.22%** of entry. Targets **4.23% to 15.82%**.
+* Ratios measured in pixels: **2.08** and **5.58**, matching TradingView's own labels exactly.
+* His zones are **deliberately wide**: "the demand is **everything to the side of it as
+  well**, so this whole area would be a demand zone."
+* And he is explicitly loose about trendlines: "you don't have to have a trend line like
+  this... **even though we're not connecting on each trend line**." Measured: one drawn on
+  **two** touches.
+* **No daily limit anywhere in this video** — no trade cap, no win-ends-day. He runs five or
+  six setups back to back. Every other video has the two-trade rule; this one never mentions it.
