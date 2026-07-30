@@ -4074,3 +4074,64 @@ because he names the account size as the precondition and Leo's is the opposite 
   **two** touches.
 * **No daily limit anywhere in this video** — no trade cap, no win-ends-day. He runs five or
   six setups back to back. Every other video has the two-trade rule; this one never mentions it.
+
+## "Mobile Trading STRATEGY" (Yq31IN9PFPw) — THE BANDS GO ON THE RSI, NOT ON PRICE
+
+This is the video where he names the setup after himself — "**the Mamba sniping scalping
+perfect entry strategy**" — and the code had the central indicator wrong.
+
+**Read straight off his MetaTrader properties screens:**
+
+    Bollinger Bands    Period 34, Shift 0, Deviations 2.000,
+                       APPLY TO: FIRST INDICATOR'S DATA
+    RSI                Period 14, Apply to Close, Levels 75 / 0 / 25 / 0
+
+**And his Indicators screen shows the placement outright:**
+
+    Main window          Moving Average, Moving Average, Moving Average
+    Indicator window 1   Relative Strength Index, BOLLINGER BANDS
+
+"First Indicator's Data" in that sub-window **is the RSI**. The legend proves it numerically:
+`RSI(14) 53.07  Bands(34) 46.881 63.688 30.075` — those are RSI-scale numbers, not GBPJPY
+prices, and (63.688 + 30.075) / 2 = 46.881, the middle band exactly.
+
+**The code computed them on price**, which is a different indicator entirely. Now fixed:
+fires 46 times at a median 1:3.22.
+
+Build order matters for anyone reproducing it: RSI into a sub-window **first**, then the
+bands into that same sub-window with Apply-to set to First Indicator's Data. His spoken
+instructions give the reverse order because he is re-opening a chart he already built and
+fumbles it live — "oh we already had bollinger bands, i'm sorry, what the hell."
+
+### AND HE COUNTS THE CONFLUENCES HERE — THE NUMBER IS TWO
+
+> "all it is is like a **two confirmation** pretty much scalping strategy where you're gonna
+> use bollinger bands and rsi and that's pretty much it"
+
+The two are **the RSI breaking its band** and **the RSI breaking the 75/25 level**. He also
+permits one alone: "sometimes you can do bollinger bands by themselves, but **I really prefer
+you guys do these together, because when you see both that's when it's going to be the most
+deadly**."
+
+Measured band geometry makes the pairing strict: his bands sit around **63.7 / 30.1** while
+the levels are **75 / 25**, so the levels are OUTSIDE the bands and requiring both means the
+75/25 is the binding constraint.
+
+### HIS OTHER NUMBERS, AND WHERE THEY FIGHT
+
+* **Breakeven at +20 pips, absolute**: "you'd probably be up 20 pips and then you're just
+  gonna relax." That is a fixed pip count, against the **half-the-way-to-target** rule built
+  last cycle from a different video. Reconcilable only if his usual target is ~40 pips.
+* **H1 on screen in 100% of frames, never switched.** "you can use the h4, h1, m15 is very
+  deadly as well, but **h1 is kind of the most secure**." A fifth timeframe answer, and it
+  backs "H1 only".
+* **He recommends retests here** — "add this to your price action trading strategy such as
+  **breaks and re-tests**, trend lines, fibonaccis" — directly against "I abandoned retests".
+* **Position size is a free dial**: "**adjust your freaking lot sizes** and you're making
+  whatever percentage you want to make just by adjusting your lot sizes." Sizing chosen to
+  produce a return rather than to cap a loss. NOT built.
+* **NO stop loss is specified anywhere in the video**, and no order ticket is ever opened.
+  The agent's own verdict, which I agree with: the initial stop and the position size are the
+  two things this video cannot supply, and anything put there is mine rather than his.
+* Three moving averages sit on his price chart in every frame and he **never opens, names or
+  mentions them**. Settings unreadable. Recorded as unknown rather than guessed.

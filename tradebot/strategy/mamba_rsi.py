@@ -183,17 +183,43 @@ class MambaRsi(Strategy):
         return best
 
     def _band_broken(self, candles: list[Candle], direction: int) -> bool:
-        """Confirmation three: "our Bower bands they have been broken out of"."""
-        bands = bollinger(candles, period=self.boll_period, stdevs=self.boll_stdevs)
-        upper = bands.upper[-1] if bands.upper else None
-        lower = bands.lower[-1] if bands.lower else None
-        if upper is None or lower is None:
+        """THE BANDS GO ON THE RSI, NOT ON PRICE.
+
+        Read straight off his MetaTrader properties screens, not inferred:
+
+            Bollinger Bands   Period 34, Shift 0, Deviations 2.000,
+                              APPLY TO: FIRST INDICATOR'S DATA
+            RSI               Period 14, Apply to Close, Levels 75 / 0 / 25 / 0
+
+        And his Indicators screen shows the placement outright:
+
+            Main window          Moving Average, Moving Average, Moving Average
+            Indicator window 1   Relative Strength Index, BOLLINGER BANDS
+
+        "First Indicator's Data" in that sub-window IS the RSI. The sub-window
+        legend proves it numerically -- it reads `RSI(14) 53.07  Bands(34) 46.881
+        63.688 30.075`, and those band values are RSI-scale numbers, not GBPJPY
+        prices. (63.688 + 30.075) / 2 = 46.881, the middle band exactly.
+
+        This computed the bands on PRICE, which is a different indicator entirely
+        and the wrong one. He calls this setup "the Mamba strategy" and it is the
+        only one he names after himself.
+        """
+        series = rsi(candles, period=self.rsi_period)
+        vals = [v for v in series if v is not None]
+        if len(vals) < self.boll_period + 1:
             return False
-        bar = candles[-1]
-        # Selling a weakening push up: price has poked out of the upper band.
+        window = vals[-self.boll_period:]
+        mid = sum(window) / len(window)
+        sd = (sum((x - mid) ** 2 for x in window) / len(window)) ** 0.5
+        if sd <= 0:
+            return False
+        value = vals[-1]
+        # "almost broke below the bollinger bands but not quite, BUT I WOULD COUNT
+        # THAT AS BREAKING BELOW BECAUSE IT'S PRETTY MUCH IN IT" -- touching counts.
         if direction < 0:
-            return bar.high >= upper
-        return bar.low <= lower
+            return value >= mid + sd * self.boll_stdevs
+        return value <= mid - sd * self.boll_stdevs
 
     def _rsi_ok(self, candles: list[Candle], direction: int) -> bool:
         """"anytime the RSI breaks above the 75 Zone we're looking for sells"."""
