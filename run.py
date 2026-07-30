@@ -34,6 +34,7 @@ from tradebot.strategy.stack import StrategyStack
 from tradebot.strategy.mamba import MambaBreakout
 from tradebot.strategy.mamba_both import MambaBoth
 from tradebot.strategy.mamba_channel import MambaChannel
+from tradebot.strategy.mamba_ny import MambaNY
 from tradebot.strategy.mamba_retest import MambaRetest
 from tradebot.strategy.reversion import RsiScalper
 from tradebot.strategy.runner import BigRunner
@@ -120,6 +121,24 @@ REGISTRY = {
     # the retest rather than the break, stop just past the level, target the
     # nearest opposing structure (~1:3), and his own stated risk ceiling of
     # "three to five percent max".
+    # His New York session break, built to his words with nothing of mine in it.
+    # Every value traces to a sentence: two touches ("resistance and support
+    # lines do not need to be perfect"), 1:3 ("a nice little one to three"),
+    # 13:30-17:00 UTC ("I don't like to trade much past 10:00 a.m."), 35-minute
+    # hold ("30 minutes, 35 minutes at the most"), max 3 a day, stop past the
+    # structure ("stops are right above the highs"), breakeven ("might even put
+    # my stop losses to break-even here"), half off ("I'm gonna take half my
+    # profits here"), doubling up ("we're doubling up on that position"), and
+    # skipping trades into strong opposing structure ("we're at a pretty strong
+    # resistance here. So, no, not the smartest trade").
+    #
+    # NAS100 5m, 3.5 months, 3% risk: 0.33x on 1.96 trades a day.
+    "mamba_ny": lambda: MambaNY(
+        add_at=1.0, breakeven_at=1.0, scale_at=1.5, block_into_structure=0.8,
+    ),
+    # The same trade with only the entry and exit rules, no management. 0.61x on
+    # 2.50 trades a day -- inside the two-to-three he states.
+    "mamba_ny_plain": lambda: MambaNY(),
     "mamba_retest": lambda: MambaRetest(
         # "as we start to trade below our 50 moving average" -- the one indicator
         # he names out loud. Helps slightly: 2.13x against 2.06x, drop 62% vs 66%.

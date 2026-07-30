@@ -116,6 +116,8 @@ class MambaNY(Strategy):
         breakeven_at: float = 0.0,
         scale_at: float = 0.0,
         block_into_structure: float = 0.0,
+        add_at: float = 0.0,
+        max_adds: int = 1,
     ) -> None:
         self.session = session
         self.window_minutes = window_minutes
@@ -129,6 +131,12 @@ class MambaNY(Strategy):
         self.breakeven_at = breakeven_at
         self.scale_at = scale_at
         self.block_into_structure = block_into_structure
+        # "well let me do two yep there it is we're doubling up on that position
+        # by the way I'm pretty confident we're going to push out here."
+        # He adds when the trade is already working. Measured in R: once a
+        # position is this far ahead, double it. Zero disables.
+        self.add_at = add_at
+        self.max_adds = max_adds
 
     # -- reading his chart -----------------------------------------------
 
@@ -290,6 +298,33 @@ class MambaNY(Strategy):
                     if half >= 0.01 and pos.lots > 0.01:
                         return [Exit(ticket=pos.ticket, lots=half,
                                      reason="half-off")]
+
+        # "we're doubling up on that position... I'm pretty confident"
+        # Only into a winner, and only while the original stop still protects
+        # the whole thing -- he adds because it is working, not to rescue it.
+        if self.add_at > 0:
+            for pos in context.open_positions:
+                if pos.comment != self.name or pos.stop_loss is None:
+                    continue
+                risk = abs(pos.entry_price - pos.stop_loss)
+                if risk <= 0:
+                    continue
+                price = context.ask if pos.is_long else context.bid
+                ahead = ((price - pos.entry_price) if pos.is_long
+                         else (pos.entry_price - price))
+                if ahead < risk * self.add_at:
+                    continue
+                # One add per original trade. Counting positions on this symbol
+                # is what bounds it, so nothing has to survive a restart.
+                mine = [p for p in context.open_positions if p.comment == self.name]
+                if len(mine) > self.max_adds:
+                    continue
+                return [Enter(
+                    side=pos.side,
+                    stop_loss=pos.stop_loss,
+                    take_profit=pos.take_profit,
+                    comment=self.name,
+                )]
 
         # -- entries ------------------------------------------------------
 

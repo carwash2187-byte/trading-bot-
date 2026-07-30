@@ -976,3 +976,67 @@ because the old number came from a cap that was never applied.
 position stamps, an exit behind an entry gate, and now a calendar that never advanced.
 Every one produced plausible numbers. The tell is always that a rule which should
 change behaviour changes nothing.
+
+---
+
+## CYCLE 1 of 2 (20-minute run) — "How To Trade SMALL Forex Accounts Using the 1 Minute Timeframe" (5cnHDWQkwLg)
+
+Live session, gold, 1-minute chart, $500 account. Narrated as it happens.
+
+### HE ADDS TO POSITIONS — doubles up when confident
+
+> "well let me do two yep there it is **we're doubling up on that position** by the
+> way **I'm pretty confident** we're going to push out here"
+
+Not built anywhere. Building it.
+
+### HIS RESULT THAT SESSION, and his real short-timeframe frequency
+
+> "a **$41 win a $40 win and a $44 win with only $115 loss** turning our **$500
+> account into $600** in the span of I don't know it's been like what what would you
+> say 30 minutes or so an hour 30 minutes about **30 minutes**"
+
+**+20% in about 30 minutes, four trades.** On the 1-minute he trades far more often
+than the two-to-three a day he quotes for indices. Two different tempos for two
+different timeframes.
+
+### 1-MINUTE TRADES MUST BE TAKEN QUICKLY — his words on hold time again
+
+> "with these **one minute trades you got to get in you got to get up quick** it's
+> not going to be something that lasts you're not going to get in and you're not
+> going to watch it just drop and drop and drop **they're reversing and they reverse
+> fast** you got to try to maximize your gains"
+
+### TARGET IS THE NEXT STRUCTURE
+
+> "we will go ahead and wait **Target these next highs**"
+> "I want to **Target these highs up here** because I truly do believe that's where
+> we're going to go"
+
+### GOLD, ON THE 1 MINUTE, IN THE EVENING
+
+> "we're currently on the **1 minute time frame on gold** we are coming to a support
+> Zone"
+> "this could be our **final trade of tonight** and we'll come back tomorrow"
+
+Evening US time is the Tokyo session, which matches "Tokyo session for me is better
+for gold" from the other video. Consistent.
+
+### HE STOPS WHEN THERE IS NOTHING THERE
+
+> "we'll take a couple more final trades **if they are there if not then that's it**"
+
+### Cycle 1 results — NAS100 5m, 3.5 months, 3% risk
+
+| build | growth | trades/day | win% | hold | drop |
+|-------|--------|-----------|------|------|------|
+| his entry/exit rules only | 0.61x | 2.50 | 38.5% | 35m | 53% |
+| + doubling up at 1R | 0.61x | 2.50 | 38.5% | 35m | 53% |
+| + breakeven at 1R | 0.56x | 35.4% | | 35m | 54% |
+| + half off at 1.5R | 0.68x | 2.81 | 45.9% | 30m | 55% |
+| + skip into strong structure | 0.40x | 1.98 | 28.5% | 20m | 61% |
+| everything he says he does | 0.33x | 1.96 | 25.9% | 15m | 67% |
+
+Registered `mamba_ny` with everything on, and `mamba_ny_plain` with entry and exit
+only. Trade frequency is 1.96-2.81 a day, inside his stated two-to-three, and this
+is the first build where that cap is genuinely enforced rather than silently absent.
