@@ -4669,3 +4669,28 @@ Two separate faults:
 
 Verified against the live feed: **92 events, 19 of them high-impact**, and its fields
 (`title`, `country`, `date`, `impact`) map straight onto what the parser already accepted.
+
+## EVERY SECOND, WITHOUT GETTING BANNED — and a cache that stored nothing
+
+A one-second loop across four markets was unaffordable: three requests per market
+per cycle is roughly **14 a second, over a million a day** at one provider. Brokers
+throttle or ban for that, and **a banned bot does not trade at all**, which is worse
+than a slow one.
+
+But the arithmetic was wrong in an obvious way once looked at: **a 5-minute candle
+changes every 5 minutes.** Re-downloading it three hundred times in between buys
+nothing. What actually moves second to second is the **price**, and that is a
+separate, much cheaper call.
+
+So bars are now held until the bar they belong to closes. Measured: **20 cycles ask
+the broker once instead of twenty**, and each market is fetched independently.
+
+That makes `--loop 1` affordable, and it is what the service now ships with.
+
+**And the first version of the cache stored nothing.** The read checked
+`end is None`, then `end` was defaulted to now a few lines further down, so the
+matching check at the write site was *always false*. The cache read worked, the
+cache write never ran — it looked completely implemented and did nothing.
+
+Same shape as the eleven silent rules, in a different file, found the same way: by
+counting whether it actually fired rather than reading whether it looked right.

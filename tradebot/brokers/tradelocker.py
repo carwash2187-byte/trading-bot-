@@ -98,6 +98,8 @@ class TradeLockerBroker(Broker):
         timeout: float = 15.0,
     ) -> None:
         super().__init__(mode=mode)
+        # Bars, held until the bar they belong to closes. See get_candles.
+        self._candle_cache: dict[tuple, tuple] = {}
         self.username = username
         self.password = password
         self.server = server
@@ -330,6 +332,52 @@ class TradeLockerBroker(Broker):
     def get_candles(
         self, symbol: str, timeframe: str, count: int, end: datetime | None = None
     ) -> list[Candle]:
+        """Bars, cached until the next one is actually due.
+
+        THIS IS WHAT MAKES A ONE-SECOND LOOP POSSIBLE.
+
+        Every cycle asked the broker for candles again, and on a five-second loop
+        across four markets that is roughly 14 requests a second -- over a million
+        a day at one provider. Brokers throttle or ban for that, and a banned bot
+        does not trade at all, which is worse than a slow one.
+
+        But a 5-minute candle only changes every 5 minutes. Re-downloading it 300
+        times in between buys nothing. What genuinely moves second to second is
+        the PRICE, and `get_price` is a separate, much cheaper call that is not
+        cached at all.
+
+        So the bars are held until the bar they belong to closes. That cuts the
+        per-symbol cost of a cycle from three requests to one, and the saving
+        grows the faster the loop runs -- at one second it is a ~99% reduction on
+        the candle traffic. His entry is intrabar anyway ("I'm going to get in
+        right on that wick"), and intrabar means the live price, not a new bar.
+        """
+        # Created on first use rather than in __init__, because a subclass that
+        # does not call super().__init__() would otherwise raise AttributeError
+        # here -- which is exactly what happened to the history tests, and would
+        # equally happen to any custom broker someone wrote later.
+        cache = getattr(self, "_candle_cache", None)
+        if cache is None:
+            cache = {}
+            self._candle_cache = cache
+
+        # Captured BEFORE `end` is defaulted to now, a few lines below. Testing
+        # `end is None` again at the bottom is always False by then, so the cache
+        # read worked while the cache WRITE never ran -- it stored nothing, and
+        # looked completely implemented while doing so. Exactly the shape of the
+        # silent rules this project keeps turning up, in a different file.
+        cacheable = end is None
+
+        if cacheable:
+            minutes = max(1, timeframe_minutes(timeframe))
+            now = utcnow()
+            # Which bar are we inside? The cache is valid for the whole of it.
+            bar_index = int(now.timestamp()) // (minutes * 60)
+            key = (symbol.upper(), timeframe.lower(), count)
+            hit = cache.get(key)
+            if hit is not None and hit[0] == bar_index:
+                return hit[1]
+
         iid = self._instrument_id(symbol)
         resolution = _RESOLUTIONS.get(timeframe.lower())
         if resolution is None:
@@ -393,7 +441,19 @@ class TradeLockerBroker(Broker):
                 "%s %s: asked for %d bars, server had %d",
                 symbol, timeframe, count, len(out),
             )
-        return out[-count:]
+        bars = out[-count:]
+        if cacheable:
+            minutes = max(1, timeframe_minutes(timeframe))
+            bar_index = int(utcnow().timestamp()) // (minutes * 60)
+            cache = getattr(self, "_candle_cache", None)
+            if cache is None:
+                cache = {}
+                self._candle_cache = cache
+            cache[(symbol.upper(), timeframe.lower(), count)] = (bar_index, bars)
+            # Never let it grow without bound across a long session.
+            if len(cache) > 64:
+                cache.clear()
+        return bars
 
     # -- trading ---------------------------------------------------------
 
