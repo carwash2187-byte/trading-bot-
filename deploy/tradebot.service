@@ -1,0 +1,68 @@
+# systemd unit — keeps the bot running 24/7 with the Mac off.
+#
+# Install:  sudo cp deploy/tradebot.service /etc/systemd/system/
+#           sudo systemctl daemon-reload
+#           sudo systemctl enable --now tradebot
+#
+# Watch:    journalctl -u tradebot -f
+# Stop:     sudo systemctl stop tradebot
+# Restart:  sudo systemctl restart tradebot
+
+[Unit]
+Description=MambaFX copy bot
+# Do not start before the box has a working network, or the first calendar
+# fetch and the broker login both fail and the service restart-loops.
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=tradebot
+WorkingDirectory=/home/tradebot/tradebot
+
+# Credentials live in a file the service reads, never on the command line --
+# anything on the command line shows up in `ps` for every user on the box.
+EnvironmentFile=/home/tradebot/tradebot/.env
+
+# --loop 5 = check every market every five seconds. He watches one chart at a
+# time; this watches four, twelve times a minute.
+#
+# --mode demo until it has been seen placing and closing real orders. Going live
+# needs BOTH --mode live and TRADEBOT_ALLOW_LIVE=yes, and that is a deliberate
+# two-key change rather than something a typo can do.
+ExecStart=/usr/bin/python3 /home/tradebot/tradebot/run.py \
+    --broker tradelocker \
+    --mode demo \
+    --symbols NAS100,US30,GBPUSD,XAUUSD \
+    --strategies mamba_complete \
+    --risk-per-trade 0.10 \
+    --news-url https://nfs.faireconomy.media/ff_calendar_thisweek.json \
+    --loop 5 \
+    --verbose
+
+# If it dies for any reason -- crash, broker dropping the socket, the box
+# rebooting -- bring it straight back. Ten seconds is long enough to avoid
+# hammering a broker that is refusing connections, short enough that a restart
+# is invisible on a five-second loop.
+Restart=always
+RestartSec=10
+
+# Do not let a restart loop run away silently: if it fails five times inside two
+# minutes, stop and stay stopped so the heartbeat goes stale and it is obvious
+# something is actually wrong rather than the box quietly thrashing.
+StartLimitBurst=5
+StartLimitIntervalSec=120
+
+StandardOutput=journal
+StandardError=journal
+
+# Basic hardening. The bot needs the network and its own directory; it has no
+# business anywhere else on the filesystem.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=/home/tradebot/tradebot
+
+[Install]
+WantedBy=multi-user.target
