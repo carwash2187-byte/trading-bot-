@@ -2815,3 +2815,37 @@ trading account guide.
 None of it plays in this video, but it names the parts he considers the method -- and
 "stop loss adjustments" being its own section confirms that moving stops is central rather
 than incidental.
+
+## Cycle 2 — his level map built, and it is a different architecture
+
+`level_map()` and `snap_to_level()` in `mamba_patterns.py`.
+
+He does not compute a stop from a swing or a target from a multiple. He draws the
+horizontal levels first and then picks entry, stop and targets off that map. Proven on
+the $250k trade, where all five prices matched lines already on his chart:
+
+| his price | drawn level | gap |
+|-----------|-------------|-----|
+| entry 14085.25 | 14085.73 | 0.5 pts |
+| TP1 14173.72 | 14171.26 | 2.5 |
+| TP2 14242.28 | 14238.74 | 3.5 |
+| TP3 14384.48 | 14384.18 | 0.3 |
+| stop 14003.83 | 14003.75 | 0.1 |
+
+Built from wick extremes rather than closes, because his zones get pierced -- a level is
+where price REACHED, not where it settled. Clustered so a level is a band several wicks
+returned to, ranked by attendance, handed back in price order so a caller can walk the map
+up or down.
+
+Verified on US30 15m: **24 levels** where he had about twenty, and a level within range on
+**93% of bars**.
+
+### Why this matters more than any single rule
+
+Every knob still flagged as mine exists because there was no map to select from --
+`stop_bars`, `target1`, `target2`, `fallback_reward`, `trail_after`. With a map, those are
+answering a question he never asks. `snap_to_level` returning None is itself the answer in
+the case they were invented for: **no level in range means no target he would have drawn,
+so there is no trade** rather than a number I made up.
+
+That is the route to deleting the rest of them rather than tuning them.

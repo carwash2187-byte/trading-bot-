@@ -493,3 +493,98 @@ def obv_divergence(candles: list[Candle], lookback: int = 40) -> int:
             and max(o_last) < max(o_first)):
         return -1
     return 0
+
+
+def level_map(
+    candles: list[Candle],
+    lookback: int = 300,
+    tolerance_pct: float = 0.0004,
+    min_touches: int = 3,
+    max_levels: int = 24,
+) -> list[float]:
+    """The horizontal levels he draws BEFORE deciding anything.
+
+    This is the most codeable thing found in his videos, and nothing else in this
+    project works this way. On the $250k trade his 5-minute chart carried about
+    twenty persistent horizontal rays with price tags, and every price in the trade
+    turned out to be one of them:
+
+        entry 14085.25   -> drawn level 14085.73
+        TP1   14173.72   -> drawn level 14171.26
+        TP2   14242.28   -> drawn level 14238.74
+        TP3   14384.48   -> drawn level 14384.18
+        stop  14003.83   -> drawn level 14003.75
+
+    All five within three points of lines that were already on the chart. He does
+    not compute a stop from a swing or a target from a multiple -- he builds the
+    map first and then picks entry, stop and targets off it. His own words for what
+    the map is made of:
+
+        "right here we have as you can see resistance -- boom boom boom boom boom
+         -- price comes above"
+
+        "this is a zone where price is actually having resistance... this is supply
+         we have supply here, right here more supply"
+
+        "when you have a buildup in a zone on a H4, a lot of times it's going to
+         get respected"
+
+    Everything the rest of this project does -- stop_bars, target1, target2,
+    fallback_reward, the trail distance -- exists because I had no map to select
+    from. With one, those knobs are answering a question he never asks.
+
+    Returns prices sorted low to high, each being a band that price has visited at
+    least ``min_touches`` times and then left.
+    """
+    window = candles[-lookback:]
+    if len(window) < 30:
+        return []
+    price = window[-1].close
+    band = price * tolerance_pct
+    if band <= 0:
+        return []
+
+    # Every wick extreme is a candidate. He points at wicks, not closes -- and his
+    # zones get pierced, so a level is where price REACHED, not where it settled.
+    extremes: list[float] = []
+    for c in window:
+        extremes.append(c.high)
+        extremes.append(c.low)
+    extremes.sort()
+
+    # Cluster the extremes: a level is a price several wicks came back to.
+    levels: list[tuple[float, int]] = []
+    i = 0
+    while i < len(extremes):
+        j = i
+        while j < len(extremes) and extremes[j] - extremes[i] <= band:
+            j += 1
+        touches = j - i
+        if touches >= min_touches:
+            levels.append((sum(extremes[i:j]) / touches, touches))
+        i = j
+
+    # Keep the best-attended ones, then hand them back in price order so callers
+    # can walk up or down the map.
+    levels.sort(key=lambda lv: -lv[1])
+    return sorted(lv[0] for lv in levels[:max_levels])
+
+
+def snap_to_level(
+    price: float, levels: list[float], side: int, max_away_pct: float = 0.004
+) -> float | None:
+    """Pick the nearest level above or below a price, the way he selects a target.
+
+    ``side`` +1 looks up, -1 looks down. Returns None when the map has nothing
+    within ``max_away_pct`` -- which is itself information: no level in range means
+    no target he would have drawn, so there is no trade rather than an invented
+    number.
+    """
+    if not levels:
+        return None
+    limit = price * max_away_pct
+    if side > 0:
+        above = [lv for lv in levels if price < lv <= price + limit]
+        return min(above) if above else None
+    below = [lv for lv in levels if price - limit <= lv < price]
+    return max(below) if below else None
