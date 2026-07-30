@@ -2878,3 +2878,159 @@ Working solo in the meantime and dropping the fan-out width when it resumes.
 Honest revision: **all 162 in eleven hours is not achievable at this fan-out**. Two or three
 agents at a time is likely the practical ceiling, which is perhaps 30-50 videos in the
 window rather than 162. The tracker means the next run continues rather than restarts.
+
+---
+
+# THE TWENTY DIMENSIONS — his answer, from 18 videos watched properly
+
+Required by the prompt before stopping. Each has his own words, or NOT FOUND YET.
+Where he gives different answers in different videos, all are recorded — the
+inconsistency is his, and choosing between them would be me overriding him.
+
+**1. MARKETS.** "full time trading just nasdaq us 30 gbp usd and all of my cryptos".
+Later and narrower: "us30 NASDAQ only, stay away from S&P, stay away from gold" plus
+"I kind of stopped trading Forex because the Forex markets can be too manipulated".
+His crypto four, read off screen: BTC, DOGE, LTC, XRP. Watchlists seen: "Scalping"
+(XAUUSD, NAS100, US30, GBPUSD, GBPJPY) and "Scalping BIG" (adds UK100, FRA40, NQ1!,
+YM1!). One pair he singles out: "GJ is what I'm going to be trading for the rest of
+my life".
+
+**2. SESSIONS AND CLOCK.** "you only trade during New York session... around 6:20,
+6:30 a.m." — his clock is UTC-8, triangulated three ways. Three different widths,
+all his: 210 minutes ("I don't like to trade much past 10:00 a.m."), 30 minutes
+("even by 7:00 a.m., 30 minutes in, I'm getting ready to pack the books"), and a
+7-minute cluster in his own room's fills. Plus "Tokyo session for me is better for
+gold", and his room runs "New York session, Tokyo session, and London session".
+
+**3. TIMEFRAMES AND ORDER.** "we're gonna start on the h4, always h4 — you can use
+the daily as well, I like the h4." Full sequence frame-verified once as Daily → H4 →
+5m. The daily's job is a veto: "we check our daily to make sure that that's the
+case". Entry timeframe is 5m or 1m: "it's very important that you use a 5-minute or
+1-minute chart simply because we are super scalping". And "don't use the hourly as
+much".
+
+**4. INDICATORS.** Four different setups across four videos, all his: SMA 8 and SMA
+50 ("that's all we're going to be using", "simple ones are a lot better"); EMA 8
+with MA 21 and OBV; eight collapsed studies gated behind his paid room; and a
+completely bare chart. Where he gives settings they are exact — RSI period 14 with
+bands at 75 and 25, Bollinger period 34. The 50 he names in 22 separate places.
+
+**5. HOW HE FINDS A LEVEL.** The answer that reorganised the whole build: he draws a
+map of horizontal levels first. "right here we have resistance — boom boom boom boom
+boom". Level types: swing extremes; congestion, which he calls a buildup ("it's just
+a buildup in the moment off a bunch of candles — it's a buildup zone, it's
+support"); parallel channels; trendlines; Fibonacci; supply and demand zones. On
+touches: "resistance and support lines do not need to be perfect", two is enough,
+and measured drawings show 3-4. Zones get pierced — triggers must read wicks, not
+closes.
+
+**6. WHAT TRIGGERS THE ENTRY.** He rejects both of the obvious ones. Retest:
+"waiting for that retest... it just takes too long" — past tense, abandoned.
+Breakout: "I don't like to trade the breakouts necessarily but the pre-breakouts —
+I get in there before it breaks out". Measured: he bought 28 points above support
+with the trendline still 260 points overhead. And no candle close: "I do not wait
+for closure, I get in as the market is pushing and breaking through".
+
+**7. HOW HE PICKS DIRECTION.** "first off I need to determine, are we going up are
+we going down... that's going to be from the daily and the four hour." Simplest
+statement: "I'm going to take a sell if we're in a selling market and I see a
+support break." Bitcoin gates the alts: "anytime bitcoin falls or gets pumped, most
+other cryptos are going to pump up as well".
+
+**8. CONFLUENCE.** THREE, counted aloud: "we have bearish divergence showing two
+confirmations and now in third confirmation a fibonacci golden zone retest". And he
+refuses one: "this isn't enough, we can't use just this as a confirmation".
+
+**9. STOP PLACEMENT.** "stops are right above the highs" / "below that previous
+support line". Measured, it is the level below entry, and below the swing low of the
+pullback rather than one tick under the signal candle. Widths he states: 10, 13, 16,
+22, 25, 30, 40, 44 pips, and "15 pips 20 pips at the most" on gold. His stated key:
+"super, super tight stop losses". Mental stops exist — "my mental stop losses are
+very very tight" — and are not buildable server-side.
+
+**10. TARGETS.** Not multiples. Measured proof: two gold entries with identical
+targets produced 2.62R and 4.44R. "I'll target my next main zone" / "we can always
+take profit way up here at this major resistance zone". Ratios he quotes span 1:1 to
+1:10 depending on the trade: 1:1 on the scalper, 1:3 on indices, 1:4-1:5 on futures,
+1:7-1:10 flipping a small account. And the 1:1 is a decision point, not an exit:
+"don't just take all your profit... trail your stop loss, put that stop loss to
+break even".
+
+**11. POSITION SIZE.** Fixed cash risk with size scaled inversely to stop distance —
+measured on three separate videos, always the same $750 in his drawing tool. He
+never says it out loud. His stated percentages: "three to five percent max"
+carefully, then "risking 10%", "risking 15%", "risk 25% of your account, which is
+kind of what you're going to have to do" for a small account. His own signals print
+"1-3% max risk per trade". And on a small account, a fixed lot: "if you're using a
+0.01 that would have been a dollar sixty loss for a five dollar and 10 cent gain".
+
+**12. TRADE MANAGEMENT.** Breakeven at 1:2 — "we got to a 1 to two, stops can go to
+break even" — and "near break even" rather than exactly. Half off: "I'm gonna take
+half my profits here". Trailing: "I'm going to trail my stop-loss all the way up",
+walked level to level. Adding to a winner: "we're doubling up on that position",
+confirmed by seven tickets in one basket. Never widens a stop — zero mentions in 144
+transcripts. Caution: on one video the breakeven was narrated and the stop box never
+moved.
+
+**13. HOLD TIME.** "you get in, you get out, you move on — you don't hold trades for
+a long time", narrated at "30 minutes, 35 minutes at the most". Measured holds range
+from 53 seconds and 1 minute up to 3-6 hours, and a 5-day gold carry on the same
+account. The 1-minute chart is faster still: "you got to get in, you got to get out
+quick, they reverse fast".
+
+**14. EXITS.** Target reached; stop; trailed stop taken out in profit; the level
+ahead — "price at a strong resistance zone... I just want to get in and out";
+uncertainty — "I ended up closing because I wasn't sure if price was going to fully
+reverse"; the reason dying — "trend got broke, it's not going to come back"; the
+clock — "getting later in the day, pack the books"; satisfaction — "I got out early
+but it kept going"; and memory of a shape that burned him — "last time this
+happened I got stopped out, let me just get out early".
+
+**15. RE-ENTRY.** Yes, but conditionally: "I'm not going to continue to re-enter
+unless that trading strategy says it's still a good trade". After leaving early: "I
+got out too early, I want to re-enter this trade" — which he numbers as "trade
+number two part two". Every re-entry he narrates follows him closing, never being
+stopped out.
+
+**16. DAILY LIMITS.** "my rule is I can only take three trades max in one day... I
+say three but I think two is better... really after two losses you should stop and
+wait till the next day." Also quits on profit: "quick profits that I can just relax
+for the day after". His forbidden ceiling: "you cannot go out there and take 30
+trades in one night".
+
+**17. AFTER A LOSS.** "wait till the next day, let the markets refresh, get your
+psychology back on track and then trade again." No size change stated anywhere. He
+warns against revenge trading and against watching the balance: "never look at the
+money in your account... look at the chart itself".
+
+**18. ACCOUNT PHASES.** Exact: "turn a 100 account into a thousand, thousand into
+ten thousand — I didn't want to go below ten thousand, keeping my account 10,000,
+withdrawing anything above, and then twenty thousand, thirty thousand". Cap,
+withdraw above the cap, raise the cap. On blowing up: "if we do lose it, that's
+okay, we deposit again" and "I kept losing, I kept creating more accounts". Once
+grown: "you do 5% per week".
+
+**19. WHAT HE REFUSES.** Trades into strong opposing structure — "we're at a pretty
+strong resistance here, so no, not the smartest trade". S&P and gold on the indices
+build. Forex entirely, latterly. The retest. 1:1 targets. Overtrading, in many
+forms. Switching strategies: "don't go around looking for other strategies... it
+just messes up the entire strategy". And believing anyone who claims no losses:
+"whoever your mentor is is lying to you".
+
+**20. HIS CONDITIONS.** Zero-spread accounts: "there's no spread, it's pretty much
+zero" / "when I enter that trade I am instantly in profit, if not at break even,
+because there's no spread at all". Measured: US30 spread 1.40 points on his live
+panel, NAS100 1.90, XRP 33 points. Commission $0.70 per unit round turn. His broker
+prices US30 at $100 per point per lot. Platforms seen: MT4/MT5 mobile, Match-Trader,
+Liquid Trader Pro, TradingView for charting. He recommends MT5 for its drag-to-move
+stop.
+
+## NOT FOUND YET
+
+* The settings of the eight indicators on his six-figure chart — gated behind his
+  paid room, and a channel there is literally called secret-settings.
+* Any numeric touch count. He says "a couple" and "not perfect"; drawings show 3-4.
+* The precise trigger point for his breakeven move and his partials, beyond "at some
+  point" and "getting a little later in the day".
+* Any post-loss sizing rule.
+* Whether the level map is redrawn intraday or set before the session.
