@@ -39,6 +39,7 @@ from tradebot.strategy.mamba_channel import MambaChannel
 from tradebot.strategy.mamba_fib import MambaFib
 from tradebot.strategy.mamba_ny import MambaNY
 from tradebot.strategy.mamba_retest import MambaRetest
+from tradebot.strategy.mamba_room import MambaRoom
 from tradebot.strategy.mamba_signals import MambaSignals
 from tradebot.strategy.mamba_rsi import MambaRsi
 from tradebot.strategy.reversion import RsiScalper
@@ -265,6 +266,21 @@ REGISTRY = {
     # market is pushing and breaking through."
     #
     #   --strategies mamba_indices --symbols NAS100,US30 --risk-per-trade 0.10
+    # HIS POSTED SIGNAL, the most completely specified thing he does anywhere.
+    # Read off two of his own room cards, identical geometry on a buy and a sell:
+    # a flat 25.0-point stop and a 1/2/3/4/6 R ladder, unchanged by entry price or
+    # direction, footer "Please do not over risk! 1-3% max risk per trade!"
+    #
+    # US30, "around six o'clock in the morning" on his UTC-8 clock = 14:00 UTC, one
+    # trade a day, 5m for direction and 1m for the break, entered intrabar because
+    # waiting for the close is his own stated mistake.
+    #
+    # Executable on Leo's account and NOT on his own: his broker prices US30 at
+    # $100/point/lot, so his minimum 0.01 lot on a 25-point stop risks 16.7% of
+    # $150. Leo's broker prices it at $1/point/lot -- the same trade risks 0.17%.
+    #
+    #   --strategies mamba_room --symbols US30 --risk-per-trade 0.10
+    "mamba_room": lambda: MambaRoom(),
     "mamba_indices": lambda: MambaSignals(
         min_votes=2, allow_reentry=True,
         window_minutes=30, flatten_at_window_end=True,

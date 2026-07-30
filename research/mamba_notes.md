@@ -2629,3 +2629,114 @@ across both.
 The chart is **18-19 March 2020** -- peak pandemic volatility, EURUSD 1H candles with
 110-pip ranges. A 30-pip stop and a 120-pip target are calibrated to that. They will not
 transfer to a normal EURUSD, and he never says so.
+
+## Cycle 1 — videos I2I4EVPFoak, qM4A_6i21I0 and qAvSFpKE4aE
+
+Three more subagent reports. Between them they answer the question his own videos kept
+dodging, and they contradict two things already in the code.
+
+### THE ANSWER TO WHETHER HIS METHOD FITS $150
+
+Measured off his phone: his broker prices US30 at **$100 per index point per lot**. So his
+own minimum 0.01 lot on his signalled 25-point stop risks **$25 -- 16.7% of a $150
+account**, far outside the "1-3% max risk per trade" printed on his own signals.
+
+Leo's broker, checked directly on the account:
+
+| symbol | 1 lot | 0.01 lot | 25-point stop | % of $150 |
+|--------|-------|----------|---------------|-----------|
+| **US30** | $1/pt | $0.01/pt | **$0.25** | **0.17%** |
+| NAS100 | $10/pt | $0.10/pt | $2.50 | 1.67% |
+| XAUUSD | $100/pt | $1.00/pt | $25.00 | 16.67% |
+
+**His exact trade fits Leo's account and does not fit his own.** US30 has a hundred times
+more headroom here than on his broker; NAS100 lands inside his 1-3% at minimum size; gold
+is the one that cannot be done, which matches the fixed-lot danger found earlier.
+
+### HIS POSTED SIGNAL — the most complete spec in the catalogue
+
+Two of his own room cards, one buy one sell, identical geometry: **a flat 25.0-point stop
+and a 1 / 2 / 3 / 4 / 6 R ladder**, unchanged by entry price or direction. His hit messages
+confirm the arithmetic, and the footer reads "Please do not over risk! 1-3% max risk per
+trade!" One signal per day. Built as `mamba_room.py`.
+
+### HE HAS ABANDONED BREAK-AND-RETEST
+
+> "the problem with this is **I'm waiting for that retest** and when you wait for that
+> retest and it doesn't come you're **missing out on pips**, you're missing out on
+> trades... **it just takes too long**"
+
+He describes it in the past tense as the thing he stopped doing. That is exactly what
+`mamba_retest.py` implements -- built from the $100-account video, which is older. Both are
+his; this is the later word.
+
+### AND HE DOES NOT TRADE THE BREAKOUT EITHER
+
+> "it's a breakout pattern and for me **I don't like to trade the breakouts** necessarily
+> but **the pre-breakouts** -- I like to get in there **before it breaks out** when I know
+> it's going to break out so I can get as much pips as possible"
+
+Measured: his fill sat **28 points above the support band with the trendline still 260
+points overhead**. He bought at the level in anticipation, not on the break. That is the
+opposite of every breakout entry in this project.
+
+### THE SINGLE MOST CODEABLE THING FOUND ANYWHERE
+
+His 5-minute chart carries about **twenty persistent horizontal levels** with price tags.
+And every price in the trade snapped to one of them:
+
+| his price | nearest drawn level |
+|-----------|--------------------|
+| entry 14085.25 | 14085.73 |
+| TP1 14173.72 | 14171.26 |
+| TP2 14242.28 | 14238.74 |
+| TP3 14384.48 | 14384.18 |
+| stop 14003.83 | 14003.75 |
+
+**He builds the level map first, then selects entry, targets and stop from it.** Nothing in
+this project works that way -- everything here computes a stop from a swing and a target
+from a multiple. This is a different architecture and it is his.
+
+### WHICH MEANS HIS TARGETS ARE NOT R MULTIPLES
+
+Proof from his own cards: two gold entries at different prices carry **identical** TP1/TP2/
+TP3 and stop, producing **2.62R on one and 4.44R on the other**. The prices are fixed to
+structure; the ratio is whatever falls out.
+
+That directly contradicts the fixed ladder in `mamba_room` -- which was measured off his
+US30 room cards, where the spacing genuinely was a clean 1/2/3/4/6R. **Both are his, from
+different videos.** Recorded rather than reconciled.
+
+### ZONES ARE PIERCED, so triggers must read wicks
+
+The daily wick went ~90 points through his zone and closed back inside; two of three
+5-minute touches closed below the band. A bot testing "close inside the zone" would have
+missed all three. **Wick interaction, not closes.**
+
+### HIS ORDER OF TIMEFRAMES, frame-verified
+
+5m glance, then **Daily, then H4, then back to 5m** to enter -- confirmed by the frames
+matching his words second by second. His watchlist here, named "Scalping": **XAUUSD,
+NAS100, US30, GBPUSD, GBPJPY.**
+
+### HIS ACCOUNT PHASES, stated exactly
+
+> "eventually I was able to turn a **100 account into a thousand**, thousand dollars into
+> **ten thousand** -- I didn't want to go below ten thousand, start making like **two, 3K a
+> month keeping my account 10,000, withdrawing anything above**, and then twenty thousand,
+> thirty thousand, and I just kept doing this until I was at a six-figure account"
+
+Cap the account, withdraw everything above the cap, then raise the cap. And after a
+blow-up: "I kept losing, I kept creating more accounts."
+
+### AND THE 1:1 IS A DECISION POINT, NOT AN EXIT
+
+From I2I4EVPFoak: "once that gets hit, your main take profit gets it, **don't just take all
+your profit** -- take a little bit of partials if you want, but better than that **trail
+your stop loss, put that stop loss to break even**." Any bot exiting at 1:1 does the
+opposite of what he teaches.
+
+Also measured there: every ratio he speaks matches his tool exactly -- "one to seven point
+five" against a displayed 7.51, "one to six" against 6.07, "one to almost five" against
+4.48. **When he quotes a number off his screen he is accurate.** It is his *account* that
+tells a different story from his *teaching*, not his arithmetic.
