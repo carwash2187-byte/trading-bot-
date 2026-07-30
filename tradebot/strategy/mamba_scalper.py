@@ -124,7 +124,6 @@ class MambaScalper(Strategy):
         require_buildup: bool = True,
         daily_bars: int = 0,
         reward: float = 1.0,
-        stop_bars: int = 3,
         zone_pct: float = 0.0004,
         max_stop_pct: float = 0.00087,
         clamp_stop: bool = True,
@@ -152,7 +151,6 @@ class MambaScalper(Strategy):
         # trade unsizeable -- the sizer wanted 0.0003 lots against a 0.01 minimum
         # and refused all 14 valid setups. His tight stop is not a preference
         # here, it is what makes a small account able to take the trade at all.
-        self.stop_bars = stop_bars
         self.zone_pct = zone_pct
         # His own width. "we're going to put our stops below that previous support
         # line. Okay, 17 PIPS" -- on GBPJPY at 195 that is 0.087% of price.
@@ -346,7 +344,9 @@ class MambaScalper(Strategy):
             return []
 
         bar = candles[-1]
-        window = candles[-self.stop_bars:]
+        # "that last candle where we broke, the high of that candle" -- his
+        # stop is the trigger candle's own extreme. stop_bars=3 was mine.
+        window = candles[-1:]
         # "we're going to put our stops below that previous support line."
         if direction > 0:
             structure = min(c.low for c in window)

@@ -139,6 +139,10 @@ class MT5Broker(Broker):
             quote_currency=str(info.currency_profit),
             digits=int(info.digits),
             description=str(info.description),
+            # trade_stops_level is quoted in POINTS, so it has to be multiplied
+            # by the point size to become a price distance.
+            min_stop_distance=(float(getattr(info, "trade_stops_level", 0) or 0)
+                               * float(getattr(info, "point", 0) or 0)),
         )
 
     def get_price(self, symbol: str) -> tuple[float, float]:

@@ -58,6 +58,12 @@ class Instrument:
     # the one pair MambaFX says he will trade "for the rest of my life": 14 valid
     # setups found, 0 trades taken, and the refusals were swallowed silently.
     quote_to_account_rate: float = 1.0
+    # The broker's OWN minimum distance between price and a stop, in price units.
+    # MT5 publishes it as SYMBOL_TRADE_STOPS_LEVEL and REJECTS any order whose
+    # stop sits closer than this -- error 130, "Invalid stops". Not a number of
+    # mine: it is the broker's, and an order that violates it is never filled.
+    # Zero means the broker did not publish one.
+    min_stop_distance: float = 0.0
 
     def __post_init__(self) -> None:
         if self.contract_size <= 0:

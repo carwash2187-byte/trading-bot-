@@ -3355,3 +3355,42 @@ so `evaluate()` raised AttributeError the moment it reached the session check wi
 candles to get there. The main build would have **died on the live account on its first
 real bar**. Twelve bugs went quiet and printed believable numbers; this one takes the bot
 down. Found because the win-gate check made me run the main build directly.
+
+---
+
+# CYCLE 7 — 2026-07-30
+
+## Cycle 7 — his stop rule replaces my window, and a live-account blocker found
+
+### `stop_bars` AND `zone_pct` DELETED — HIS STOP IS THE TRIGGER CANDLE
+
+> "I like to go based off of where we broke... I'm going to place that **just above that
+> last candle. So that last candle where we broke, the high of that candle**... That's
+> where my stop loss is going to go."
+
+Measured on his chart: the stop sat **exactly on the breakout candle's high**, with no pad.
+So both numbers go — `stop_bars=24` (the swing window I invented) and `zone_pct=0.0004`
+(the buffer I invented). His stop needs neither. It is one candle's extreme.
+
+**And the widths come out as his.** With nothing configured, the median stop is now **56.0
+points** on US30 against his own measured **48.7 and 29.5 points**. Same thing happened
+with the level map: give him his rule and his numbers appear on their own. A 24-bar swing
+window could never have produced that — it was three times too wide by construction.
+
+### THE LIVE-ACCOUNT BLOCKER, FOUND BECAUSE THE STOPS GOT TIGHTER
+
+One stop in the new build came out **3.0 points wide**. On a chart that is fine. On a real
+account it is an **unfillable order** — MT5 publishes a minimum distance between price and
+stop (`SYMBOL_TRADE_STOPS_LEVEL`) and rejects anything closer as "invalid stops".
+
+**Nothing in this project knew that number existed.** No instrument carried it, no broker
+reported it, no order checked it. Every tight stop the bot has ever produced would have
+been refused by the broker tomorrow, and the refusal looks exactly like having no signal —
+the same disguise the currency bug wore.
+
+Built: the instrument carries the broker's floor, MT5 reports it, and an order whose stop
+sits inside it is widened to exactly the floor before being sent. **The number is the
+broker's, not mine.** Refusing the trade instead would be me overruling him over a platform
+limit he never has to think about.
+
+Proof it fires: a stop asked for 3.0 points away went out at 10.0, the floor exactly.

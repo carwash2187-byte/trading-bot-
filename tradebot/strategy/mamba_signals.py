@@ -79,8 +79,13 @@ class MambaSignals(Strategy):
         window_minutes: 210. "I don't like to trade much past 10:00 a.m."
         reward: 3.0. "a nice little one to three."
         max_hold_minutes: 35. "30 minutes, 35 minutes at the most."
-        stop_bars: Bars whose extreme the stop sits behind. "stops are right above
-            the highs."
+        (stop_bars deleted -- his stop is the TRIGGER CANDLE's own extreme, so
+        there is no window to size. "I like to go based off of where we broke...
+        I'm going to place that just above that last candle. So that last candle
+        where we broke, the high of that candle... That's where my stop loss is
+        going to go." Measured on his chart: the stop sat EXACTLY on the breakout
+        candle's high, and his two stops came out 48.7 and 29.5 points -- one
+        candle's range, not a 24-bar swing.)
         max_trades_per_day: 3.
         max_losses_per_day: 2.
         breakeven_at: R at which the stop goes to entry, after banking half.
@@ -127,8 +132,6 @@ class MambaSignals(Strategy):
         wait_for_close: bool = True,
         reward: float = 3.0,
         max_hold_minutes: int = 35,
-        stop_bars: int = 24,
-        zone_pct: float = 0.0004,
         use_ma_swoop: bool = True,
         swoop_bend: float = 1.0,
         ma_fast: int = 8,
@@ -181,8 +184,6 @@ class MambaSignals(Strategy):
         # enough candles to get there. The main build would have died on the
         # live account on its first real bar.
         self.flatten_at_window_end = flatten_at_window_end
-        self.stop_bars = stop_bars
-        self.zone_pct = zone_pct
         # DELETED: the side-of-the-average vote.
         #
         # Price is always on one side of a moving average, so it voted on 100% of
@@ -614,10 +615,10 @@ class MambaSignals(Strategy):
                 enough = (b if still > 0 else sl) >= self.min_votes
                 if still != 0 and still == self._reentry_side and enough:
                     bar = candles[-1]
-                    win = candles[-self.stop_bars:]
+                    win = candles[-1:]     # his trigger candle
                     if still > 0:
                         structure = min(c.low for c in win)
-                        stop = structure - structure * self.zone_pct
+                        stop = structure
                         if stop < bar.close:
                             self._reentry_armed = None
                             risk = bar.close - stop
@@ -627,7 +628,7 @@ class MambaSignals(Strategy):
                                 comment=self.name, lots=self.fixed_lots)]
                     else:
                         structure = max(c.high for c in win)
-                        stop = structure + structure * self.zone_pct
+                        stop = structure
                         if stop > bar.close:
                             self._reentry_armed = None
                             risk = stop - bar.close
@@ -680,8 +681,11 @@ class MambaSignals(Strategy):
                 return []
 
         bar = candles[-1]
-        window = candles[-self.stop_bars:]
-        # "stops are right above the highs" / "below the low right here to the left"
+        # HIS STOP IS THE TRIGGER CANDLE, not a swing window. "that last candle
+        # where we broke, the high of that candle... That's where my stop loss is
+        # going to go" -- and on his chart the stop sat exactly on that high, with
+        # no pad. The old stop_bars=24 was mine.
+        window = candles[-1:]
         # "stops are gonna be just below that moving average"
         ma_level = None
         if self.stop_at_ma:
@@ -694,7 +698,7 @@ class MambaSignals(Strategy):
             structure = min(c.low for c in window)
             if ma_level is not None and ma_level < bar.close:
                 structure = max(structure, ma_level)
-            stop = structure - structure * self.zone_pct
+            stop = structure
             if stop >= bar.close:
                 return []
             risk = bar.close - stop
@@ -711,7 +715,7 @@ class MambaSignals(Strategy):
         structure = max(c.high for c in window)
         if ma_level is not None and ma_level > bar.close:
             structure = min(structure, ma_level)
-        stop = structure + structure * self.zone_pct
+        stop = structure
         if stop <= bar.close:
             return []
         risk = stop - bar.close

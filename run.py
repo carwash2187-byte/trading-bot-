@@ -362,7 +362,7 @@ REGISTRY = {
         min_votes=2, wait_for_close=False
     ),
     "mamba_signals_1m": lambda: MambaSignals(
-        min_votes=2, max_hold_minutes=35, stop_bars=20
+        min_votes=2, max_hold_minutes=35
     ),
     "mamba_fib": lambda: MambaFib(),
     # =====================================================================

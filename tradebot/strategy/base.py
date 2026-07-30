@@ -130,6 +130,27 @@ class Enter(Action):
 
         entry_price = context.ask if self.side.is_long else context.bid
 
+        # HIS STOP, MADE LEGAL AT THE BROKER. His rule puts the stop on the
+        # trigger candle's own extreme -- "that last candle where we broke, the
+        # high of that candle" -- and when that candle is small the stop lands a
+        # few points from price. That is a perfectly good stop on a chart and an
+        # UNFILLABLE ORDER on a real account: MT5 rejects it outright as invalid
+        # stops. Measured on his own US30 signals, one stop in this build came
+        # out 3.0 points wide, which most brokers refuse.
+        #
+        # Pushing it out to the broker's published floor is the smallest possible
+        # change that still places his trade, and the number is the broker's
+        # rather than mine. Refusing the trade instead would be me overruling him
+        # over a platform limit he never has to think about.
+        floor = context.instrument.min_stop_distance
+        if floor > 0 and abs(entry_price - self.stop_loss) < floor:
+            widened = (entry_price - floor if self.side.is_long
+                       else entry_price + floor)
+            log.info("%s stop %.5f is inside the broker's %.5f minimum; "
+                     "moved to %.5f so the order is accepted",
+                     context.symbol, self.stop_loss, floor, widened)
+            self.stop_loss = widened
+
         # Cap the size at what free margin can actually carry, with a tenth
         # held back for the position moving against us before the stop. The
         # risk formula alone can balloon when volatility collapses -- risk
