@@ -551,7 +551,22 @@ class MambaSignals(Strategy):
                 b = sum(1 for x in v.values() if x > 0)
                 sl = sum(1 for x in v.values() if x < 0)
                 still = 1 if b > sl else (-1 if sl > b else 0)
-                if still != 0 and still == self._reentry_side:
+                # He does NOT re-enter on the move merely still pointing his way:
+                #
+                #   "i'm not going to continue to re-enter UNLESS THAT TRADING
+                #    STRATEGY SAYS IT'S STILL A GOOD TRADE right but don't over
+                #    trade."
+                #
+                # And he names the anti-pattern he is guarding against: "you can't
+                # just sit there and oh i took a 10 pip loss i'm going to re-enter
+                # oh i took another 20 pip [loss] i'm going to re-enter and go for
+                # a 300 pip game -- it's just not like that."
+                #
+                # So a re-entry needs the SAME confirmation a fresh entry needs, not
+                # a weaker one. Built as: the full vote threshold must still be met,
+                # not simply more votes on one side than the other.
+                enough = (b if still > 0 else sl) >= self.min_votes
+                if still != 0 and still == self._reentry_side and enough:
                     bar = candles[-1]
                     win = candles[-self.stop_bars:]
                     if still > 0:

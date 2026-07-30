@@ -2263,3 +2263,102 @@ He looks at the weekly. The bot does not need to, because looking without acting
 a behaviour a bot can have. So the parameter is deleted rather than kept at zero.
 
 32 strategies still construct, 258 tests pass.
+
+## Cycle 1 — video prtpGhzb22g, "6 Tips To Become a PRO SCALPER" (10:38)
+
+Watched by subagent: full audio plus every frame. The video is entirely talking-head with
+no chart walkthrough, but his live TradingView chart is visible on the monitor behind him
+and was measurable.
+
+### CONFIRMED, and it matches what is already built
+
+His daily limits, tightened in his own words:
+
+> "**my rule is i can only take three trades max in one day**"
+> "**i mean i say three but i think two is better** but i will do three if i really have
+> to but **really after two losses you should stop and wait till the next day**"
+
+That is `max_trades_per_day=3` and `max_losses_per_day=2` exactly as built. And the
+consequence:
+
+> "**wait till the next day** let the markets refresh a little bit relax you know get
+> your psychology back on track and then trade again"
+
+### CORRECTED — re-entry was too loose
+
+> "i'm not going to continue to re-enter **unless that trading strategy says it's still a
+> good trade** right but don't over trade"
+
+And the anti-pattern he names:
+> "you can't just sit there and oh i took a 10 pip loss i'm going to re-enter oh i took
+> another 20 pip [loss] i'm going to re-enter and go for a 300 pip game -- it's just not
+> like that"
+
+My re-entry only required the move to still point his way. His requires the setup to
+still be valid. Fixed: a re-entry now needs the FULL vote threshold again, the same
+confirmation a fresh entry needs.
+
+### HIS GOLD NUMBERS — stop and target, stated
+
+> "my stop losses when i trade gold they're like **15 pips 20 pips at the most**"
+> "my take profits **my main targets are anywhere from 100 to 200 pips**"
+> "very tight stop loss huge take profit **i'm going to trail my stop-loss all the way up**"
+
+That is **5:1 to 13:1**, far above the 1:3 he quotes for indices. Note "main targets"
+plural -- the only hint of multiple targets in this video, never explained.
+
+**MEASURED off his chart:** a Long Position tool live on screen with a teal reward box of
+241 pixels against a dark-red risk box of 40 pixels -- **approximately 6:1**, stable
+across four sample columns. His spoken 15-20 pip stop against a 100-200 pip target
+corroborates it.
+
+### DIRECTION — three inputs, higher timeframes first
+
+> "use your **daily and use your h4** to realize market structure which way is price going
+> where are we trending"
+> "whether it's **above your moving averages** or any of the other reasons"
+> "look at **fundamentals what's happening with the news** positive news coming out for gold"
+> "once you realize okay we're in a bullish market... now you're going to go to your five
+> minute your 15 minute whatever you want to use **i use the five minute**"
+
+### ENTRY — a 5-minute breakout
+
+> "the way i trade is very simple i look for **breakouts on my five-minute chart**"
+
+### A NEW EXIT, discretionary and not yet built
+
+> "you're going to remember oh last time this happened i got stopped out **let me just get
+> out early because this doesn't look good anymore** boom saved yourself from 10 pips
+> which is a lot for scalper"
+
+He leaves on pattern recognition -- having seen this shape fail before. That is judgement
+rather than a rule, and it is the clearest example yet of the part of him that cannot be
+copied from video.
+
+### WHAT HE REFUSES — the bulk of this video
+
+> "**you cannot go out there and take 30 trades in one night**... you don't want to mess
+> with your psychology that much"
+> "**don't ruin your psychology by taking 500 trades in a single night**"
+> "**don't over trade** set yourself a limit"
+> "don't sit there and just keep entering and doing crazy stuff just because you have
+> tight stop losses -- trust me those **tight stop losses those little baby stops they add
+> up fast** if you start to get crazy"
+> "**don't go around looking for other strategies**... when you start to look at this
+> strategy and this strategy you start to implement things from each strategy and **it
+> just messes up the entire strategy**"
+> "i don't care who tells you that -- **whoever your mentor is is lying to you**" (on
+> never-lose claims)
+
+### His own record, stated
+
+> "the last month or so i've taken about 30 trades i lost four of those right so i think i
+> went **26 wins four losses**... this is a really really really good month"
+> "someone who you know been trading **five years and two of those years very
+> unsuccessfully**"
+
+### NOT IN THIS VIDEO
+
+Sessions and clock times. Level definition and touch count. Indicator periods or settings.
+Candle-close confirmation. Risk percent or lot size. Breakeven point. Partial-exit rules.
+Hold time. Broker, spread or leverage.
