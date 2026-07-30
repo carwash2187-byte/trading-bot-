@@ -1329,3 +1329,61 @@ a day, active on 95% of trading days, spread across the markets he actually name
 The idle-days problem is gone -- 11 quiet days instead of 71.
 
 Money at 2% risk: 0.35x over ten months. Registered as `mamba_all`.
+
+---
+
+## BACKLOG ITEM 1 — FIBONACCI, built. His "gold zone".
+
+His most-used tool: 14 videos, 36 statements. And he is far more restrictive with
+it than the toolkit allows -- out of every Fibonacci level he trades **two**.
+
+### THE LEVELS
+
+> "we wait for it to come back and reject our **gold zone which is the zero five
+> zone or the 0.61 our 0.618 zone**"
+> "the Fibonacci is just a **zero point five or six one eight** zone **that's the
+> only zones I want to see get rejected**"
+> "price does not break through this **gold Zone that 0.5 68618 rejection Zone**
+> then I'm fine"
+> "look at this beautiful **50 and a 6-1-8 rejection** beautiful rejection right here"
+
+**0.5 to 0.618. He calls it the gold zone.** One mention of an alternative:
+> "it could be a **382 or a 50** rejection"
+
+### HOW HE DRAWS IT
+
+> "take my Fibonacci I'm gonna **draw from this low to this high**"
+> "I'm **not gonna draw my Fibonacci from this wick** because this candlestick to me
+> is **not really set as that push**"
+> "I'm gonna go and **draw my Fibonacci from this wick right here to the top**"
+> "you take your fibonacci **from this little red candlestick**"
+
+Across one impulse push, from the wick that started it to the extreme that ended it.
+His refusal of a wick that is "not really set as that push" is built as a minimum
+move size -- a push has to be big relative to the noise or it is not a push.
+
+### THE ENTRY
+
+> "what am I gonna do here I'm gonna **wait for a Fibonacci setup to occur** now that
+> I see this **huge rejection to the downside**"
+> "very simple **we wait for it to come back and reject our gold zone**"
+> "you go on the **15 and get your Fibonacci entry**"
+
+### AND HE STACKS IT — five confirmations named in one breath
+
+> "that's two confirmations if not like six by because we already know the **h4 shown
+> bullish** the **MA is our crossing over on the h4** the [MAs] have **crossed over on
+> the 15** we've got our **fibonacci zone** on this choppy setup and now we see a
+> **support on a former resistance** this is a great buy"
+
+> "instead of just looking for five minute 15 minute entries just randomly using your
+> fibonacci **look at higher time frames** and see what's going on"
+
+The moving-average crossover is built here as an option because he names it in the
+same breath as the gold zone.
+
+### Numbers, 15m, 10 months, 3% risk
+
+US30 0.39x on 0.34/day, NAS100 0.82x on 0.47/day, GBPUSD 0.77x on 0.08/day, gold
+took no trades at all -- the minimum push size is likely too large for gold's range
+and wants a per-market value.

@@ -35,6 +35,7 @@ from tradebot.strategy.mamba import MambaBreakout
 from tradebot.strategy.mamba_all import MambaAll
 from tradebot.strategy.mamba_both import MambaBoth
 from tradebot.strategy.mamba_channel import MambaChannel
+from tradebot.strategy.mamba_fib import MambaFib
 from tradebot.strategy.mamba_ny import MambaNY
 from tradebot.strategy.mamba_retest import MambaRetest
 from tradebot.strategy.mamba_rsi import MambaRsi
@@ -181,6 +182,16 @@ REGISTRY = {
     # Gold, US30, NAS100 and GBPUSD together, 10 months: 2.55 trades a day,
     # active on 211 of 222 trading days -- his frequency and his coverage. Money
     # at 2% risk: 0.35x.
+    # His Fibonacci "gold zone" -- his most-used tool, in 14 videos and 36
+    # statements, and he trades exactly two levels out of the whole toolkit:
+    # "the fibonacci is just a zero point five or six one eight zone that's the
+    # only zones I want to see get rejected". Drawn across one impulse push,
+    # "from this low to this high", refusing wicks that are "not really set as
+    # that push". Entry is the retracement being rejected inside 0.5-0.618.
+    #
+    # 15m, 10 months, 3%: US30 0.39x on 0.34/day, NAS100 0.82x on 0.47/day,
+    # GBPUSD 0.77x on 0.08/day, gold no trades.
+    "mamba_fib": lambda: MambaFib(),
     "mamba_all": lambda: MambaAll(),
     "mamba_retest": lambda: MambaRetest(
         # "as we start to trade below our 50 moving average" -- the one indicator
