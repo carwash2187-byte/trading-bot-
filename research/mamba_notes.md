@@ -3786,3 +3786,84 @@ trading fakeouts** — "I've never traded fake outs purposely".
 **ChatGPT's words**, which he reads aloud and calls "good data". They are not his rule. On
 GBP/JPY, where the spread alone runs 2-4 pips, a 5-pip stop is close to unusable. Treating
 read-aloud on-screen text as his instruction would poison every rule in this project.
+
+---
+
+# CYCLE 10 — 2026-07-30
+
+## `target1`/`target2` DELETED — and `mamba_rsi` had NEVER TAKEN A TRADE
+
+His targets are levels, not multiples of risk:
+
+> "we can always take profit way up here at this **MAJOR RESISTANCE ZONE**"
+> "i'll go ahead and **ZOOM OUT and i'll target my NEXT MAIN ZONE**"
+> "when it comes to my risk-to-reward, **I WANT 1:3. 1:5 are amazing**, but if i can at
+> least get a 1:3, i'm going to be satisfied"
+
+The proof they were never multiples: two of his gold entries at *different* prices carry
+**identical** targets, giving 2.62R on one and 4.44R on the other. Impossible if the target
+were an R multiple. My 1.5 and 4.0 were invented.
+
+Deleting them exposed that **this strategy has never produced a single trade**, and could
+not have. Three separate bugs, all mine:
+
+1. **Direction was read off the trend, then the RSI was required to contradict it.** A
+   downtrend gave direction "sell", which then demanded RSI at or above 75 — and in a
+   downtrend the RSI is not overbought. Measured: the RSI condition was satisfied **0 times
+   in 20,000 bars**. His rule is the opposite and the old code quoted it directly above the
+   broken logic: "**ANYTIME THE RSI BREAKS ABOVE THE 75 ZONE WE'RE LOOKING FOR SELLS**." The
+   RSI extreme *is* the signal.
+2. **The level was the most-touched swing anywhere in the window**, which is almost never
+   where price is standing. Price was at it **0 times out of 214** RSI extremes. Now it
+   comes from the same wick-clustered map every other strategy uses.
+3. **The "is price at the level" test only checked one side**, so a support sitting 80
+   points ABOVE price passed — a level that had already broken. The stop then landed on the
+   wrong side of the market and the final sanity check silently returned nothing.
+
+And the target needed his second sentence as well as his first. The nearest level gave a
+median **1:0.39** — risking two and a half to make one. Demanding 1:3 from that nearest
+level gave zero. **Zooming out to the first zone that pays 1:3 is what he actually does**,
+and it needs no number of mine beyond his own 3.
+
+**Measured after: 95 entries in 8,000 bars, median ratio 1:3.24, range 1:3.01 to 1:14.78.**
+Against his stated "I want 1:3, 1:5 are amazing" and his measured fib ratios of 2.62-8.52.
+
+## "$5 TODAY" (GTabpw0sWEE) — AND HE CONTRADICTS THE WIN-ENDS-THE-DAY RULE OUTRIGHT
+
+> "two trades max per day... only two trades a day. **You win one, you lose one, you're
+> done.**"
+> "**whether it's TWO LOSSES, TWO WINS, or one of each.** Take your two trades, you're done."
+> "I'm taking two trades per day max. I usually trade one time per day, sometimes two, but
+> **never three**."
+
+**"Two wins" is explicitly allowed.** That directly contradicts "First trade works out,
+we're done, we don't go for a second" and "you trade and that's it, you're done for the day"
+— the two videos the win-gate was built from.
+
+Three videos: **two say a win ends the day, one says outright that it does not.** The gate
+stays on the majority reading and this is recorded rather than silently resolved. The
+invariant all three agree on is **two trades maximum**, which is already built.
+
+### HIS OTHER NUMBERS HERE
+
+* **"0.01 always — the minimum, smallest you can do — and work your way up."** Fixed
+  minimum lot on a small account. Directly relevant: this is the only sizing rule he gives
+  that fits an account the size of Leo's.
+* **Breakeven at roughly HALF the target**: "let's say you have a **15 to 20 pip take
+  profit** and you're at like **eight or nine pips profit** — I really do recommend you put
+  your stop loss to entry." Not an R multiple. My `breakeven_at=2.0` is 2R.
+* **H4 for bias, M15 for entry, in that order**, and he is explicit the H4 is context only:
+  "we're **not trading it**... we're still using it in our smaller timeframe trades."
+* **He WAITS FOR THE CLOSE, three times**: "we wait for **price to close above** our moving
+  averages", "**once price closes above that**", "a nice bullish candle **just closed
+  above** our two moving averages". Fourth data point in the candle-close conflict.
+* **8 and 50 SMA confirmed again.**
+* **Target = the next resistance on the ENTRY timeframe**, not the bias timeframe.
+* **"Don't trade US30 or indices"** — said 3 seconds after "my last trade was on US 30".
+
+### MEASURED AGAINST SPOKEN, AGAIN
+
+He says 5 pips risk for 10 pips reward (2:1). The position tool he drew measures
+**0.90:1, then 1.34:1, then 1.42:1** as he re-drags it mid-sentence. He never draws the 2:1
+he states. And his own arithmetic — "0.01, 5 pips is 50 cents, you're down to $4.50" — is
+**exactly 10% of the account per trade**, the number another of his videos bans outright.

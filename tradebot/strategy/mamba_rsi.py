@@ -61,6 +61,7 @@ from datetime import timezone
 
 from ..brokers.base import Candle, OrderSide
 from ..data.indicators import bollinger, rsi
+from .mamba_patterns import level_map, snap_to_level
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
 
 
@@ -80,8 +81,17 @@ class MambaRsi(Strategy):
         level_bars: Bars searched for the box he draws.
         zone_pct: Half-height of that box, as a fraction of price.
         min_touches: 2. He counts the wicks that reached the level.
-        target1: First target, in R. "take profit one".
-        target2: Second target, in R. "takeprofit two will then be down in this
+        (target1 and target2 deleted -- his targets are LEVELS, not multiples of
+        risk: "we can always take profit way up here at this MAJOR RESISTANCE
+        ZONE", "i'll go ahead and zoom out and i'll TARGET MY NEXT MAIN ZONE", and
+        "my take profits are better than anybody... almost every single time it
+        comes to the t, hit take profit and then goes back the other way, BECAUSE I
+        KNOW THAT THIS IS ACTUALLY SUPPLY." The proof they are not multiples is
+        that two of his gold entries at different prices carry IDENTICAL targets,
+        producing 2.62R on one and 4.44R on the other -- impossible if the target
+        were an R multiple. My 1.5 and 4.0 were invented.)
+
+        (removed: second target, in R. "takeprofit two will then be down in this
             area".
         require_rsi: Whether the RSI band break is mandatory. He says outright
             "do not use it by itself", and he takes the trade on three
@@ -107,8 +117,6 @@ class MambaRsi(Strategy):
         level_bars: int = 60,
         zone_pct: float = 0.0006,
         min_touches: int = 2,
-        target1: float = 1.5,
-        target2: float = 4.0,
         require_rsi: bool = True,
         max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
@@ -122,8 +130,6 @@ class MambaRsi(Strategy):
         self.level_bars = level_bars
         self.zone_pct = zone_pct
         self.min_touches = min_touches
-        self.target1 = target1
-        self.target2 = target2
         self.require_rsi = require_rsi
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
@@ -230,7 +236,16 @@ class MambaRsi(Strategy):
             price = context.bid if pos.is_long else context.ask
             ahead = ((price - pos.entry_price) if pos.is_long
                      else (pos.entry_price - price))
-            if ahead < risk * self.target1:
+            # "hit take profit and then goes back the other way, because i know
+            # that this is actually supply" -- the first slice comes off at the
+            # first LEVEL past entry, whatever R that happens to be.
+            rungs = level_map(context.candles)
+            first = snap_to_level(pos.entry_price, rungs,
+                                  1 if pos.is_long else -1)
+            if first is None:
+                continue
+            reached = price >= first if pos.is_long else price <= first
+            if not reached:
                 continue
             # Whether the first target has already been banked is inferred from
             # the stop: it only sits at or past entry once that has happened, so
@@ -261,23 +276,64 @@ class MambaRsi(Strategy):
         if context.news is not None and context.news.active:
             return []
 
-        # One: direction. "we are only looking for sells and nothing else"
-        direction = self._trend(candles)
-        if direction == 0:
+        # One: direction, AND IT COMES FROM THE RSI, NOT THE TREND.
+        #
+        #   "ANYTIME THE RSI BREAKS ABOVE THE 75 ZONE WE'RE LOOKING FOR SELLS"
+        #
+        # This read the direction off the trend and then demanded the RSI
+        # contradict it -- a downtrend gave direction -1, which then required RSI
+        # at or above 75. In a downtrend the RSI is not overbought, so the two
+        # conditions could never both be true. Measured: at-level 5,649 times,
+        # band broken 542, RSI condition satisfied **0 times in 20,000 bars**.
+        # The strategy has never taken a trade and never could have.
+        #
+        # The RSI extreme IS the signal here. That is what he says, in the sentence
+        # the old code quoted directly above the broken logic.
+        series = rsi(candles, period=self.rsi_period)
+        value = series[-1] if series else None
+        if value is None:
+            return []
+        if value >= self.rsi_upper:
+            direction = -1
+        elif value <= self.rsi_lower:
+            direction = 1
+        else:
             return []
 
-        # Two: the level, on the side the trade needs.
-        level = self._level(candles, want_resistance=direction < 0)
+        # Two: the level, and it has to be the one PRICE IS AT.
+        #
+        # _level picked the most-touched swing anywhere in its window, which is
+        # almost never where price currently is -- measured, price was at that
+        # level 0 times out of 214 RSI extremes. Same failure as the fib: a level
+        # chosen without reference to where price is standing is not a level he
+        # would ever trade.
+        #
+        # The wick-clustered map already answers "which level is price at", and it
+        # is the same map his zones come from everywhere else in this project.
+        # Resistance above for a sell, support below for a buy.
+        bar_now = candles[-1]
+        level = snap_to_level(bar_now.close, level_map(candles), -direction)
         if level is None:
             return []
 
         bar = candles[-1]
         zone = bar.close * self.zone_pct
         # Price has to actually be at the level he drew.
-        if direction < 0 and bar.high < level - zone:
-            return []
-        if direction > 0 and bar.low > level + zone:
-            return []
+        # PRICE MUST BE AT THE LEVEL, NOT THROUGH IT. This test only checked one
+        # side, so a support sitting 80 points ABOVE price still passed -- a level
+        # that had already broken. The stop then landed on the wrong side of the
+        # market and the final sanity check silently returned nothing, which is why
+        # this strategy has never produced a single trade.
+        #
+        # His behaviour is a touch and a rejection: "price came down, tapped it,
+        # and rejected." So the bar has to REACH the level and close back on the
+        # correct side of it.
+        if direction < 0:
+            if bar.high < level - zone or bar.close > level + zone:
+                return []
+        else:
+            if bar.low > level + zone or bar.close < level - zone:
+                return []
 
         # Three: the band break, plus the RSI he pairs with it.
         if not self._band_broken(candles, direction):
@@ -285,19 +341,55 @@ class MambaRsi(Strategy):
         if not self._rsi_ok(candles, direction):
             return []
 
+        # HIS TARGET IS THE NEXT MAIN ZONE UP THE MAP. "i'll go ahead and zoom
+        # out and i'll target my next main zone." If the map has nothing in range
+        # there is NO TRADE -- not a fallback multiple. That is the whole point of
+        # deleting target2: he never invents a distance when structure is silent.
+        # HIS TARGET IS THE NEXT MAIN ZONE, NOT THE NEAREST LINE.
+        #
+        #   "i'll go ahead and ZOOM OUT and i'll target my NEXT MAIN ZONE"
+        #   "we can always take profit way up here at this MAJOR resistance zone"
+        #   "when it comes to my risk-to-reward, I WANT 1:3... if i can at least
+        #    get a 1:3, i'm going to be satisfied"
+        #
+        # Those two sentences together are the whole rule and they need no number
+        # of mine: walk up the map and take the first zone that pays his 1:3. The
+        # nearest level alone gave a median 1:0.39 -- risking two and a half to
+        # make one, which no rule of his permits -- and demanding 1:3 from that
+        # nearest level gave zero trades. Zooming out is what he actually does.
+        zones = level_map(candles)
+        min_reward = 3.0
+        # HIS FLOOR, HIS NUMBER: "when it comes to my risk-to-reward, I WANT 1:3.
+        # 1:5 are amazing, but IF I CAN AT LEAST GET A 1:3, I'M GOING TO BE
+        # SATISFIED." So a level that does not pay 3 to 1 is not a trade he takes.
+        # Without this the nearest level was often closer than the stop, producing
+        # a median 1:0.39 -- risking two and a half to make one, which he would
+        # never do and which no rule of his permits.
+        min_reward = 3.0
+
         if direction < 0:
             stop = self._wick_stop(candles, level, short=True)
             if stop <= bar.close:
                 return []
+            need = (stop - bar.close) * min_reward
+            below = sorted((z for z in zones if z < bar.close - need), reverse=True)
+            if not below:
+                return []
+            target = below[0]
             risk = stop - bar.close
             return [Enter(side=OrderSide.SELL, stop_loss=stop,
-                          take_profit=bar.close - risk * self.target2,
+                          take_profit=target,
                           comment=self.name)]
 
         stop = self._wick_stop(candles, level, short=False)
         if stop >= bar.close:
             return []
+        need = (bar.close - stop) * min_reward
+        above = sorted(z for z in zones if z > bar.close + need)
+        if not above:
+            return []
+        target = above[0]
         risk = bar.close - stop
         return [Enter(side=OrderSide.BUY, stop_loss=stop,
-                      take_profit=bar.close + risk * self.target2,
+                      take_profit=target,
                       comment=self.name)]
