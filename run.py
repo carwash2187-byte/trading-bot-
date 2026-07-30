@@ -466,7 +466,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--balance", type=float, default=10_000.0)
     parser.add_argument("--seed-price", type=float, default=2000.0,
                         help="paper broker only: starting price")
-    parser.add_argument("--risk-per-trade", type=float, default=0.01)
+    # HIS number, not mine. He states it repeatedly for a small account being
+    # flipped, which is exactly this situation:
+    #
+    #   "I don't mind going and risking 15% on the next trade."
+    #   "I don't mind going and risking 10% on the next trade."
+    #   "you want to risk 25% of your account, which is kind of what you're going
+    #    to have to do if you want to make $5,000 in 3 weeks."
+    #   "we're risking $5, which is 25% of the account"
+    #   "You may blow your account trying for the first few times, but that's
+    #    okay" -- he says the risk out loud too.
+    #
+    # This defaulted to 1% and I ran 2% in every test, which was me substituting
+    # my judgement for his. 10% is the bottom of the range he names.
+    parser.add_argument("--risk-per-trade", type=float, default=0.10)
     parser.add_argument("--daily-loss-limit", type=float, default=0.03)
     parser.add_argument("--max-drawdown-limit", type=float, default=0.06)
     parser.add_argument("--news-url", default="",
