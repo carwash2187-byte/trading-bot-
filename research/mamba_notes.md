@@ -4583,3 +4583,36 @@ Proven to fire: second leg on 460 checks, third on 393.
 The margin cap in `Enter.execute` will refuse legs the account cannot carry — that refusal is
 the broker's arithmetic, not a rule of mine, and it is the only thing standing between this and
 the full 27.6%.
+
+---
+
+# CYCLE 17 — 2026-07-30
+
+---
+
+# CYCLE 18 — 2026-07-30
+
+## `stop_zone_frac` DELETED — his stop clears the rectangle, it is not a fraction into it
+
+> "right above that final wick -- not that final wick, **THE BIGGEST WICK it pretty much
+> made**, because it shouldn't wick above that again"
+> "that last candle where we broke, **THE HIGH OF THAT CANDLE**... that's where my stop loss
+> is going to go"
+
+Neither of those is a fraction of anything. My `stop_room = zone * (1 + 0.5)` was two invented
+numbers stacked on each other — a made-up zone width, times a made-up fraction of it.
+
+Both are gone. The zone comes from `level_zones` at its measured width, and **the stop is the
+zone's far edge** — the price that has to be cleared for his level to be wrong.
+
+**Measured after: stop median 26 points on US30.** His own measured stops on US30 are **25-31
+points**, and his signal room posts a flat **25.0-point** stop. Two independent sources of his
+and the derived number lands between them, having been told neither.
+
+That is the sixth time this project has found that giving him his rule reproduces his numbers
+by itself: his stop widths, his level-map ratios, his trade frequency, his 1:3 targets, his
+swoop, and now this.
+
+The strategy still fires rarely — 1 in 1,334 — and that remains consistent with his own verdict
+on it: "when you wait for that retest and it doesn't come you're missing out... **it just takes
+too long**."

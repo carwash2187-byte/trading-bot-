@@ -53,6 +53,7 @@ from dataclasses import dataclass
 from datetime import time, timedelta, timezone
 
 from ..data.ohlc import timeframe_minutes
+from .mamba_patterns import level_zones
 from ..brokers.base import Candle, OrderSide
 from .mamba import SESSION_OPENS_UTC
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
@@ -91,7 +92,14 @@ class MambaRetest(Strategy):
 
         (removed: how long after a break the retest still counts. A level
             revisited weeks later is not the same trade.
-        stop_zone_frac: Where in the zone the stop sits, as a fraction of zone
+        (stop_zone_frac deleted -- his stop goes BEYOND the zone, and the zone has
+        a measured width now. "right above that final wick, not that final wick,
+        THE BIGGEST WICK it pretty much made, because it shouldn't wick above that
+        again" and "that last candle where we broke, THE HIGH OF THAT CANDLE".
+        Neither of those is a fraction of anything. The zone's own far edge is what
+        price has to clear, and the wick cluster that made the level supplies it.)
+
+        (removed: where in the zone the stop sat, as a fraction of zone
             height beyond the far edge. His words allow either the middle or just
             past it; this puts it just past, which is the version he draws.
         fallback_reward: Reward multiple used only when no opposing structure is
@@ -109,7 +117,6 @@ class MambaRetest(Strategy):
         level_lookback: int = 200,
         zone_pct: float = 0.0004,
         min_touches: int = 3,
-        stop_zone_frac: float = 0.5,
         fallback_reward: float = 3.0,
         max_trades_per_day: int = 2,
         stop_after_win: bool = True,
@@ -137,7 +144,6 @@ class MambaRetest(Strategy):
         # 3, and he counts them: "We're stuck. 1 2 3. We can't break it."
         self.min_touches = min_touches
         self.stop_after_win = stop_after_win
-        self.stop_zone_frac = stop_zone_frac
         self.fallback_reward = fallback_reward
         self.max_trades_per_day = max_trades_per_day
         # "as we start to trade below our 50 moving average we could see
@@ -446,8 +452,19 @@ class MambaRetest(Strategy):
             return []
 
         bar = candles[-1]
-        zone = bar.close * self.zone_pct
-        stop_room = zone * (1.0 + self.stop_zone_frac)
+        # HIS RECTANGLE, at its measured width. The wick cluster that makes a level
+        # also gives its thickness -- "the demand is EVERYTHING TO THE SIDE OF IT as
+        # well, so this whole area would be a demand zone." A level with no zone
+        # around it falls back to the map tolerance, which is the same band the
+        # clustering used to find it in the first place.
+        zones = level_zones(candles)
+
+        def band(price: float) -> tuple[float, float]:
+            for lo, hi in zones:
+                if lo <= price <= hi:
+                    return (lo, hi)
+            pad = price * self.zone_pct
+            return (price - pad, price + pad)
 
         for level in self._broken_levels(candles):
             # A support broken downward is now resistance: sell its retest.
@@ -456,9 +473,10 @@ class MambaRetest(Strategy):
                 # "we get in a short position off that wig" -- the bar must
                 # REACH back up into the zone and close back below it. A close
                 # above means the level did not hold and there is no trade.
-                if not (bar.high >= level.price - zone and bar.close < level.price):
+                lo, hi = band(level.price)
+                if not (bar.high >= lo and bar.close < level.price):
                     continue
-                stop = level.price + stop_room
+                stop = hi          # beyond his rectangle, not a fraction into it
                 risk = stop - bar.close
                 if risk <= 0:
                     continue
@@ -474,9 +492,10 @@ class MambaRetest(Strategy):
 
             # A resistance broken upward is now support: buy its retest.
             if (not level.broken_down) and bias > 0:
-                if not (bar.low <= level.price + zone and bar.close > level.price):
+                lo, hi = band(level.price)
+                if not (bar.low <= hi and bar.close > level.price):
                     continue
-                stop = level.price - stop_room
+                stop = lo          # beyond his rectangle
                 risk = bar.close - stop
                 if risk <= 0:
                     continue
