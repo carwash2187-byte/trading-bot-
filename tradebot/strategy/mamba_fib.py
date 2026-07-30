@@ -110,6 +110,7 @@ class MambaFib(Strategy):
         min_push_pct: float = 0.004,
         fib_near: float = 0.5,
         fib_far: float = 0.618,
+        fib_stop: float = 0.764,
         ma_fast: int = 8,
         ma_slow: int = 50,
         higher_tf_bars: int = 96,
@@ -124,6 +125,15 @@ class MambaFib(Strategy):
         self.min_push_pct = min_push_pct
         self.fib_near = fib_near
         self.fib_far = fib_far
+        # 0.764, NOT the standard 0.786. Read off his tool on five separate draws,
+        # and verified arithmetically against the printed prices. It is coloured
+        # black on his template while 0.5 is gold and 0.618 is orange -- so it is
+        # not part of the entry zone, it is where the stop goes. Measured: two of
+        # his four stops sat within 1.8 pips of this line.
+        #
+        # That replaces stop_beyond_pct, which was a distance I invented. His stop
+        # is a fib level, so it needs no width of mine.
+        self.fib_stop = fib_stop
         self.ma_fast = ma_fast
         self.ma_slow = ma_slow
         self.higher_tf_bars = higher_tf_bars
@@ -145,28 +155,84 @@ class MambaFib(Strategy):
     # -- drawing it the way he draws it ----------------------------------
 
     def _push(self, candles: list[Candle]) -> Push | None:
-        """The impulse move to measure across: "from this low to this high".
+        """The impulse to measure across -- the LAST CLEAN one, not the biggest.
 
-        Finds the largest clean one-directional move in the window. Requires it to
-        be big enough to be a real push, because he explicitly refuses to draw
-        from a candle that is "not really set as that push".
+        He states this rule twice and it is the whole skill as he presents it:
+
+            "the way I'm drawing my Fibonacci's is very simple, I'm drawing it from
+             that MAIN PUSH. So I'm not gonna draw my Fibonacci from here to up
+             here -- no. I'm gonna draw it from where the MARKET STRUCTURE REALLY
+             STARTS TO GO."
+
+            "this push starts here, it doesn't start down in that area... the push
+             is not down in here, because YEAH IT PUSH, BUT THEN IT CAME BACK
+             DOWN. This is where the main push is."
+
+        Measured on his own chart: he anchored at 107.283 while the actual low in
+        view was ~106.75 -- deliberately skipping 53 pips of larger move. This
+        method previously took the extreme low and extreme high of the window,
+        which is exactly the "here to up here" he refuses.
+
+        So: walk back from the current bar to the most recent swing that started a
+        one-directional run, and stop as soon as the run is broken by a meaningful
+        pullback. An origin that pushed and then came back down is disqualified.
+
+        And "it is kind of steep... don't really have much rejections" -- he passes
+        on a leg too vertical to have left wicks behind, which is why a leg needs
+        enough bars to have structure rather than merely enough size.
         """
         window = candles[-self.push_bars:]
         if len(window) < 15:
             return None
 
-        lows = [(i, c.low) for i, c in enumerate(window)]
-        highs = [(i, c.high) for i, c in enumerate(window)]
-        low_i, low_v = min(lows, key=lambda x: x[1])
-        high_i, high_v = max(highs, key=lambda x: x[1])
+        last = window[-1]
+        # Which way the recent leg runs, from the freshest extreme.
+        recent = window[-8:]
+        up = recent[-1].close >= sum(c.close for c in recent) / len(recent)
+
+        # Walk back while the run holds. It breaks when price retraces more than
+        # `break_frac` of the progress made so far -- that is the "it came back
+        # down" he names.
+        break_frac = 0.5
+        if up:
+            end_v = max(c.high for c in window[-8:])
+            start_v = end_v
+            start_i = len(window) - 1
+            best = end_v
+            for i in range(len(window) - 1, -1, -1):
+                c = window[i]
+                if c.low < start_v:
+                    start_v = c.low
+                    start_i = i
+                # progress so far, and how far price came back inside the leg
+                if best - start_v > 0:
+                    pull = (best - max(x.high for x in window[i:])) / (best - start_v)
+                    if pull > break_frac:
+                        break
+            low_v, high_v = start_v, end_v
+            low_i, high_i = start_i, len(window) - 1
+        else:
+            end_v = min(c.low for c in window[-8:])
+            start_v = end_v
+            start_i = len(window) - 1
+            worst = end_v
+            for i in range(len(window) - 1, -1, -1):
+                c = window[i]
+                if c.high > start_v:
+                    start_v = c.high
+                    start_i = i
+                if start_v - worst > 0:
+                    pull = (min(x.low for x in window[i:]) - worst) / (start_v - worst)
+                    if pull > break_frac:
+                        break
+            low_v, high_v = end_v, start_v
+            low_i, high_i = len(window) - 1, start_i
+
         if low_i == high_i:
             return None
-
         size = high_v - low_v
-        if size <= 0 or size / window[-1].close < self.min_push_pct:
+        if size <= 0 or size / last.close < self.min_push_pct:
             return None
-
-        up = high_i > low_i  # the high came after the low, so the push went up
 
         # The retracement runs back from the end of the push toward its start.
         if up:
@@ -256,7 +322,10 @@ class MambaFib(Strategy):
             top, bottom = push.zone_near, push.zone_far
             if not (bar.low <= top and bar.close > bottom):
                 return []
-            stop = push.low - push.low * self.stop_beyond_pct
+            # "a nice little stop-loss just below where a wick" -- and measured,
+            # that lands on his 0.764. The fib supplies it; no width of mine.
+            size = push.high - push.low
+            stop = push.high - size * self.fib_stop
             if stop >= bar.close:
                 return []
             risk = bar.close - stop
@@ -268,7 +337,8 @@ class MambaFib(Strategy):
         bottom, top = push.zone_near, push.zone_far
         if not (bar.high >= bottom and bar.close < top):
             return []
-        stop = push.high + push.high * self.stop_beyond_pct
+        size = push.high - push.low
+        stop = push.low + size * self.fib_stop
         if stop <= bar.close:
             return []
         risk = stop - bar.close

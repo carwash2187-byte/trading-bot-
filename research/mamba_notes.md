@@ -3090,3 +3090,80 @@ level below entry and the target is the next level up, so the geometry knobs ans
 question he never asks. Deleting them means migrating the older strategies onto the map
 rather than editing a default — which is the next job, and a refactor rather than a
 find-and-replace.
+
+## Cycle 3 — video v-0dOEDqglA, his dedicated Fibonacci video
+
+Watched by subagent on USD/JPY 60-minute, five worked examples, every fib level read off
+the on-chart labels and cross-checked arithmetically.
+
+### HIS TEMPLATE, confirmed exactly
+
+| level | colour on his tool | role |
+|-------|--------------------|------|
+| -0.618, -0.25 | teal | extensions, present but **never targeted** |
+| 0 | teal | the end of the impulse |
+| 0.236 | lavender | ignored |
+| 0.382 | black | mentioned once as "not deep enough" |
+| **0.5** | **gold** | traded |
+| **0.618** | **orange** | traded |
+| **0.764** | black | **the stop** |
+| 1 | black | the start of the impulse |
+
+0.5 and 0.618 are the only two warm colours on the whole tool, adjacent, and they are what
+he boxes. **0.764 and not 0.786 is confirmed**, verified against the printed prices — and
+being black rather than gold tells you its job: it is not an entry level, it is where the
+stop goes. Two of his four stops sat within 1.8 pips of it.
+
+No 0.786, no 0.707, no 1.272 or 1.618 anywhere.
+
+### THE LEG RULE — stated twice, and it corrects my code
+
+> "the way I'm drawing my Fibonacci's is very simple, I'm drawing it from that **main
+> push**. So **I'm not gonna draw my Fibonacci from here to up here** -- no. I'm gonna draw
+> it from **where the market structure really starts to go**."
+
+> "this push starts here, it doesn't start down in that area... the push is not down in
+> here, because **yeah it push, but then it came back down**."
+
+Measured: he anchored at 107.283 while the actual low in view was ~106.75 — **deliberately
+skipping 53 pips of larger move.** My `_push` took the extreme low and extreme high of the
+window, which is precisely the "here to up here" he refuses.
+
+Rebuilt to walk back from the current bar and stop as soon as the run is broken by a
+retracement past half its progress — an origin that pushed and then came back down is
+disqualified, which is his rule in his words. Measured after: a valid leg on **60%** of
+sampled points, typical leg **0.79% of price**.
+
+### AND THE STOP IS NOW A FIB LEVEL
+
+`stop_beyond_pct` deleted. The stop is the 0.764, so it needs no width of mine. Measured
+output: **0.32-0.45% of price**, which is his own 18.5-31.2 pip range on a 108 pair.
+
+### WHAT HE REFUSES, and it is specific
+
+* a leg **too steep**: "we might not though, 'cause it is kind of steep... don't really
+  have much rejections"
+* a retracement that **never reaches the zone**: "we almost have the 0.382 rejections but
+  didn't quite get there" — no trade, "so now we waited for another setup"
+* the **wrong leg**, as above
+* a zone with **no wicks in it**
+
+### THE LEVEL-MAP QUESTION — it does NOT generalise
+
+On the $250k video every price snapped to a pre-drawn horizontal. **Here there is not a
+single pre-drawn line on the chart.** The Fibonacci comes first and the levels come out of
+it: entries land within 0.4-3.1 pips of a printed fib level, stops on the 0.764. Only the
+targets are eyeballed prior swings, and three of four land nowhere near a fib line.
+
+Two videos, two opposite orderings, both his. Recorded rather than reconciled — and it
+means `mamba_levels` and `mamba_fib` are both faithful, to different sessions.
+
+### AND A CLAIM OF HIS THAT THE PIXELS CONTRADICT
+
+He says four times that these entries had "no drawdown at all, none whatsoever". Measured
+adverse excursion from his own marked entry to the bottom of his own rejection box: **3.6,
+7.4, 9.9 and 11.8 pips** — the last being about 45% of that trade's stop. The claim only
+holds if he enters the bar after the rejection wick, which he never says.
+
+Also: "26 pips stop loss, 62 take profit" — the label on his own screen reads **68.7**. His
+other quoted numbers all match his labels exactly.
