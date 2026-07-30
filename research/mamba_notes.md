@@ -3034,3 +3034,59 @@ stop.
   point" and "getting a little later in the day".
 * Any post-loss sizing rule.
 * Whether the level map is redrawn intraday or set before the session.
+
+## Cycle 3 — the parameter audit, and the first real deletions
+
+92 distinct parameters across the mamba strategies. **50 now carry his quote; 42 do not.**
+The prompt's rule is that an unsourced parameter gets deleted rather than explained, so
+here is the first pass of that, plus an honest note on which of the 42 are actually
+framework rather than trading decisions.
+
+### DELETED
+
+**`use_ma`, the side-of-the-average vote.** Price is always on one side of a moving
+average, so it voted on **100% of bars** — a free vote that quietly made a threshold of
+three mean "the average plus any two other things". And he never asks the question it
+answered: he does not say "price is above the 50, so buy", he names two events, the
+crossover and the swoop. A state he never reads is not a rule of his. Gone, not defaulted
+off.
+
+**MACD divergence.** It entered this project on a single passing mention while **OBV is
+what is actually in his chart legend** and what he points at while explaining a trade.
+Two divergence signals voting is one of them carrying weight he never gives it.
+
+Result, measured after the deletions:
+
+| signal | fires |
+|--------|-------|
+| gap | 56.3% |
+| swoop | 27.1% |
+| double top | 25.3% |
+| OBV divergence | 19.8% |
+| liquidity sweep | 15.7% |
+| buildup | 12.6% |
+| engulfing | 3.6% |
+| MA crossover | 2.6% |
+
+**No signal fires on 100% of bars any more.** His counted floor of three agreeing now
+selects **6.2%** of bars — genuinely picky, where before the free vote made it far looser.
+
+### HONEST NOTE ON THE REMAINING 42
+
+Not all of them are trading decisions. `timeframe`, and the various `lookback` fields are
+framework plumbing; `boll_stdevs` is a TradingView default he leaves untouched, which is
+arguably his by omission; `open_hour_utc=14` is in fact sourced — "around six o'clock in
+the morning" on his UTC-8 clock — and my table simply missed it.
+
+The genuinely unsourced ones that shape a trade are the stop geometry (`stop_bars`,
+`stop_beyond_pct`, `stop_zone_frac`, `stop_buffer_pct`, `stop_candle_frac`), the target
+geometry (`target1`, `target2`, `target_pct`, `fallback_reward`), the Fibonacci anchoring
+(`push_bars`, `min_push_pct`), the trend windows (`trend_bars`), the trail distance
+(`trail_after`), and every number in `mamba_channel` (`edge_pct`, `stop_pct`,
+`min_width_pct`, `touch_tolerance`).
+
+**All of those exist because there was no level map.** With `mamba_levels` the stop is the
+level below entry and the target is the next level up, so the geometry knobs answer a
+question he never asks. Deleting them means migrating the older strategies onto the map
+rather than editing a default — which is the next job, and a refactor rather than a
+find-and-replace.

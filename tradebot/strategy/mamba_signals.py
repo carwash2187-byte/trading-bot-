@@ -55,7 +55,6 @@ from .mamba_patterns import (
     engulfing,
     fair_value_gap,
     liquidity_sweep,
-    macd_divergence,
 )
 
 
@@ -82,9 +81,6 @@ class MambaSignals(Strategy):
         max_hold_minutes: 35. "30 minutes, 35 minutes at the most."
         stop_bars: Bars whose extreme the stop sits behind. "stops are right above
             the highs."
-        use_ma: Whether the moving averages get a vote. He mentions them beside
-            the engulfing candle -- "our moving averages are above everything...
-            gonna pull our trade to the downside".
         max_trades_per_day: 3.
         max_losses_per_day: 2.
         breakeven_at: R at which the stop goes to entry, after banking half.
@@ -133,7 +129,6 @@ class MambaSignals(Strategy):
         max_hold_minutes: int = 35,
         stop_bars: int = 24,
         zone_pct: float = 0.0004,
-        use_ma: bool = False,
         use_ma_swoop: bool = True,
         swoop_bend: float = 1.0,
         ma_fast: int = 8,
@@ -182,19 +177,14 @@ class MambaSignals(Strategy):
         self.max_hold_minutes = max_hold_minutes
         self.stop_bars = stop_bars
         self.zone_pct = zone_pct
-        # Whether price merely being on one side of the 50 gets a vote.
+        # DELETED: the side-of-the-average vote.
         #
-        # OFF, and that is a correction rather than a preference. Price is always
-        # on one side of a moving average, so this voted on 100.0% of bars -- which
-        # made a threshold of two mean "the moving average plus any single other
-        # thing". That is not the confluence he describes, it is a free vote.
-        #
-        # And he never asks the question this answers. He does not say "price is
-        # above the 50, so buy". He names two EVENTS: "see if we can get a moving
-        # average crossover" and "they're coming down and they're swooping...
-        # once they start to turn up". Both of those are things that happen, not
-        # states that persist, and both are below.
-        self.use_ma = use_ma
+        # Price is always on one side of a moving average, so it voted on 100% of
+        # bars -- a free vote that made a threshold of three mean "the average plus
+        # any two other things". And he never asks the question it answered. He
+        # does not say "price is above the 50, so buy"; he names two EVENTS, the
+        # crossover and the swoop, and both are below. A state he never reads is
+        # not a rule of his, so the knob is gone rather than defaulted off.
         # "what are our moving averages doing here, guys? And this is very
         #  important to pay attention to... they're SWOOPING... Once they start to
         #  turn up, most the time this momentum is going to pull all the way to the
@@ -382,11 +372,11 @@ class MambaSignals(Strategy):
         if odiv:
             out["obv"] = odiv
 
-        # "lower lows higher high on our macd... price is bound to reverse" -- one
-        # passing mention in one video, against OBV being on his chart throughout.
-        div = macd_divergence(candles)
-        if div:
-            out["macd"] = div
+        # DELETED: MACD divergence. It entered this project on a single passing
+        # mention -- "lower lows higher high on our macd" -- while OBV is what is
+        # actually in his chart legend and what he points at while explaining a
+        # trade. Two divergence signals voting is one of them inventing weight he
+        # never gives it.
 
         # "when you have a buildup in a zone on a H4, a lot of times it's going
         # to get respected" -- the vote is price returning to the zone and being
@@ -427,22 +417,18 @@ class MambaSignals(Strategy):
             if swoop:
                 out["swoop"] = swoop
 
-        # "our moving averages are above everything... gonna pull our trade to
-        # the downside"
-        if self.use_ma:
+        # "see if we can get a moving average crossover" -- the 8 crossing the 50
+        # on THIS bar, which is an event rather than a state.
+        if self.use_ma_crossover:
             closes = [c.close for c in candles]
             fast = sma(closes, self.ma_fast)
             slow = sma(closes, self.ma_slow)
-            if fast and slow and fast[-1] is not None and slow[-1] is not None:
-                out["ma"] = 1 if fast[-1] > slow[-1] else -1
-                # The crossover itself, as its own vote: the 8 crossing the 50 on
-                # this bar. "see if we can get a moving average crossover."
-                if (self.use_ma_crossover and len(fast) > 1 and len(slow) > 1
-                        and fast[-2] is not None and slow[-2] is not None):
-                    was = fast[-2] > slow[-2]
-                    now = fast[-1] > slow[-1]
-                    if was != now:
-                        out["ma_cross"] = 1 if now else -1
+            if (len(fast) > 1 and len(slow) > 1
+                    and None not in (fast[-1], fast[-2], slow[-1], slow[-2])):
+                was = fast[-2] > slow[-2]
+                now = fast[-1] > slow[-1]
+                if was != now:
+                    out["ma_cross"] = 1 if now else -1
 
         return out
 
