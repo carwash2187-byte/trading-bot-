@@ -3971,3 +3971,44 @@ had been orphaned by that refactor, called from nowhere, and would have thrown i
 anything had called it. Deleted.
 
 **All nine strategies now pass: every attribute used is stored.**
+
+---
+
+# CYCLE 12 — 2026-07-30
+
+## THE PARAMETER AUDIT THE PROMPT ASKS FOR — every knob left in mamba*.py
+
+Mechanically enumerated: **158 constructor parameters across all mamba files.** Of those,
+**106 carry his quote within twenty lines of where they are set.** The remaining 52 were
+checked by hand; most are sourced with the quote further up the file (his 8 and 50 SMAs,
+his 75/25 RSI, his 34 Bollinger, his two trades, his two losses, his 1:3, his 35 minutes,
+his 0.764). Three were genuinely wrong and are fixed here.
+
+### 1. `stop_beyond_pct` — DECLARED, ASSIGNED, NEVER USED
+
+A dead knob. Its behaviour was replaced by the 0.764 fib stop in an earlier cycle, and the
+parameter itself was left behind, still accepting a value that could never do anything. That
+is the same shape as the eleven silent rules, just at the parameter level rather than the
+rule level. Removed.
+
+### 2. `higher_tf_bars = 96` WAS A WHOLE DAY, NOT FOUR HOURS
+
+> "we're gonna start on the h4, **ALWAYS h4**"
+
+96 bars of 15-minute data is **twenty-four hours**. Both `mamba_fib` and `mamba_retest` were
+reading a *daily* trend and calling it his H4. Now derived the same way as everything else:
+four hours is 240 minutes, divided by the bar length — **16 bars on 15m, 48 on 5m.**
+
+### 3. `min_touches` — HE COUNTS THEM OUT LOUD, AND IT IS THREE
+
+> "We want to see price get stuck at a ceiling just like this. Bam. We're stuck. **1 2 3.**
+> We can't break it."
+> "right here we have as you can see resistance -- **boom boom boom boom boom** -- price
+> comes above"
+
+Three is the floor he counts to; five is the gesture he makes. **Two was mine**, and it let
+the bot call a level anything price had brushed twice.
+
+**All four setups still fire after the changes:** NY break 54 of 1,000, fib gold zone 123,
+RSI 10, break-and-retest 1. The last is very low and that agrees with his own verdict on it —
+"when you wait for that retest and it doesn't come... it just takes too long."

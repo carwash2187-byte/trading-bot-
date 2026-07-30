@@ -62,6 +62,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timezone
 
+from ..data.ohlc import timeframe_minutes
 from ..brokers.base import Candle, OrderSide
 from ..data.indicators import sma
 from .mamba_patterns import double_top_bottom, macd_divergence
@@ -104,7 +105,6 @@ class MambaFib(Strategy):
             bullish".
         reward: 3.0, his usual. The stop is the far end of the push, so reward is
             taken as a multiple rather than from structure.
-        stop_beyond_pct: How far past the push extreme the stop sits.
         max_trades_per_day: 3.
         max_losses_per_day: 2. "we are done for the day and we come back tomorrow".
     """
@@ -120,9 +120,8 @@ class MambaFib(Strategy):
         fib_stop: float = 0.764,
         ma_fast: int = 8,
         ma_slow: int = 50,
-        higher_tf_bars: int = 96,
+        higher_tf_bars: int = 0,
         reward: float = 3.0,
-        stop_beyond_pct: float = 0.0008,
         max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
         stop_after_win: bool = True,
@@ -142,9 +141,9 @@ class MambaFib(Strategy):
         self.fib_stop = fib_stop
         self.ma_fast = ma_fast
         self.ma_slow = ma_slow
-        self.higher_tf_bars = higher_tf_bars
+        self.higher_tf_bars = (higher_tf_bars if higher_tf_bars > 0
+                               else 240 // max(1, timeframe_minutes(self.timeframe)))
         self.reward = reward
-        self.stop_beyond_pct = stop_beyond_pct
         self.max_trades_per_day = max_trades_per_day
         self.max_losses_per_day = max_losses_per_day
         self.stop_after_win = stop_after_win

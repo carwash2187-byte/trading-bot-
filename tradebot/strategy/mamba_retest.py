@@ -52,6 +52,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import time, timedelta, timezone
 
+from ..data.ohlc import timeframe_minutes
 from ..brokers.base import Candle, OrderSide
 from .mamba import SESSION_OPENS_UTC
 from .base import Action, AdjustStop, Enter, Exit, Strategy, StrategyContext
@@ -70,7 +71,9 @@ class MambaRetest(Strategy):
     """Break and retest, the way he teaches it for a small account.
 
     Args:
-        higher_tf_bars: Bars making up the "four hour" view whose rejection sets
+        (higher_tf_bars derived, not chosen -- "we're gonna start on the h4,
+        ALWAYS h4". Four hours is 240 minutes, so the count is 240 divided by the
+        bar length. My 96 was eight hours on a 5-minute chart.)
             the direction. 96 fifteen-minute bars is 24 hours.
         level_lookback: How far back to hunt for the level that gets broken.
         zone_pct: Half-height of a level's zone, as a fraction of price. He draws
@@ -102,10 +105,10 @@ class MambaRetest(Strategy):
 
     def __init__(
         self,
-        higher_tf_bars: int = 96,
+        higher_tf_bars: int = 0,
         level_lookback: int = 200,
         zone_pct: float = 0.0004,
-        min_touches: int = 2,
+        min_touches: int = 3,
         stop_zone_frac: float = 0.5,
         fallback_reward: float = 3.0,
         max_trades_per_day: int = 2,
@@ -119,9 +122,11 @@ class MambaRetest(Strategy):
         scale_at: float = 0.0,
         max_hold_minutes: int = 0,
     ) -> None:
-        self.higher_tf_bars = higher_tf_bars
+        self.higher_tf_bars = (higher_tf_bars if higher_tf_bars > 0
+                               else 240 // max(1, timeframe_minutes(self.timeframe)))
         self.level_lookback = level_lookback
         self.zone_pct = zone_pct
+        # 3, and he counts them: "We're stuck. 1 2 3. We can't break it."
         self.min_touches = min_touches
         self.stop_after_win = stop_after_win
         self.stop_zone_frac = stop_zone_frac

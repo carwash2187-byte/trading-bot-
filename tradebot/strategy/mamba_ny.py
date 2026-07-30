@@ -114,7 +114,7 @@ class MambaNY(Strategy):
         window_minutes: int = 210,
         zone_lookback: int = 72,
         zone_pct: float = 0.0004,
-        min_touches: int = 2,
+        min_touches: int = 3,
         trend_bars: int = 0,
         reward: float = 3.0,
         max_hold_minutes: int = 35,
@@ -137,6 +137,7 @@ class MambaNY(Strategy):
         self.window_minutes = window_minutes
         self.zone_lookback = zone_lookback
         self.zone_pct = zone_pct
+        # 3, and he counts them: "We're stuck. 1 2 3. We can't break it."
         self.min_touches = min_touches
         self.trend_bars = (trend_bars if trend_bars > 0
                            else 240 // max(1, timeframe_minutes(self.timeframe)))

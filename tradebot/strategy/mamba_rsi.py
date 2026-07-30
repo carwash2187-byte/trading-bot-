@@ -116,7 +116,7 @@ class MambaRsi(Strategy):
         trend_bars: int = 60,
         level_bars: int = 60,
         zone_pct: float = 0.0006,
-        min_touches: int = 2,
+        min_touches: int = 3,
         require_rsi: bool = True,
         max_trades_per_day: int = 2,
         max_losses_per_day: int = 2,
@@ -130,6 +130,7 @@ class MambaRsi(Strategy):
         self.trend_bars = trend_bars
         self.level_bars = level_bars
         self.zone_pct = zone_pct
+        # 3, and he counts them: "We're stuck. 1 2 3. We can't break it."
         self.min_touches = min_touches
         self.require_rsi = require_rsi
         self.max_trades_per_day = max_trades_per_day
