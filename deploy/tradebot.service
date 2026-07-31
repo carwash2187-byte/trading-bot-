@@ -24,11 +24,19 @@ WorkingDirectory=/home/tradebot/tradebot
 # anything on the command line shows up in `ps` for every user on the box.
 EnvironmentFile=/home/tradebot/tradebot/.env
 
-# --loop 1 = check every market EVERY SECOND. He watches one chart at a time;
-# this watches four, sixty times a minute each.
+# --loop 15 = check every market four times a minute.
 #
-# One second is only affordable because get_candles caches bars until the bar it
-# is inside actually closes. Without that, a cycle costs three requests per
+# One second was tried and TradeLocker refused it: Cloudflare answered 429 "you
+# are being rate limited" on essentially every request, so the bot saw nothing at
+# all. The provider sets this ceiling, not the code -- a steady cycle costs about
+# six requests (account, positions, and one quote per market), so one second is
+# roughly 360 a minute and fifteen seconds is about 24.
+#
+# This is still far faster than what it replaced: the old scheduled job ran every
+# five minutes and, being a hosted scheduler, routinely another five to fifteen
+# minutes late. Four looks a minute against one look every ten to twenty minutes.
+#
+# It is affordable at all because get_candles caches bars until the bar it Without that, a cycle costs three requests per
 # market and a one-second loop is over a million requests a day at one provider
 # -- which gets throttled or banned, and a banned bot does not trade at all.
 # With it, the bars are fetched once per five-minute bar and only the live price
@@ -46,7 +54,7 @@ ExecStart=/usr/bin/python3 /home/tradebot/tradebot/run.py \
     --strategies mamba_complete \
     --risk-per-trade 0.10 \
     --news-url https://nfs.faireconomy.media/ff_calendar_thisweek.json \
-    --loop 1 \
+    --loop 15 \
     --verbose
 
 # If it dies for any reason -- crash, broker dropping the socket, the box
