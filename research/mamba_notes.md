@@ -4694,3 +4694,44 @@ cache write never ran — it looked completely implemented and did nothing.
 
 Same shape as the eleven silent rules, in a different file, found the same way: by
 counting whether it actually fired rather than reading whether it looked right.
+
+---
+
+# LIVE STREAM CYCLE 1 — 2026-07-31
+
+# LIVE STREAM CYCLE 2 — 2026-07-31
+
+# LIVE STREAM CYCLE 3 — 2026-07-31
+
+## "How I Got Rich From Selling Courses" (AOiHOAQmSs4) — no method, two useful scraps
+
+A life-story video. Zero setups, zero rules, no live trade explained. **Nothing codeable.**
+
+Two things in four seconds of un-narrated archive b-roll, though — both worth recording
+because they are *pixels*, not claims:
+
+### 1. HIS 0.764 FIB, CONFIRMED A FOURTH TIME
+
+The fib on that old screen recording reads **0.236 / 0.382 / 0.5 / 0.618 / 0.764 / 1**.
+**0.764, not the standard 0.786** — now confirmed in four separate videos across what looks
+like several years. It is not a one-off mis-drag; it is his template.
+
+### 2. HIS OLDER INDICATOR SET WAS DIFFERENT — EMA 8, MA 21, OBV
+
+That archive clip shows **"EMA 8 close"** and **"MA 21 close"** on price with **OBV** below.
+His stated current pair is **simple 8 and 50**: "you now have an eight and a 50 moving average
+on your screen, that's all we're going to be using" and "**simple ones are a lot better** by
+the way."
+
+So EMA 9/21 — which this project used at the start and deleted as mine — was **closer to his
+old setup than I realised**. It was still wrong to use, because he says plainly what he uses
+*now*, and the code follows that. Recorded as evolution rather than contradiction.
+
+It does **not** close the three-plotted-moving-average gap. Different platform, different era,
+settings panel never opened. **Seven videos have now failed to read which three.**
+
+### AND THE MEASURED RATIO
+
+The only measurable trade idea in the video is a position tool at **4.3 : 1**, un-narrated.
+That sits inside his taught 1:3-1:5 band — so it agrees with what he *teaches* and contradicts
+what he *posts* (TP1 0.77R, TP2 1.59R). The teach-versus-trade gap holds.
