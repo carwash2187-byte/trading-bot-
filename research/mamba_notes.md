@@ -4735,3 +4735,5 @@ settings panel never opened. **Seven videos have now failed to read which three.
 The only measurable trade idea in the video is a position tool at **4.3 : 1**, un-narrated.
 That sits inside his taught 1:3-1:5 band — so it agrees with what he *teaches* and contradicts
 what he *posts* (TP1 0.77R, TP2 1.59R). The teach-versus-trade gap holds.
+
+# LIVE STREAM CYCLE 4 (final) — 2026-07-31
