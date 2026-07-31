@@ -4737,3 +4737,78 @@ That sits inside his taught 1:3-1:5 band — so it agrees with what he *teaches*
 what he *posts* (TP1 0.77R, TP2 1.59R). The teach-versus-trade gap holds.
 
 # LIVE STREAM CYCLE 4 (final) — 2026-07-31
+
+## LIVE STREAM 1 (CQdzD17lD-M) — the sizing question is SETTLED, and it is neither answer
+
+47 minutes, of which **10% has a chart on screen**. Two trades reviewed in replay. And it
+answers the question three earlier videos left contradictory.
+
+### HIS SIZING: FIXED CASH RISK, VARIABLE QUANTITY — MEASURED ON ONE MORNING
+
+    US30    Stop 28.0 pts   Qty 8    Amount 750
+    NAS100  Stop 15.03 pts  Qty 16   Amount 750
+
+**Same morning. Same risk. Different quantity.** The size is solved backwards from the stop
+distance to hold the money constant — 8 contracts on a 28-point stop, 16 on a 15-point stop.
+
+That **breaks both** previous readings: it is not "0.01 always the minimum" and it is not the
+fixed 2.00 lots seen in his MT5 history. It is fixed-cash risk, and this is the first time it
+has been caught with two different sizes side by side rather than inferred.
+
+**The bot sizes by percentage of equity.** His model is a fixed amount with size derived. That
+is a genuine structural difference, now proven rather than suspected.
+
+### TIMEFRAMES: 15m THEN 5m, AND HE NEVER OPENS 1h OR 4h
+
+His quick bar is `1m · 5m · 15m · 30m · 1h · 4h · D` — **there is no W tab at all**, which
+answers the weekly question by absence. He opens 15m, then clicks 5m: "now, if we go to the
+five minute, okay, three candles."
+
+Breaks "always H4" and "H1 only". Supports "5 and 15 minute, that's all".
+
+### HIS DRAWN RATIO IS EXACTLY 5, AND IT SHARPENS THE TEACH-VERSUS-TRADE GAP
+
+Both position tools literally read **"Risk/Reward Ratio: 5"**, and the pixel measurements
+agree — 4.89 and 4.95. So **what he draws for camera is 5R**, while **what he publishes to his
+signal room is TP1 0.77R and TP2 1.59R**.
+
+> "I've never consistently done more than a one to five"
+> "You can be profitable going for a one to one. **I don't like that.**"
+
+### AND HIS OWN SCREEN CONTRADICTS HIS OWN CLAIM BY ABOUT TEN TIMES
+
+> "In the matter of two trades, **we make $70,000**"
+
+His own tooltip on that same screen, for that same trade: **"Target: 139.9 (0.30%) 1,399,
+Amount: 2249.11"**. Doubling for the second leg is roughly **$4.5-7.5k, not $70,000.** Same
+section, same screen, off by an order of magnitude.
+
+### HE NOW REFUSES FOREX AND GOLD — WHICH BREAKS THE WATCHLIST I BUILT
+
+> "**stop trading any Forex pair that exists ever again**... You need to trade **France 40 and
+> UK 100**" · "**German 40 is just as good**"
+> "I traded gold for a while. **I don't like it. I don't like the way gold moves.**"
+
+The bot's four markets are NAS100, US30, GBPUSD and XAUUSD — taken from his older stated
+watchlist. **He now refuses two of those four.** His live watchlist is titled "Scalping BIG"
+and holds XAUUSD, GBPUSD, UK100, FRA40, BTCUSD, ETHUSD, XRPUSD, NAS100, US30, YM1!, NQ1!.
+Recorded, not acted on — this is one video against several, and it is a change of mind rather
+than a contradiction.
+
+And the session rule extends: "right at the start of **London session** you trade these just
+like you trade US30 and NASDAQ, because they move the same except they move during London
+instead of New York."
+
+### TWO TRADES THE SAME MORNING, BOTH WINNERS
+
+He takes the second after the first has won — **he did not stop after a win.** That weakens
+the win-ends-the-day rule further, which is already a documented switch.
+
+### STILL UNREAD AFTER EIGHT VIDEOS
+
+His indicator legend is **collapsed to a badge reading "9"** — nine indicators grouped, names
+hidden. He never opens the menu or a settings dialog. Only **one** thing is plotted on price
+and it is a **stepped green/red trailing line**, which is not a moving average at all.
+
+Hold times measured: **under 15 minutes** on US30, **3h 55m** on NAS100 — against his own
+"I trade fast, quick, quick, quick".
